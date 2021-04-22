@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.16)
 set(CMAKE_CXX_STANDARD 98)
 #set(CMAKE_CXX_FLAGS "-Wall -Wextra -Werror -stdlib=libc++")
 set(CMAKE_CXX_FLAGS "-stdlib=libc++")
-set(CMAKE_CXX_COMPILER "/bin/clang++")
+set(CMAKE_CXX_COMPILER "clang++")
 
 file(GLOB include "includes/*")
 
