@@ -1,5 +1,5 @@
 #include "includes/allowed_library_includes.h"
-#include <sys/sendfile.h>
+
 char webpage[] =
 	"HTTP/1.1 200 OK\r\n"
 	"Content-Type text/html; charset=UTF-8\r\n\r\n"
