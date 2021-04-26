@@ -2,7 +2,7 @@
 #define CONFIG_HPP
 #include <string>
 #include <vector>
-#include "simplifiers.hpp"
+#include "simplifiers.h"
 //Full public class ?
 class Config {
  public:

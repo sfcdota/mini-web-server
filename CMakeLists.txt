@@ -13,4 +13,4 @@ include_directories(includes /usr/local/include)
 
 add_executable(webserv
         ${include}
-        main.cpp ConfigReader.cpp ConfigReader.hpp Config.cpp Config.hpp Header.cpp Header.hpp includes/simplifiers.hpp)
+        main.cpp ConfigReader.cpp ConfigReader.hpp Config.cpp Config.hpp Header.cpp)

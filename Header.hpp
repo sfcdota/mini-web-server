@@ -2,7 +2,7 @@
 #ifndef HEADER_HPP
 #define HEADER_HPP
 #include <string>
-#include "simplifiers.hpp"
+#include "includes/simplifiers.h"
 #include <ctime>
 //Full public class ?
 struct Header {
