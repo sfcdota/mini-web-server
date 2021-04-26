@@ -26,7 +26,7 @@ int main()
 	setsockopt(fd_server, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(int));
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_addr.s_addr = INADDR_ANY;
-	server_addr.sin_port = htons(8080);
+	server_addr.sin_port = htons(80);
 	
 	if(bind(fd_server, (struct sockaddr *) &server_addr, sizeof(server_addr)) == -1)
 	{
@@ -42,7 +42,7 @@ int main()
 		exit(1);
 	}
 	
-	while(1)
+	while(true)
 	{
 		fd_client = accept(fd_server, (struct sockaddr *)&client_addr, &sin_len);
 		if (fd_client == -1)
