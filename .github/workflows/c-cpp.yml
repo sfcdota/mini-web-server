@@ -40,6 +40,7 @@ jobs:
         - name: Build
           shell: bash
           run: |
+            ls -la
             cmake build -Bbuild -H.
             cmake --build build/ --target all
         - name: Run
