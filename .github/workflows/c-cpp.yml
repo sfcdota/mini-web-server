@@ -1,30 +1,24 @@
 name: C/C++ CI
 
-on:
+on:  
   push:
     branches: [ master ]
   pull_request:
     branches: [ master ]
-
+  schedule:
+    - cron: "0 12 * * *"
+  workflow_dispatch:
 jobs:
   build:
       name: Build
       runs-on: ${{matrix.os}}
       strategy:
         matrix:
-            os: [ubuntu-latest, windows-latest, macOS-latest]
+            os: [ubuntu-latest, macOS-latest]
       steps:
-        # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
         - uses: actions/checkout@v2
-        - name: Install dependencies on windows
-          if: startsWith(matrix.config.os, 'windows')
-          run: |
-            choco install ninja cmake
-            ninja --version
-            cmake --version
-
         - name: Install dependencies on ubuntu
-          if: startsWith(matrix.config.name, 'Ubuntu_Latest_GCC')
+          if: startsWith(matrix.os, 'ubuntu-latest')
           run: |
             sudo apt-get update
             sudo apt-get install ninja-build cmake libc++-dev libc++abi-dev
@@ -32,7 +26,7 @@ jobs:
             cmake --version
             gcc --version
         - name: Install dependencies on macos
-          if: startsWith(matrix.config.os, 'macos')
+          if: startsWith(matrix.os, 'macOS-latest')
           run: |
             brew install p7zip cmake ninja
             ninja --version
@@ -47,7 +41,10 @@ jobs:
         - name: Build
           shell: bash
           run: |
+            ls -la ..
             cmake build -Bbuild -H.
             cmake --build build/ --target all
         - name: Run
-            build/webserv
+          shell: bash
+          run: |
+            ./build/webserv
