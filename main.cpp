@@ -8,7 +8,7 @@ char webpage[] =
 	"<style>body {background-color: #FFFF00}</style></head>\r\n"
 	"<body><center><h1>Hello world!</h1><br>\r\n";
 
-int main()
+int main(int argc, char **argv)
 {
 	struct sockaddr_in server_addr = {}, client_addr = {};
 	socklen_t  sin_len = sizeof(client_addr);
@@ -42,7 +42,7 @@ int main()
 		exit(1);
 	}
 	
-	while(true)
+	while(argc == 1)
 	{
 		fd_client = accept(fd_server, (struct sockaddr *)&client_addr, &sin_len);
 		if (fd_client == -1)
