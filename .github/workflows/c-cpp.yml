@@ -45,6 +45,10 @@ jobs:
             cmake build -Bbuild -H.
             cmake --build build/ --target all
         - name: Run
+          if: startsWith(matrix.os, 'ubuntu-latest')
           shell: bash
-          run: |
-            ./build/webserv
+          run: /home/runner/work/webserv/webserv/build/webserv 1
+        - name: Run mac
+          if: startsWith(matrix.os, 'macOS-latest')
+          shell: bash
+          run: /home/runner/work/webserv/webserv/build/webserv 1
