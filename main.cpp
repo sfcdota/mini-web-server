@@ -8,8 +8,11 @@ char webpage[] =
 	"<style>body {background-color: #FFFF00}</style></head>\r\n"
 	"<body><center><h1>Hello world!</h1><br>\r\n";
 
-int main()
+int main(int argc, char **argv)
 {
+    time_t time = 0;
+    if (argc == 2 && *argv[1] == '1')
+        time == std::time(nullptr);
 	struct sockaddr_in server_addr = {}, client_addr = {};
 	socklen_t  sin_len = sizeof(client_addr);
 	int fd_server, fd_client;
@@ -42,7 +45,7 @@ int main()
 		exit(1);
 	}
 	
-	while(1)
+	while(argc == 1)
 	{
 		fd_client = accept(fd_server, (struct sockaddr *)&client_addr, &sin_len);
 		if (fd_client == -1)
