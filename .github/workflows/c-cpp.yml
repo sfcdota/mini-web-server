@@ -47,8 +47,8 @@ jobs:
         - name: Run
           if: startsWith(matrix.os, 'ubuntu-latest')
           shell: bash
-          run: /home/runner/work/webserv/webserv/build/webserv 1
+          run: sudo /home/runner/work/webserv/webserv/build/webserv 1
         - name: Run mac
           if: startsWith(matrix.os, 'macOS-latest')
           shell: bash
-          run: /Users/runner/work/webserv/webserv/build/webserv 1
+          run: sudo /Users/runner/work/webserv/webserv/build/webserv 1
