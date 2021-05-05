@@ -1,4 +1,4 @@
-#ifndef CONFIGREADER_H
-#define CONFIGREADER_H
+#ifndef CONFIGREADER_HPP_
+#define CONFIGREADER_HPP_
 
-#endif
+#endif // CONFIGREADER_HPP_

@@ -1,5 +1,5 @@
-#ifndef ALLOWED_LIBRARY_INCLUDES_H
-#define ALLOWED_LIBRARY_INCLUDES_H
+#ifndef INCLUDES_ALLOWED_LIBRARY_INCLUDES_HPP_
+#define INCLUDES_ALLOWED_LIBRARY_INCLUDES_HPP_
 #include <cstdlib>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -22,4 +22,4 @@
 #include <algorithm>
 #include <exception>
 	#include <netdb.h> //????????
-#endif
+#endif // INCLUDES_ALLOWED_LIBRARY_INCLUDES_HPP_

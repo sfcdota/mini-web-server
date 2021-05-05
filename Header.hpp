@@ -1,9 +1,9 @@
 
-#ifndef HEADER_HPP
-#define HEADER_HPP
+#ifndef HEADER_HPP_
+#define HEADER_HPP_
 #include <string>
-#include "includes/simplifiers.h"
 #include <ctime>
+#include "includes/simplifiers.hpp"
 //Full public class ?
 struct Header {
  public:
@@ -26,4 +26,4 @@ struct Header {
   str user_agent;
   str www_authenticate;
 };
-#endif
+#endif // HEADER_HPP_
