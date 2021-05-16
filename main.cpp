@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
 	setsockopt(fd_server, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(int));
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_addr.s_addr = INADDR_ANY;
-	server_addr.sin_port = htons(80);
+	server_addr.sin_port = htons(8080);
 	
 	if(bind(fd_server, (struct sockaddr *) &server_addr, sizeof(server_addr)) == -1) {
 		perror("bind");
