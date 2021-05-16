@@ -8,9 +8,15 @@ on:
   schedule:
     - cron: "0 12 * * *"
   workflow_dispatch:
+  
 jobs:
-  build:
-      name: Build
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: pre-commit/action@v2.0.3
+  run:
+      name: Run
       runs-on: ${{matrix.os}}
       strategy:
         matrix:
