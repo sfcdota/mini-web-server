@@ -12,5 +12,8 @@ file(GLOB include "includes/*")
 include_directories(includes /usr/local/include)
 
 add_executable(webserv
-        ${include}
-        main.cpp ConfigReader.cpp ConfigReader.hpp Config.cpp Header.cpp server.hpp)
+#        ${include}
+#        main.cpp ConfigReader.cpp ConfigReader.hpp Config.cpp Header.cpp server.hpp
+        parser.cpp
+        get_next_line.cpp
+        )

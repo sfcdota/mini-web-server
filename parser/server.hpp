@@ -1,6 +1,13 @@
 #ifndef SERVER_HPP_
 #define SERVER_HPP_
-#include "includes/allowed_library_includes.hpp"
+#include <unistd.h>
+#include <cstring>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <iostream>
+#include <string>
+#include <vector>
 
 struct error_page {
   std::vector<int> error_codes;

@@ -1,6 +1,8 @@
 #ifndef INCLUDES_ALLOWED_LIBRARY_INCLUDES_HPP_
 #define INCLUDES_ALLOWED_LIBRARY_INCLUDES_HPP_
-#include <cstdlib>
+
+
+#include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
@@ -22,5 +24,7 @@
 #include <algorithm>
 #include <exception>
 	#include <netdb.h> //????????
+
+int			get_next_line(int fd, std::string str);
 
 #endif // INCLUDES_ALLOWED_LIBRARY_INCLUDES_HPP_

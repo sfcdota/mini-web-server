@@ -1,4 +1,4 @@
-FOR CODE STYLE CHECHING
+FOR CODE STYLE CHECKING
 pip install pre-commit
 pip install cpplint
 move to project dir and use: pre-commit run --all-files
