@@ -2,6 +2,7 @@
 #define SERVER_HPP_
 #include <unistd.h>
 #include <cstring>
+#include <cstdlib>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
@@ -10,7 +11,7 @@
 #include <vector>
 
 struct error_page {
-  std::vector<int> error_codes;
+  int error_code;
   std::string error_path;
 };
 
@@ -25,11 +26,23 @@ struct location {
 };
 
 struct server {
-  int host;
+  std::string host;
   int port;
   std::vector<std::string> server_names;
   std::vector<error_page> error_pages;
-  size_t client_max_body_size;
+  int client_max_body_size;
   std::vector<location> locations;
+};
+
+struct parser{
+	int							fd;
+	int							find;
+	std::string					str;
+    int							index;
+    bool						server_status;
+    bool						location_status;
+	std::vector<std::string>	string_arr;
+	int							res;
+	std::string					error_message;
 };
 #endif // SERVER_HPP_
