@@ -34,15 +34,15 @@ struct server {
   std::vector<location> locations;
 };
 
-struct parser{
-	int							fd;
-	int							find;
-	std::string					str;
-    int							index;
-    bool						server_status;
-    bool						location_status;
-	std::vector<std::string>	string_arr;
-	int							res;
-	std::string					error_message;
+struct parser {
+  int fd;
+  int find;
+  std::string str;
+  int index;
+  bool server_status;
+  bool location_status;
+  std::vector<std::string> string_arr;
+  int res;
+  std::string error_message;
 };
 #endif // SERVER_HPP_
