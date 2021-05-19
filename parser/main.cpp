@@ -1,6 +1,10 @@
 #include <iostream>
 
+int test(int n = 2){
+  return n;
+}
+
 int main() {
-	std::cout << "Hello, World!" << std::endl;
+  std::cout << isspace();
 	return 0;
 }
