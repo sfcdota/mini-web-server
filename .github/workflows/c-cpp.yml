@@ -1,0 +1,60 @@
+name: C/C++ CI
+
+on:  
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  schedule:
+    - cron: "0 12 * * *"
+  workflow_dispatch:
+  
+jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: pre-commit/action@v2.0.3
+  run:
+      name: Run
+      runs-on: ${{matrix.os}}
+      strategy:
+        matrix:
+            os: [ubuntu-latest, macOS-latest]
+      steps:
+        - uses: actions/checkout@v2
+        - name: Install dependencies on ubuntu
+          if: startsWith(matrix.os, 'ubuntu-latest')
+          run: |
+            sudo apt-get update
+            sudo apt-get install ninja-build cmake libc++-dev libc++abi-dev
+            ninja --version
+            cmake --version
+            gcc --version
+        - name: Install dependencies on macos
+          if: startsWith(matrix.os, 'macOS-latest')
+          run: |
+            brew install p7zip cmake ninja
+            ninja --version
+            cmake --version
+
+        - name: Configure
+          shell: bash
+          run: |
+            mkdir build
+
+            
+        - name: Build
+          shell: bash
+          run: |
+            ls -la ..
+            cmake build -Bbuild -H.
+            cmake --build build/ --target all
+        - name: Run
+          if: startsWith(matrix.os, 'ubuntu-latest')
+          shell: bash
+          run: sudo /home/runner/work/webserv/webserv/build/webserv 1
+        - name: Run mac
+          if: startsWith(matrix.os, 'macOS-latest')
+          shell: bash
+          run: sudo /Users/runner/work/webserv/webserv/build/webserv 1

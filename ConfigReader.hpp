@@ -1,0 +1,4 @@
+#ifndef CONFIGREADER_HPP_
+#define CONFIGREADER_HPP_
+
+#endif // CONFIGREADER_HPP_

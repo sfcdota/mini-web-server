@@ -1,5 +1,5 @@
-#ifndef ALLOWED_LIBRARY_INCLUDES_H
-#define ALLOWED_LIBRARY_INCLUDES_H
+#ifndef INCLUDES_ALLOWED_LIBRARY_INCLUDES_HPP_
+#define INCLUDES_ALLOWED_LIBRARY_INCLUDES_HPP_
 #include <cstdlib>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -22,4 +22,10 @@
 #include <algorithm>
 #include <exception>
 	#include <netdb.h> //????????
-#endif
+
+  #include "libft.h"
+  #include "get_next_line.h"
+#define MAX_CONNECTIONS 128
+#define TIMOUT_USEC 100
+#define DEFAULT_INPUT_BUFFERSIZE 2048
+#endif // INCLUDES_ALLOWED_LIBRARY_INCLUDES_HPP_

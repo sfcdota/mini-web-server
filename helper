@@ -1,0 +1,17 @@
+FOR CODE STYLE CHECHING
+pip install pre-commit
+pip install cpplint
+move to project dir and use: pre-commit run --all-files
+For configuring auto pre-commit to git from terminal: pre-commit install
+
+
+man : https://www.opennet.ru/man.shtml?topic=curl&category=1&russian=3
+
+curl -i localhost (headers & body)
+curl -v localhost (full)
+
+curl  -X POST -F 'image=~/Desktop/1.png' localhost (image ?)
+curl localhost -o kek (write response to a file, like '>' in bash)
+
+
+
