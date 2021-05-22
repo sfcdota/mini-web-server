@@ -5,4 +5,5 @@
 # define COMMENT '#'
 
 int get_next_line(int fd, char **line);
+
 #endif //WEBSERV_PARSER_HPP_
