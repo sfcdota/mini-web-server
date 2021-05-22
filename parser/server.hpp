@@ -9,6 +9,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <map>
 
 struct error_page {
   int error_code;
