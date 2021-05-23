@@ -5,7 +5,7 @@ int main(int argc, char **argv) {
   if (argc > 1) // for tests
     exit(0);
   const ServerConfig DEFAULT_CONFIG =
-      {0, 8080, std::vector<std::string>(),
+      {0, 8000, std::vector<std::string>(),
        std::vector<error_page>(),
        1024,
        std::vector<location>(),};
@@ -18,6 +18,5 @@ int main(int argc, char **argv) {
 //  std::string kek2 = "sec-ch-ua-mobile: ?0";
 //  size_t pos = 0;
 //  std::cout << MessageValidator::ValidHeader(kek2, pos) << std::endl;
-
   return 0;
 }
