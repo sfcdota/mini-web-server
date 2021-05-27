@@ -19,6 +19,7 @@ struct error_page {
 struct location {
   std::string path;
   bool autoindex;
+  std::string root;
   std::vector<std::string> index;
   std::vector<std::string> http_methods;
   std::string upload_path; // if exists - upload allowed
@@ -40,8 +41,8 @@ struct parser {
   int find;
   std::string str;
   int index;
-  bool server_status;
-  bool location_status;
+  short server_status;
+  short location_status;
   std::vector<std::string> string_arr;
   int res;
   std::string error_message;
