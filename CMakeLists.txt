@@ -21,4 +21,4 @@ include_directories(libft/)
 include_directories(get_next_line/)
 
 add_executable(webserv
-        ${include} ${gnl} ${libft} ${main})
+        ${include} ${gnl} ${libft} ${main} Request.cpp Request.hpp)

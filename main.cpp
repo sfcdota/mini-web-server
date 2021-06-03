@@ -3,7 +3,7 @@
 
 int main(int argc, char **argv) {
   const ServerConfig DEFAULT_CONFIG =
-      {0, 8080, std::vector<std::string>(),
+      {0, 80, std::vector<std::string>(),
        std::vector<error_page>(),
        1024,
        std::vector<location>(),};

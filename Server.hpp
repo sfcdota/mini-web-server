@@ -6,6 +6,7 @@
 #define SERVER_HPP_
 #include "allowed_library_includes.hpp"
 #include "ServerConfig.hpp"
+#include "Request.hpp"
 
 class Server {
  public:
@@ -33,6 +34,6 @@ class Server {
   void SocketRead();
   void SocketWrite();
   const char * Response(std::string& request);
-
+  bool valid_method(size_t begin, size_t end, std::string & request_line);
 };
 #endif // SERVER_HPP_

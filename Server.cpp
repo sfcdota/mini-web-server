@@ -108,7 +108,7 @@ void Server::SocketRead() {
       }
       FD_CLR(*it, &master_read);
       FD_SET(*it, &master_write);
-      write.push_back(std::pair<int, std::string>(*it, std::string()));
+      write.push_back(std::pair<int, std::string>(*it, input));
       read.erase(it--);
     }
   }
@@ -141,9 +141,9 @@ void Server::Init() {
     addr.sin_addr.s_addr = INADDR_ANY; // should be it->host
     addr.sin_family = AF_INET;
     addr.sin_port = htons(it->port);
-    int server_fd = Guard(socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0), false);
+    int server_fd = Guard(socket(AF_INET, SOCK_STREAM, 0), false); // SOCK_NONBLOCK on ubuntu only!
     fcntl(server_fd, F_SETFL, O_NONBLOCK);
-    Guard(setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &options_value, sizeof(int)), false);
+    Guard(setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &options_value, sizeof(int)), false); // SO_REUSEPORT on ubuntu only!
     Guard(bind(server_fd, (struct sockaddr *) &addr, sizeof(sockaddr_in)), false);
     Guard(listen(server_fd, MAX_CONNECTIONS), false);
     FD_SET(server_fd, &master_read);
@@ -152,7 +152,11 @@ void Server::Init() {
     max_fd = server_fd;
   }
 }
-  const char * Server::Response(std::string& request) {
-    return webpage;
-  }
+
+
+
+const char * Server::Response(std::string & req) {
+  Request request = Request(req);
+  return webpage;
+}
 

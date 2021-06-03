@@ -5,6 +5,8 @@
 #include <ctime>
 #include "includes/simplifiers.hpp"
 //Full public class ?
+
+
 struct Header {
  public:
   str accept_charsets;
@@ -26,4 +28,12 @@ struct Header {
   str user_agent;
   str www_authenticate;
 };
+
+//struct Request {
+//  std::string method;
+//  std::string target;
+//  std::string http_version;
+//  Header header;
+//  std::string body; //?
+//};
 #endif // HEADER_HPP_
