@@ -22,7 +22,8 @@ char webpage[] =
 
 
 Server::Server(const std::vector<ServerConfig> &config, const ssize_t INPUT_BUFFER_SIZE)
-    : config(config), INPUT_BUFFER_SIZE(INPUT_BUFFER_SIZE) {
+    : config(config), master_read(), working_read(), master_write(), working_write(),
+    timout(), INPUT_BUFFER_SIZE(INPUT_BUFFER_SIZE), status() {
   timout.tv_sec = 0;
   timout.tv_usec = 0;
   FD_ZERO(&master_read);
@@ -31,7 +32,8 @@ Server::Server(const std::vector<ServerConfig> &config, const ssize_t INPUT_BUFF
   FD_ZERO(&working_write);
   max_fd = -1;
 }
-Server::Server() : INPUT_BUFFER_SIZE(DEFAULT_INPUT_BUFFERSIZE) {
+Server::Server() : master_read(), working_read(), master_write(), working_write(),
+timout(), INPUT_BUFFER_SIZE(DEFAULT_INPUT_BUFFERSIZE), max_fd(), status() {
 
 }
 
@@ -39,7 +41,7 @@ Server::Server() : INPUT_BUFFER_SIZE(DEFAULT_INPUT_BUFFERSIZE) {
 /// \param retval returned function value, that will go through this function if success.
 /// \param rw_operation enables check for errno only when false (not read-write operation).
 /// \return inputed retval if not exited
-int Server::Guard(int retval, bool rw_operation) {
+int Server::Guard(ssize_t retval, bool rw_operation) {
   if (retval == -1) {
     if (!rw_operation && EWOULDBLOCK != errno) {
       std::cout << strerror(errno) << std::endl;
@@ -49,6 +51,8 @@ int Server::Guard(int retval, bool rw_operation) {
         close(it->first);
       exit(EXIT_FAILURE);
     }
+    std::cout << "Read/write error occured" << std::endl;
+    return -1;
   }
   return retval;
 }
@@ -85,7 +89,6 @@ void Server::ConnectionAccept() {
   }
 }
 void Server::SocketRead() {
-  int fd;
   std::string input;
   bool empty_line = false;
   char *buf = reinterpret_cast<char *>(ft_calloc(INPUT_BUFFER_SIZE, sizeof(char)));
@@ -94,7 +97,7 @@ void Server::SocketRead() {
       std::cout << "Trying to read from client with socked fd = " << *it << std::endl;
       while (!empty_line && (status = (Guard(recv(*it, buf, INPUT_BUFFER_SIZE, 0), true))) > 0) {
         std::cout << status << " bytes received from client with socket fd = " << *it << std::endl;
-//        std::cout << std::endl << "Those bytes are:" << std::endl << buf << "$$$$$$$$"
+//        std::cout << std::endl << "Those bytes are:" <d< std::endl << buf << "$$$$$$$$"
 //                  << std::endl;
         input += std::string(buf);
         std::cout << "Current request is:" << std::endl << input << "$$$$$$$$" << std::endl;
@@ -141,9 +144,13 @@ void Server::Init() {
     addr.sin_addr.s_addr = INADDR_ANY; // should be it->host
     addr.sin_family = AF_INET;
     addr.sin_port = htons(it->port);
-    int server_fd = Guard(socket(AF_INET, SOCK_STREAM, 0), false); // SOCK_NONBLOCK on ubuntu only!
+    int server_fd = Guard(socket(AF_INET, SOCK_STREAM, 0), false);
+    // SOCK_NONBLOCK on ubuntu only!
+
     fcntl(server_fd, F_SETFL, O_NONBLOCK);
-    Guard(setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &options_value, sizeof(int)), false); // SO_REUSEPORT on ubuntu only!
+    Guard(setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &options_value, sizeof(int)), false);
+    // SO_REUSEPORT on ubuntu only!
+
     Guard(bind(server_fd, (struct sockaddr *) &addr, sizeof(sockaddr_in)), false);
     Guard(listen(server_fd, MAX_CONNECTIONS), false);
     FD_SET(server_fd, &master_read);
@@ -156,7 +163,8 @@ void Server::Init() {
 
 
 const char * Server::Response(std::string & req) {
-  Request request = Request(req);
+  HTTP_MessageAnalyzer kek = HTTP_MessageAnalyzer(req, true);
+//  Request request = Request(req);
   return webpage;
 }
 

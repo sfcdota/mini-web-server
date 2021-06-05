@@ -7,6 +7,7 @@
 #include "allowed_library_includes.hpp"
 #include "ServerConfig.hpp"
 #include "Request.hpp"
+#include "HTTP_MessageAnalyzer.hpp"
 
 class Server {
  public:
@@ -29,7 +30,7 @@ class Server {
   unsigned status;
   void Init();
   Server();
-  int Guard(int retval, bool rw_operation);
+  int Guard(ssize_t retval, bool rw_operation);
   void ConnectionAccept();
   void SocketRead();
   void SocketWrite();

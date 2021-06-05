@@ -9,24 +9,24 @@
 
 struct Header {
  public:
-  str accept_charsets;
-  str accept_language;
-  str allow;
-  str authorization;
-  str content_language;
-  str content_length;
-  str content_location;
-  str content_type;
+  std::string accept_charsets;
+  std::string accept_language;
+  std::string allow;
+  std::string authorization;
+  std::string content_language;
+  std::string content_length;
+  std::string content_location;
+  std::string content_type;
   time_t date;
-  str host;
-  str last_modified;
-  str location;
-  str referer;
-  str retry_after;
-  str server;
-  str transfer_encoding;
-  str user_agent;
-  str www_authenticate;
+  std::string host;
+  std::string last_modified;
+  std::string location;
+  std::string referer;
+  std::string retry_after;
+  std::string server;
+  std::string transfer_encoding;
+  std::string user_agent;
+  std::string www_authenticate;
 };
 
 //struct Request {

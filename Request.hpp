@@ -1,7 +1,8 @@
 
-#ifndef _REQUEST_HPP_
-#define _REQUEST_HPP_
+#ifndef REQUEST_HPP_
+#define REQUEST_HPP_
 #include "includes/allowed_library_includes.hpp"
+#include "includes/simplifiers.hpp"
 
 /* with c++ string impossible to use find functions to get tokens
  * because start pos = 0 means it will search entire input string.
@@ -11,22 +12,20 @@
 class Request {
  public:
   explicit Request(std::string & request);
-  std::string method;
-  std::string target;
-  std::string version;
-  std::string head;
-  std::string body;
+  std::map<std::string, std::string> request_line;
   std::map<std::string, std::list<std::string> > headers;
   std::string body; //????????
+  size_t status_code;
+  bool failed;
  private:
   std::vector<std::string> allowed_methods;
-  void GetHeadBlocks(std::string & request);
-  void GetHead(std::string & request);
-  void GetBody(std::string & request);
-  bool ValidRequest(std::string & request_line);
-  bool ValidMethod(std::string & request, size_t & begin, size_t & token);
-  bool ValidTarget(std::string & request, size_t & begin, size_t & token);
-  bool ValidVersion(std::string & request, size_t & begin, size_t & token);
-
+  std::map<std::string, std::string> & GetRequestLine(string & request);
+  bool ValidParsedHeaders(std::string & request);
+  bool ValidParsedRequest(std::string & request);
+  bool ValidMethod(std::string & method);
+  bool ValidTarget(std::string & target);
+  bool ValidVersion(std::string & version);
+  size_t left;
+  size_t right;
 };
-#endif
+#endif // REQUEST_HPP_

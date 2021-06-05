@@ -13,9 +13,9 @@ class Config {
 public:
     int host;
     int port;
-    std::vector<str> location;
+    std::vector<std::string> location;
     int client_body_limit;
-    std::vector<str> error_page;
+    std::vector<std::string> error_page;
 
 private:
 };
