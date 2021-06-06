@@ -7,18 +7,18 @@ set(CMAKE_CXX_FLAGS "-D BUFFER_SIZE=256 -stdlib=libc++")
 set(CMAKE_CXX_COMPILER "clang++")
 
 #Utils sources
-file(GLOB libft "libft/*.c")
-file(GLOB gnl "get_next_line/*.c")
+#file(GLOB libft "libft/*.c")
+#file(GLOB gnl "get_next_line/*.c")
 
-set_source_files_properties(${libft} ${gnl} PROPERTIES LANGUAGE CXX )
+#set_source_files_properties(${libft} ${gnl} PROPERTIES LANGUAGE CXX )
 
-file(GLOB include "includes/*")
-file(GLOB main "*.cpp")
-include_directories(includes /usr/local/include)
+file(GLOB main "webserv/*.cpp")
+include_directories(webserv/includes /usr/local/include)
 
 #Utils headers
-include_directories(libft/)
-include_directories(get_next_line/)
+#include_directories(libft/)
+#include_directories(get_next_line/)
 
 add_executable(webserv
-        ${include} ${gnl} ${libft} ${main} Request.cpp Request.hpp)
+#        ${gnl} ${libft}
+        ${main} webserv/Request.cpp webserv/Request.hpp)
