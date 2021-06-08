@@ -26,8 +26,8 @@ jobs:
         - name: Install dependencies on ubuntu
           if: startsWith(matrix.os, 'ubuntu-latest')
           run: |
-            sudo apt-get update
-            sudo apt-get install ninja-build cmake libc++-dev libc++abi-dev
+            sudo apt-get update && sudo apt-get upgrade -y
+            sudo apt-get install ninja-build cmake libc++-10-dev libc++abi-10-dev
             ninja --version
             cmake --version
             gcc --version
