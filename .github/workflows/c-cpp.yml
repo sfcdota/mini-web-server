@@ -27,10 +27,8 @@ jobs:
           if: startsWith(matrix.os, 'ubuntu-latest')
           run: |
             sudo apt-get update && sudo apt-get upgrade -y
-            sudo apt-get install ninja-build cmake libc++-10-dev libc++abi-10-dev
-            ninja --version
+            sudo apt-get install ninja-build cmake llvm-10 clang-10 libc++-10-dev libc++abi-10-dev
             cmake --version
-            gcc --version
         - name: Install dependencies on macos
           if: startsWith(matrix.os, 'macOS-latest')
           run: |
