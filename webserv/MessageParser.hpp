@@ -17,9 +17,9 @@ class MessageParser {
  private:
 
   std::map<std::string, std::string> & ParseRequestLine();
-  std::pair<string, string> ParseMethod();
-  std::pair<string, string> ParseTarget();
-  std::pair<string, string> ParseVersion();
+  std::pair<std::string, std::string> ParseMethod();
+  std::pair<std::string, std::string> ParseTarget();
+  std::pair<std::string, std::string> ParseVersion();
   void ParseRequestLineField(const std::pair<const std::string, bool (MessageParser::*)()>& pair);
   std::map<std::string, std::string> & ParseHeadersBlock();
   std::pair<std::string, std::string> & ParseHeader();
