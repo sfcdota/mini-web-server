@@ -6,7 +6,6 @@
 #define WEBSERV_CONFIG_HPP_
 #include <string>
 #include <vector>
-#include "simplifiers.hpp"
 
 //Full public class ?
 class Config {
