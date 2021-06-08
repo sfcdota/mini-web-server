@@ -1,5 +1,0 @@
-
-#ifndef INCLUDES_SIMPLIFIERS_HPP_
-#define INCLUDES_SIMPLIFIERS_HPP_
-typedef std::string str;
-#endif // INCLUDES_SIMPLIFIERS_HPP_
