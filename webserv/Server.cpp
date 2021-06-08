@@ -153,9 +153,9 @@ void Server::Init() {
 const char * Server::Response(std::string & req) {
   if (validator_.ValidRequest(req)) {
     request_ = parser_.ProcessRequest(req);
-//    request_.PrintRequestLine();
-//    request_.PrintHeaders();
-//    request_.PrintBody();
+    request_.PrintRequestLine();
+    request_.PrintHeaders();
+    request_.PrintBody();
   }
   else
     std::cout << "Request sucks" << std::endl;

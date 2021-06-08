@@ -53,6 +53,7 @@ Request MessageParser::ProcessRequest(std::string &http_message) {
   std::string body;
   size_t pointer = msg.find(' ');
   size_t begin = 0;
+  size_t temp;
   request_line.insert(std::make_pair("method", msg.substr(begin, pointer - begin)));
   pointer = msg.find(' ', begin = pointer + 1);
   request_line.insert(std::make_pair("target", msg.substr(begin, pointer - begin)));
@@ -60,20 +61,18 @@ Request MessageParser::ProcessRequest(std::string &http_message) {
   request_line.insert(std::make_pair("version", msg.substr(begin, pointer - begin)));
   if ((pointer = msg.find("\r\n\r\n", begin = pointer + 2)) != std::string::npos) {
     while(begin < pointer) {
-      size_t temp = begin;
+      temp = begin;
       headers.insert(std::make_pair(msg.substr(begin, (temp = msg.find(':', begin)) - begin),
                                     msg.substr(++temp, (begin = msg.find("\r\n", temp)) - temp)));
       begin += 2;
     }
+    body = msg.substr(pointer + 4);
   }
-  body = msg.substr(pointer + 4);
+  else
+    body = msg.substr(pointer + 2);
   request_.SetRequestLine(request_line);
   request_.SetHeaders(headers);
   request_.SetBody(body);
-
-
-
-
   return request_;
 }
 MessageParser::MessageParser() {

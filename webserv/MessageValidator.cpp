@@ -135,16 +135,11 @@ bool MessageValidator::ValidHeader(const std::string &msg, size_t &pos) {
 
 
 bool MessageValidator::ValidFieldName(const std::string &msg, size_t &pos) {
-  if (!istchar(msg[pos])) {
-    std::string kek = msg.substr(pos);
-    const char *haha = kek.c_str();
-
+  if (!istchar(msg[pos]))
     return false;
-  }
   for(; istchar(msg[pos]); pos++); // field-name
   if (msg[pos++] != ':') {
-    const char *haha = msg.c_str();
-    printf("%s\n", &haha[pos]);
+    status_code = 400;
     return false;
   }
   return true;

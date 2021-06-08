@@ -20,18 +20,18 @@ class MessageValidator {
  public:
   size_t GetStatusCode() const;
 // private:
-  static bool ValidRequestLine(const std::string &msg, size_t &pos);
-  static bool ValidStatusLine(const std::string &msg, size_t &pos);
-  static bool ValidMethod(const std::string &msg, size_t &pos);
-  static bool ValidTarget(const std::string &msg, size_t &pos);
-  static bool ValidVersion(const std::string &msg, size_t &pos);
-  static bool ValidHeadersBlock(const std::string &msg, size_t &pos);
-  static bool ValidHeader(const std::string &msg, size_t &pos);
-  static bool ValidFieldName(const std::string &msg, size_t &pos);
-  static bool ValidFieldValue(const std::string &msg, size_t &pos);
-  static bool ValidQuotedString(const std::string &msg, size_t &pos);
-  static bool ValidComment(const std::string &msg, size_t &pos);
-  static bool ValidFieldContent(const std::string &msg, size_t &pos);
-  static bool ValidBody(const std::string &msg, size_t &pos);
+  bool ValidRequestLine(const std::string &msg, size_t &pos);
+  bool ValidStatusLine(const std::string &msg, size_t &pos);
+  bool ValidMethod(const std::string &msg, size_t &pos);
+  bool ValidTarget(const std::string &msg, size_t &pos);
+  bool ValidVersion(const std::string &msg, size_t &pos);
+  bool ValidHeadersBlock(const std::string &msg, size_t &pos);
+  bool ValidHeader(const std::string &msg, size_t &pos);
+  bool ValidFieldName(const std::string &msg, size_t &pos);
+  bool ValidFieldValue(const std::string &msg, size_t &pos);
+  bool ValidQuotedString(const std::string &msg, size_t &pos);
+  bool ValidComment(const std::string &msg, size_t &pos);
+  bool ValidFieldContent(const std::string &msg, size_t &pos);
+  bool ValidBody(const std::string &msg, size_t &pos);
 };
 #endif //WEBSERV_MESSAGEVALIDATOR_HPP_
