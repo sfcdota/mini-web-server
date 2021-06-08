@@ -13,7 +13,7 @@ const std::map<std::string, std::string> &Request::GetHeaders() const {
 void Request::SetHeaders(const std::map<std::string, std::string> &headers) {
   Request::headers = headers;
 }
-void Request::SetBody(const string &body) {
+void Request::SetBody(const std::string &body) {
   Request::body = body;
 }
 Request::Request() {
@@ -40,6 +40,6 @@ void Request::PrintBody() {
 }
 
 
-const string &Request::GetBody() const {
+const std::string &Request::GetBody() const {
   return body;
 }

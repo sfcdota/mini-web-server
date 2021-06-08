@@ -2,18 +2,17 @@
 #ifndef WEBSERV_REQUEST_HPP_
 #define WEBSERV_REQUEST_HPP_
 #include "allowed_library_includes.hpp"
-#include "simplifiers.hpp"
 
 
 class Request {
  public:
   Request();
-  const string &GetBody() const;
+  const std::string &GetBody() const;
   const std::map<std::string, std::string> &GetRequestLine() const;
   void SetRequestLine(const std::map<std::string, std::string> &request_line);
   const std::map<std::string, std::string> &GetHeaders() const;
   void SetHeaders(const std::map<std::string, std::string> &headers);
-  void SetBody(const string &body);
+  void SetBody(const std::string &body);
   void PrintRequestLine();
   void PrintHeaders();
   void PrintBody();

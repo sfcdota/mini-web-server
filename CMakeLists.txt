@@ -13,11 +13,11 @@ set(CMAKE_CXX_COMPILER "clang++")
 #set_source_files_properties(${libft} ${gnl} PROPERTIES LANGUAGE CXX )
 
 file(GLOB main "webserv/*.cpp")
-include_directories(webserv/includes /usr/local/include)
+include_directories(webserv/includes /usr/local/include /usr/include)
 
 #Utils headers
 #include_directories(libft/)
-#include_directories(get_next_line/)
+#include_directories(get_next_lin
 
 add_executable(webserv
 #        ${gnl} ${libft}
