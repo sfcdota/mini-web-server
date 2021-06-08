@@ -13,20 +13,9 @@ class MessageParser {
  public:
   MessageParser();
   ~MessageParser();
-  Request ProcessRequest(std::string & http_message);
+  Request ProcessRequest(std::string & request);
  private:
-  bool ValidRequestLine();
-  bool ValidMethod();
-  bool ValidTarget();
-  bool ValidVersion();
-  bool ValidHeadersBlock();
-  bool ValidHeader();
-  bool ValidFieldName();
-  bool ValidFieldValue();
-  bool ValidQuotedString();
-  bool ValidComment();
-  bool ValidFieldContent();
-  bool ValidBody();
+
   std::map<std::string, std::string> & ParseRequestLine();
   std::pair<string, string> ParseMethod();
   std::pair<string, string> ParseTarget();
@@ -39,11 +28,9 @@ class MessageParser {
   void ProcessTarget();
   void ProcessVersion();
   void ProcessRequestLine();
+  void ParseRequestMessage();
   std::string msg;
   Request request_;
-  size_t begin;
-  size_t pos;
-  size_t end;
   std::map<std::string, bool (MessageParser::*)()> request_line_parse_mapping_;
 };
 #endif // WEBSERV_MESSAGEPARSER_HPP_

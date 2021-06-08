@@ -34,16 +34,19 @@ timout(), INPUT_BUFFER_SIZE(DEFAULT_INPUT_BUFFERSIZE), max_fd(), status() {}
 /// \return inputed retval if not exited
 int Server::Guard(ssize_t retval, bool rw_operation) {
   if (retval == -1) {
-    if (!rw_operation && EWOULDBLOCK != errno) {
-      std::cout << strerror(errno) << std::endl;
-      for (std::vector<int>::iterator it = read.begin(); it != read.end(); it++)
-        close(*it);
-      for (std::vector<std::pair<int, std::string> >::iterator it = write.begin(); it != write.end(); it++)
-        close(it->first);
-      exit(EXIT_FAILURE);
-    }
-    std::cout << "Read/write error occured" << std::endl;
-    return -1;
+    if (!rw_operation) {
+      if (EWOULDBLOCK != errno && EAGAIN != errno) {
+        std::cout << strerror(errno) << std::endl;
+        for (std::vector<int>::iterator it = read.begin(); it != read.end(); it++)
+          close(*it);
+        for (std::vector<std::pair<int, std::string> >::iterator it = write.begin(); it != write.end(); it++)
+          close(it->first);
+        exit(EXIT_FAILURE);
+      }
+    } else {
+        std::cout << "Read/write error occured" << std::endl;
+        return -1;
+      }
   }
   return retval;
 }
@@ -88,19 +91,12 @@ void Server::SocketRead() {
       std::cout << "Trying to read from client with socked fd = " << *it << std::endl;
       while (!empty_line && (status = (Guard(recv(*it, buf, INPUT_BUFFER_SIZE, 0), true))) > 0) {
         std::cout << status << " bytes received from client with socket fd = " << *it << std::endl;
-//        std::cout << std::endl << "Those bytes are:" <d< std::endl << buf << "$$$$$$$$"
-//                  << std::endl;
         input += std::string(buf);
-        std::cout << "Current request is:" << std::endl << buf << "$$$$$$$$" << std::endl;
         if ((empty_line = !strncmp("\r\n\r\n", &buf[status - 4], 4)))
-          std::cout << "Checking for empty line of client request... &buf[status - 4] =$" << &buf[status - 4]
-                    << "$"
-                    << std::endl;
-        if (empty_line)
           std::cout << "Client empty line found! Server will close connection" << std::endl;
         memset(buf, 0, INPUT_BUFFER_SIZE);
       }
-      std::cout << "input string :" << std::endl << input << "%%%%%%%%%%%%%%%%%%%%%%%" <<std::endl;
+//      std::cout << "input string :" << std::endl << input << "%%%%%%%%%%%%%%%%%%%%%%%" <<std::endl;
       FD_CLR(*it, &master_read);
       FD_SET(*it, &master_write);
       write.push_back(std::pair<int, std::string>(*it, input));
@@ -155,10 +151,14 @@ void Server::Init() {
 
 
 const char * Server::Response(std::string & req) {
-
-  bool valid = message_analyzer_.ProcessRequest(req);
-
-//  Request request = Request(req);
+  if (validator_.ValidRequest(req)) {
+    request_ = parser_.ProcessRequest(req);
+//    request_.PrintRequestLine();
+//    request_.PrintHeaders();
+//    request_.PrintBody();
+  }
+  else
+    std::cout << "Request sucks" << std::endl;
   return webpage;
 }
 

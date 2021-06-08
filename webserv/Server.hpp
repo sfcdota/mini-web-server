@@ -8,6 +8,7 @@
 #include "ServerConfig.hpp"
 #include "Request.hpp"
 #include "MessageParser.hpp"
+#include "MessageValidator.hpp"
 
 class Server {
  public:
@@ -28,7 +29,8 @@ class Server {
   const ssize_t INPUT_BUFFER_SIZE;
   int max_fd;
   unsigned status;
-  MessageParser message_analyzer_;
+  MessageValidator validator_;
+  MessageParser parser_;
   Request request_;
   void Init();
   Server();

@@ -18,7 +18,7 @@
 //  if (retval == -1) {
 //    if (!rw_operation && EWOULDBLOCK != errno) {
 //      std::cout << strerror(errno) << std::endl;
-//      for (std::vector<int>::iterator it = client_read.pos(); it != client_read.end(); it++) {
+//      for (std::vector<int>::iterator it = client_read.msg_pos(); it != client_read.end(); it++) {
 //        close(*it);
 //      }
 //      exit(EXIT_FAILURE);
@@ -30,7 +30,7 @@
 //void print_vec(std::vector<int> vec) {
 //  std::cout << "New select iteration. Client list now = ";
 //
-//  for (std::vector<int>::iterator it = client_read.pos(); it != client_read.end(); it++) {
+//  for (std::vector<int>::iterator it = client_read.msg_pos(); it != client_read.end(); it++) {
 //    std::cout << *it << ",";
 //  }
 //  std::cout << std::endl;
@@ -73,7 +73,7 @@
 //      std::cout << "No incoming connections last 3 seconds" << std::endl;
 //    }
 //    else {
-//      for (std::vector<int>::iterator it = client_read.pos(); it != client_read.end() && select_value > 0; it++) {
+//      for (std::vector<int>::iterator it = client_read.msg_pos(); it != client_read.end() && select_value > 0; it++) {
 //        if (FD_ISSET(*it, &read_working_set)) {
 //          if (*it == fd_server) {
 //            std::cout << "Listening socket is ready for incoming connections" << std::endl;
@@ -83,7 +83,7 @@
 //              FD_SET(fd_client, &read_master_set);
 //              client_read.push_back(fd_client);
 //            }
-//            max_fd = *std::max_element(client_read.pos(), client_read.end());
+//            max_fd = *std::max_element(client_read.msg_pos(), client_read.end());
 //            std::cout << "Ended handle of incoming connections with max_fd = " << max_fd << std::endl;
 //            select_value--;
 //          }
@@ -109,7 +109,7 @@
 //              close(*it);
 //              FD_CLR(*it, &read_master_set);
 //              if (max_fd == *it)
-//                max_fd = *std::max_element(client_read.pos(), client_read.end());
+//                max_fd = *std::max_element(client_read.msg_pos(), client_read.end());
 //              client_read.erase(it--);
 //            }
 //          } // End of else when *it != fd_server

@@ -7,9 +7,9 @@ static const char *vchardelimiters = "\"(),/:;<=>?@[\\]{}";
 
 
 /// CRLF = \ r \ n
-/// \param string s to be checked at index pos
-/// \param int index, pos to start check at
-/// \return bool, indicates whether string at pos range [pos, pos + 1] is CRLF
+/// \param string s to be checked at index msg_pos
+/// \param int index, msg_pos to start check at
+/// \return bool, indicates whether string at msg_pos range [msg_pos, msg_pos + 1] is CRLF
 bool iscrlf(const std::string &s, size_t index) {
   return s[index] == '\r' && s[index + 1] == '\n';
 }
@@ -45,17 +45,17 @@ bool ishex(int c) {
 
 
 /// obs-fold = CRLF 1*( SP / HTAB )
-/// \param string s to be checked at index pos
-/// \param int index, pos to start check at
-/// \return bool, indicates whether string at pos range [pos, pos + 2] is obs-fold
+/// \param string s to be checked at index msg_pos
+/// \param int index, msg_pos to start check at
+/// \return bool, indicates whether string at msg_pos range [msg_pos, msg_pos + 2] is obs-fold
 bool isobsfold(const std::string &s, size_t index) {
   return iscrlf(s, index) && isows(s[index + 2]);
 }
 
 /// pct-encoded = "%" HEXDIG HEXDIG
-/// \param string s to be checked at index pos
-/// \param int index, pos to start check at
-/// \return bool, indicates whether string at pos range [pos, pos + 2] is pct-encoded
+/// \param string s to be checked at index msg_pos
+/// \param int index, msg_pos to start check at
+/// \return bool, indicates whether string at msg_pos range [msg_pos, msg_pos + 2] is pct-encoded
 bool ispctencoded(const std::string & s, size_t index) {
   return s[index] == '%' && ishex(s[index + 1]) && ishex(s[index + 2]);
 }
@@ -85,13 +85,19 @@ bool istchar(int c) {
   return isalnum(c) || strchr(tchar, c);
 }
 
+/// reason-phrase = *( HTAB / SP / VCHAR / obs-text )
+/// \param int c, a char symbol
+/// \return bool, indicates whether parameter c is reason-phrase
+bool isreasonphrase(int c) {
+  return isows(c) || isvchar(c) || isobstext(c);
+}
+
 /// quoted-pair = "\" ( HTAB / SP / VCHAR / obs-text )
-/// \param string s to be checked at index pos
-/// \param int index, pos to start check at
-/// \return bool, indicates whether string at pos range [pos, pos + 1] is quoted-pair
+/// \param string s to be checked at index msg_pos
+/// \param int index, msg_pos to start check at
+/// \return bool, indicates whether string at msg_pos range [msg_pos, msg_pos + 1] is quoted-pair
 bool isquotedpair(const std::string &s, size_t index) {
-  size_t p2 = index + 1;
-  return s[index] == '\\' && (isows(s[p2]) || isvchar(s[p2]) || isobstext(s[p2]));
+  return s[index] == '\\' && isreasonphrase(s[index + 1]);
 }
 
 
@@ -110,4 +116,8 @@ bool isqdtext(int c) {
   return c == '\t' || c == ' ' || c == '\x21' ||
       c >= '\x23' && c <= '\x5B' ||
       c >= '\x5D' && c <= '\x7E' || isobstext(c);
+}
+
+bool isstatuscode(const std::string &s, size_t index) {
+  return  isdigit(s[index]) && isdigit(s[index + 1]) && isdigit(s[index + 2]);
 }

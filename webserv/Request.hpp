@@ -8,15 +8,16 @@
 class Request {
  public:
   Request();
-  const std::map<std::string, std::string> &GetRequestLine() const;
-  const std::map<std::string, std::string> &GetHeaders() const;
   const string &GetBody() const;
-  size_t GetStatusCode() const;
-  void AddRequestLineField(const std::pair<std::string, std::string> &request_line);
-  void AddHeader(const std::pair<std::string, std::string> &headers);
+  const std::map<std::string, std::string> &GetRequestLine() const;
+  void SetRequestLine(const std::map<std::string, std::string> &request_line);
+  const std::map<std::string, std::string> &GetHeaders() const;
+  void SetHeaders(const std::map<std::string, std::string> &headers);
   void SetBody(const string &body);
-  void SetStatusCode(size_t status_code);
- private:
+  void PrintRequestLine();
+  void PrintHeaders();
+  void PrintBody();
+// private:
   std::map<std::string, std::string> request_line;
   std::map<std::string,std::string> headers;
   std::string body; //????????

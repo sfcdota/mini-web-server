@@ -18,5 +18,7 @@ bool ispctencoded(const std::string & s, size_t index);
 bool isqdtext(int c);
 bool isquotedpair(const std::string & s, size_t index);
 bool isctext(int c);
+bool isreasonphrase(int c);
+bool isstatuscode(const std::string &s, size_t index);
 
 #endif //WEBSERV_INCLUDES_MESSAGEUTILS_HPP_
