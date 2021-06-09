@@ -3,7 +3,7 @@ project(webserv)
 cmake_minimum_required(VERSION 3.16)
 set(CMAKE_CXX_STANDARD 98)
 #set(CMAKE_CXX_FLAGS "-D BUFFER_SIZE=256 -Wall -Wextra -Werror -stdlib=libc++")
-set(CMAKE_CXX_FLAGS "-stdlib=libstdc++")
+set(CMAKE_CXX_FLAGS "-stdlib=libc++")
 set(CMAKE_CXX_COMPILER "clang++")
 
 #Utils sources
