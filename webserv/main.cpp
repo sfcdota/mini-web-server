@@ -2,6 +2,8 @@
 #include "Server.hpp"
 
 int main(int argc, char **argv) {
+  if (argc > 1) // for tests
+    exit(0);
   const ServerConfig DEFAULT_CONFIG =
       {0, 8080, std::vector<std::string>(),
        std::vector<error_page>(),
