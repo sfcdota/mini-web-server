@@ -2,6 +2,7 @@
 // Created by sfcdo on 05.06.2021.
 //
 #include <string>
+#include <cstring>
 
 static const char *vchardelimiters = "\"(),/:;<=>?@[\\]{}";
 

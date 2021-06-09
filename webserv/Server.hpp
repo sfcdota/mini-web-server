@@ -39,6 +39,5 @@ class Server {
   void SocketRead();
   void SocketWrite();
   const char * Response(std::string& request);
-
 };
 #endif // WEBSERV_SERVER_HPP_

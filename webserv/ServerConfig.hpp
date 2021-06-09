@@ -1,7 +1,7 @@
 #ifndef WEBSERV_SERVERCONFIG_HPP_
 #define WEBSERV_SERVERCONFIG_HPP_
 #include "allowed_library_includes.hpp"
-
+#include <sys/errno.h>
 struct error_page {
   std::vector<int> error_codes;
   std::string error_path;
