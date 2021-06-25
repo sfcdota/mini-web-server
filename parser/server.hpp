@@ -25,6 +25,7 @@ struct location {
   std::string upload_path; // if exists - upload allowed
   std::string cgi_extension;
   std::string cgi_path;
+  std::vector<std::string> retur;
 };
 
 struct server {
@@ -33,6 +34,7 @@ struct server {
   std::vector<std::string> server_names;
   std::vector<error_page> error_pages;
   int client_max_body_size;
+  std::vector<std::string> retur;
   std::vector<location> locations;
 };
 
@@ -46,5 +48,14 @@ struct parser {
   std::vector<std::string> string_arr;
   int res;
   std::string error_message;
+};
+
+struct conf_pars {
+	parser pars;
+	server serv;
+	location loc;
+	std::map <std::string, short> location_body;
+	std::map <std::string, short> server_body;
+	std::vector<std::string> vec;
 };
 #endif // SERVER_HPP_

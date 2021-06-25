@@ -4,8 +4,6 @@ project(parser)
 set(CMAKE_CXX_STANDARD 98)
 
 add_executable(parser
-#        main.cpp
-#        parser.cpp
         get_next_line.cpp
         parser_new.cpp
         )
