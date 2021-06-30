@@ -2,18 +2,26 @@
 project(webserv)
 cmake_minimum_required(VERSION 3.16)
 set(CMAKE_CXX_STANDARD 98)
-#set(CMAKE_CXX_FLAGS "-Wall -Wextra -Werror -stdlib=libc++")
-set(CMAKE_CXX_FLAGS "-stdlib=libc++")
-set(CMAKE_CXX_COMPILER "clang++")
+#set(CMAKE_CXX_FLAGS "-D BUFFER_SIZE=256 -Wall -Wextra -Werror -stdlib=libc++")
+#set(CMAKE_CXX_FLAGS "-stdlib=libc++")
+#set(CMAKE_CXX_COMPILER "clang++")
 
-file(GLOB include "includes/*")
+#Utils sources
+#file(GLOB libft "libft/*.c")
+#file(GLOB gnl "get_next_line/*.c")
 
+#set_source_files_properties(${libft} ${gnl} PROPERTIES LANGUAGE CXX )
 
-include_directories(includes /usr/local/include)
+file(GLOB main "webserv/*.cpp")
+file(GLOB conf "parser/*.cpp")
+include_directories(webserv/includes /usr/local/include /usr/include)
+
+#Utils headers
+#include_directories(libft/)
+#include_directories(get_next_lin
 
 add_executable(webserv
-#        ${include}
-#        main.cpp ConfigReader.cpp ConfigReader.hpp Config.cpp Header.cpp server.hpp
-        parser.cpp
-        get_next_line.cpp
+        #        ${gnl} ${libft}
+        ${main} #[[webserv/Request.cpp webserv/Request.hpp]]
+        ${conf}
         )

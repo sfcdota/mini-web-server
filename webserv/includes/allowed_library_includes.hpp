@@ -1,10 +1,8 @@
-#ifndef INCLUDES_ALLOWED_LIBRARY_INCLUDES_HPP_
-#define INCLUDES_ALLOWED_LIBRARY_INCLUDES_HPP_
-
-
-#include <stdlib.h>
+#ifndef WEBSERV_INCLUDES_ALLOWED_LIBRARY_INCLUDES_HPP_
+#define WEBSERV_INCLUDES_ALLOWED_LIBRARY_INCLUDES_HPP_
+#include <cstdlib>
 #include <sys/stat.h>
-#include <sys/types.h>
+//#include <sys/types.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <netinet/in.h>
@@ -23,8 +21,12 @@
 #include <map>
 #include <algorithm>
 #include <exception>
+#include "../../parser/parser.hpp"
 	#include <netdb.h> //????????
 
-int			get_next_line(int fd, std::string str);
-
-#endif // INCLUDES_ALLOWED_LIBRARY_INCLUDES_HPP_
+//  #include "libft.h"
+//  #include "get_next_line.h"
+#define MAX_CONNECTIONS 128
+#define TIMOUT_USEC 100
+#define DEFAULT_INPUT_BUFFERSIZE 2048
+#endif // WEBSERV_INCLUDES_ALLOWED_LIBRARY_INCLUDES_HPP_

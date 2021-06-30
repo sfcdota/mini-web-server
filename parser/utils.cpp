@@ -13,23 +13,23 @@ int to_int(std::string str){
 	return n;
 }
 
-void error_page(std::string str){
+void errors(std::string str){
 	std::cout << str << std::endl;
 	exit(1);
 }
 
-void clear_loc(conf_pars &con){
-	con.loc.autoindex = false;
-	con.loc.upload_path = "";
-	con.loc.http_methods.clear();
-	con.loc.cgi_extension = "";
-	con.loc.cgi_path = "";
-	con.loc.index.clear();
-	con.loc.root = "";
-	con.loc.retur.clear();
+void clear_loc(parsConfig &con){
+	con.location.autoindex = false;
+	con.location.upload_path = "";
+	con.location.http_methods.clear();
+	con.location.cgi_extension = "";
+	con.location.cgi_path = "";
+	con.location.index.clear();
+	con.location.root = "";
+	con.location.retur.clear();
 }
 
-void init_location(conf_pars &con){
+void init_location(parsConfig &con){
 	con.location_body["autoindex"] = 0;
 	con.location_body["limit_except"] = 0;
 	con.location_body["root"] = 0;
@@ -41,7 +41,7 @@ void init_location(conf_pars &con){
 	con.pars.location_status = 0;
 }
 
-void init_server(conf_pars &con){
+void init_server(parsConfig &con){
 	con.server_body["listen"] = 0;
 	con.server_body["server_name"] = 0;
 	con.server_body["error_page"] = 0;

@@ -1,23 +1,80 @@
 #ifndef WEBSERV_PARSER_HPP_
 #define WEBSERV_PARSER_HPP_
+#include <unistd.h>
+#include <cstring>
+#include <cstdlib>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <iostream>
+#include <string>
+#include <vector>
+#include <map>
 
-#include "server.hpp"
+struct error {
+	int error_code;
+	std::string error_path;
+};
+
+struct loc {
+	std::string path;
+	bool autoindex;
+	std::string root;
+	std::vector<std::string> index;
+	std::vector<std::string> http_methods;
+	std::string upload_path; // if exists - upload allowed
+	std::string cgi_extension;
+	std::string cgi_path;
+	std::vector<std::string> retur;
+};
+
+struct conf {
+	std::string host;
+	int port;
+	std::vector<std::string> server_names;
+	std::vector<error> error_pages;
+	int client_max_body_size;
+	std::vector<std::string> retur;
+	std::vector<loc> locations;
+};
+
+struct parser {
+	int fd;
+	int find;
+	std::string str;
+	int index;
+	short server_status;
+	short location_status;
+	std::vector<std::string> string_arr;
+	int res;
+	std::string error_message;
+};
+
+struct parsConfig {
+	parser pars;
+	conf serv;
+	loc location;
+	std::map <std::string, short> location_body;
+	std::map <std::string, short> server_body;
+	std::vector<std::string> vec;
+};
+//#include "server.hpp"
 #define COMMENT '#'
 
 int get_next_line(int fd, char **line);
 
 
 /*server config functions*/
-server config_par();
-void server_func(conf_pars &con, int &i);
-void location_func(conf_pars &con, int &i);
+conf parsConf();
+void parsServer(parsConfig &con, int &i);
+void parsLocation(parsConfig &con, int &i);
 
 
 /*server config utils*/
-void init_server(conf_pars &con);
-void init_location(conf_pars &con);
-void clear_loc(conf_pars &con);
-void error_page(std::string str);
+void init_server(parsConfig &con);
+void init_location(parsConfig &con);
+void clear_loc(parsConfig &con);
+void errors(std::string str);
 int to_int(std::string str);
 void isstring(std::vector<std::string> &bla, std::string &tmp);
 void word_spliter(char *line, std::vector<std::string> &bla);

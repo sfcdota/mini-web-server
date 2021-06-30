@@ -1,79 +1,79 @@
 #include "parser.hpp"
 
-void location_func(conf_pars &con, int &i){
+void parsLocation(parsConfig &con, int &i){
   std::string tmp;
 	for (; i < con.vec.size(); i++){
 	  if (con.vec[i] == "root" && !con.location_body["root"]){
 		  con.location_body["root"] = 1;
 		  if (con.vec[i + 1] != ";")
-			  con.loc.root = con.vec[i + 1];
+			  con.location.root = con.vec[i + 1];
 		  else
-			  error_page("location root error!");
+			  errors("location root error!");
 		  if (con.vec[i + 2] != ";")
-			  error_page("location root error!");
+			  errors("location root error!");
 		  i += 2;
 	  }
 	  else if (con.vec[i] == "autoindex" && !con.location_body["autoindex"]){
 	    con.location_body["autoindex"] = 1;
 		if (con.vec[i + 1] == "on")
-		  con.loc.autoindex = true;
+		  con.location.autoindex = true;
 		else if (con.vec[i + 1] == "off")
-		  con.loc.autoindex = false;
+		  con.location.autoindex = false;
 		else
-		  error_page("location autoindex error!");
+			errors("location autoindex error!");
 		if (con.vec[i + 2] != ";")
-		  error_page("location autoindex error!");
+			errors("location autoindex error!");
 		i += 2;
 	  }
 	  else if (con.vec[i] == "index" && !con.location_body["index"]){
 		while (++i < con.vec.size(), con.vec[i] != ";"){
-		  con.loc.index.push_back(con.vec[i]);
+		  con.location.index.push_back(con.vec[i]);
 		  if (!con.location_body["index"])
 		  con.location_body["index"] = 1;
 		}
 		if (i == con.vec.size() || !con.location_body["index"])
-		  error_page("location index error!");
+			errors("location index error!");
 	  }
 	  else if (con.vec[i] == "limit_except" && !con.location_body["limit_except"]){
 		while (++i < con.vec.size(), con.vec[i] != ";"){
 		  if (con.vec[i] == "POST" || con.vec[i] == "PUT" || con.vec[i] == "DELETE" || con.vec[i] == "GET")
-			  con.loc.http_methods.push_back(con.vec[i]);
+			  con.location.http_methods.push_back(con.vec[i]);
 		  else
-			error_page("locaiton limit_except error!");
+			  errors("locaiton limit_except error!");
 		  if (!con.location_body["index"])
 			con.location_body["index"] = 1;
 		}
 		if (i == con.vec.size() || !con.location_body["index"])
-		  error_page("location index error!");
+			errors("location index error!");
 	  }
 	  else if (con.vec[i] == "upload_path" && !con.location_body["upload_path"]){
 		con.location_body["upload_path"] = 1;
 		if (con.vec[i + 1] != ";")
-		  con.loc.upload_path = con.vec[i + 1];
+		  con.location.upload_path = con.vec[i + 1];
 		else
-		  error_page("location upload_path error!");
+			errors("location upload_path error!");
 		if (con.vec[i + 2] != ";")
-		  error_page("location upload_path error!");
+			errors("location upload_path error!");
 		i += 2;
 	  }
 	  else if (con.vec[i] == "cgi_extension" && !con.location_body["cgi_extension"]){
 		con.location_body["cgi_extension"] = 1;
 		if (con.vec[i + 1] != ";")
-		  con.loc.cgi_extension = con.vec[i + 1];
+		  con.location.cgi_extension = con.vec[i + 1];
 		else
-		  error_page("location cgi_extension error!");
+			errors("location cgi_extension error!");
 		if (con.vec[i + 2] != ";")
-		  error_page("location cgi_extension error!");
+			errors("location cgi_extension error!");
 		i += 2;
 	  }
 	  else if (con.vec[i] == "cgi_path" && !con.location_body["cgi_path"]){
 		con.location_body["cgi_path"] = 1;
 		if (con.vec[i + 1] != ";")
-		  con.loc.cgi_path = con.vec[i + 1];
+		  con.location.cgi_path = con.vec[i + 1];
 		else
-		  error_page("location cgi_path error!");
+			errors("location cgi_path error!");
 		if (con.vec[i + 2] != ";")
-		  error_page("location cg_path error!");
+			errors("location cg_path error!");
 		i += 2;
 	  }
 	  else if (con.vec[i] == "return" && !con.location_body["return"]){
@@ -84,78 +84,78 @@ void location_func(conf_pars &con, int &i){
 		  if (n == 2) {
 			  n = to_int(con.vec[++i]);
 			  if (n == -1)
-				  error_page("location wrong return code!");
-			  con.loc.retur.push_back(con.vec[i]);
-			  con.loc.retur.push_back(con.vec[++i]);
+				  errors("location wrong return code!");
+			  con.location.retur.push_back(con.vec[i]);
+			  con.location.retur.push_back(con.vec[++i]);
 		  }
 		  else if (n == 1)
-			  con.loc.retur.push_back(con.vec[++i]);
+			  con.location.retur.push_back(con.vec[++i]);
 		  else
-			  error_page("location return error!");
+			  errors("location return error!");
 		  if (i + 1 == con.vec.size())
-			  error_page("server sintax error!");
+			  errors("server sintax error!");
 		  i++;
 	  }
 	  else if (con.vec[i] == "}") {
 		  con.pars.location_status = 0;
-		  con.serv.locations.push_back(con.loc);
+		  con.serv.locations.push_back(con.location);
 		  init_location(con);
 		  clear_loc(con);
 	  }
 	  else
-		error_page("location error!");
+		  errors("location error!");
 	}
 }
 
-void server_func(conf_pars &con, int &i){
+void parsServer(parsConfig &con, int &i){
 	std::string tmp;
 
   for(; i < con.vec.size(); i++){
 	if (con.vec[i] == "location")
 	  con.pars.location_status = 1;
 	else if (con.vec[i] != "{" && con.pars.location_status == 1) {
-	  con.loc.path = con.vec[i];
+	  con.location.path = con.vec[i];
 	  con.pars.location_status = 2;
 	}
 	else if (con.vec[i] == "{" && con.pars.location_status == 2)
 	  con.pars.location_status = 3;
 	else if (con.pars.location_status == 3)
-	  location_func(con, i);
+		parsLocation(con, i);
 	else if (con.vec[i] == "listen" && !con.server_body["listen"]){
 	  con.server_body["listen"] = 1;
 	  while (++i < con.vec.size() && con.vec[i] != ";"){
 		int delimeter = con.vec[i].find(':');
 		if (delimeter == -1)
-		  error_page("server listen error!");
+			errors("server listen error!");
 		con.serv.host = con.vec[i].substr(0, delimeter);
 		con.serv.port = to_int(con.vec[i].substr(delimeter + 1, con.vec[i].size() - 1 - delimeter));
 		if (con.serv.port == -1)
-		  error_page("server listen port error!");
+			errors("server listen port error!");
 	  }
 		if (i == con.vec.size())
-			error_page("server listen error!");
+			errors("server listen error!");
 	}
 	else if (con.vec[i] == "server_name" && !con.server_body["server_name"]){
 	  con.server_body["server_name"] = 1;
 	  if (con.vec[i + 1] != ";")
 	    con.serv.server_names.push_back(con.vec[i + 1]);
 	  if (con.vec[i + 2] != ";")
-			error_page("server: server_name error!");
+		  errors("server: server_name error!");
 	  i += 2;
 	}
 	else if (con.vec[i] == "error_page" && !con.server_body["error_page"]){
-	  struct error_page err;
+	  struct error err;
 	  con.server_body["error_page"] = 1;
 	  if (++i < con.vec.size() && con.vec[i] != ";")
 		  err.error_code = to_int(con.vec[i++]);
 	  if (err.error_code < 400 || err.error_code >= 500)
-		error_page("server wrong error code!");
+		  errors("server wrong error code!");
 	  if (i < con.vec.size() && con.vec[i] != ";")
 		err.error_path = con.vec[i++];
 	  else
-		error_page("server error_page error!");
+		  errors("server error_page error!");
 	  if (i == con.vec.size() || con.vec[i] != ";")
-		error_page("server error_page error!");
+		  errors("server error_page error!");
 	  con.serv.error_pages.push_back(err);
 	}
 	else if (con.vec[i] == "client_max_body_size" && !con.server_body["client_max_body_size"]){
@@ -163,9 +163,9 @@ void server_func(conf_pars &con, int &i){
 	  if (++i < con.vec.size())
 		con.serv.client_max_body_size = to_int(con.vec[i++]);
 	  if (con.serv.client_max_body_size == -1)
-		  error_page("server client_max_body_size error!");
+		  errors("server client_max_body_size error!");
 	  if (i == con.vec.size() || con.vec[i] != ";")
-		error_page("server client_max_body_size error!");
+		  errors("server client_max_body_size error!");
 	}
 	else if (con.vec[i] == "return" && !con.location_body["return"]){
 		int n = 0;
@@ -175,30 +175,30 @@ void server_func(conf_pars &con, int &i){
 		if (n == 2) {
 			n = to_int(con.vec[++i]);
 			if (n == -1)
-				error_page("server wrong return code!");
+				errors("server wrong return code!");
 			con.serv.retur.push_back(con.vec[i]);
 			con.serv.retur.push_back(con.vec[++i]);
 		}
 		else if (n == 1)
 			con.serv.retur.push_back(con.vec[++i]);
 		else
-			error_page("server return error!");
+			errors("server return error!");
 		if (i + 1 == con.vec.size())
-			error_page("server sintax error!");
+			errors("server sintax error!");
 		i++;
 	}
 	else if (con.vec[i] == "}")
 	    con.pars.server_status = false;
 	else
-	  error_page("server body error!");
+		errors("server body error!");
   }
 }
 
-server config_par() {
-	conf_pars con;
+conf	parsConf() {
+	parsConfig con;
 	char *line;
 
-	con.pars.fd = open("../server.conf", O_RDONLY);
+	con.pars.fd = open("../parser/server.conf", O_RDONLY);
 
 	init_location(con);
 	init_server(con);
@@ -210,9 +210,9 @@ server config_par() {
 		  else if (con.vec[i] == "{" && con.pars.server_status == 1)
 			  con.pars.server_status = 2;
 		  else if (con.pars.server_status == 2)
-			server_func(con, i);
+			  parsServer(con, i);
 		  else
-			  error_page("server body error");
+			  errors("server body error");
 		con.vec.clear();
 		if (!con.pars.res)
 		  break;
@@ -222,8 +222,8 @@ server config_par() {
 }
 
 //int main (){
-//	server s;
-//	s = config_par();
+//	conf s;
+//	s = parsConf();
 //
 //	return 0;
 //}

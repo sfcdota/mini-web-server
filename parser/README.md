@@ -1,4 +1,4 @@
-You only need to use config_par() funciton
+You only need to use parsConf() funciton
 which located in parser_new.cpp file with no arguments.
 
 Used files:
