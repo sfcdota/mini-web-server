@@ -20,6 +20,7 @@
 #include <stack>
 #include <map>
 #include <algorithm>
+#include <fstream>
 #include <exception>
 #include "../../parser/parser.hpp"
 	#include <netdb.h> //????????

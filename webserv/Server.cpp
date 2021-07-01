@@ -106,8 +106,6 @@ void Server::SocketRead() {
 }
 
 void Server::SocketWrite() {
-	conf s;
-	s = parsConf();
   for (std::vector<std::pair<int, std::string> >::iterator it = write.begin(); it != write.end(); it++) {
     if (FD_ISSET(it->first, &working_write)) {
       if ((status = Guard(send(it->first, ResponsePrep(it->second), strlen(webpage), 0), true)) != -1)
@@ -151,12 +149,14 @@ void Server::Init() {
 }
 
 const char * Server::ResponsePrep(std::string & request) {
+	conf s;
+	s = parsConf();
   if (validator_.ValidRequest(request)) {
     request_ = parser_.ProcessRequest(request);
     request_.PrintRequestLine();
     request_.PrintHeaders();
     request_.PrintBody();
-    response_.SetResponseLine(request_.GetRequestLine());
+    response_.SetResponseLine(request_.GetRequestLine(), s);
   }
   else
     std::cout << "Request sucks" << std::endl;

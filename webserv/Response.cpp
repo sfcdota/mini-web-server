@@ -2,15 +2,21 @@
 
 Response::Response(){ }
 
-void Response::SetResponseLine(const std::map<std::string, std::string> &request_line) {
-	std::cout << "it work!" << std::endl;
+void Response::SetResponseLine(const std::map<std::string, std::string> &request_line, conf &con) {
+	std::string path = "myFile.txt";
+	std::ofstream fout;
+	fout.open(path.c_str());
 
 	this->response_line["version"] = request_line.find("version")->second;
-	if (request_line.find("method")->second == "GET" && request_line.find("target")->second == "/") {
+	if (request_line.find("method")->second == "GET") {
 		this->response_line["status_code"] = "200";
-		this->response_line["status"] = "OK";
+		this->response_line["status"] = GetStatusText(this->response_line.find("status_code")->second);
 	}
-
+	if (fout.is_open()){
+		fout << this->response_line.find("version")->second << " "
+		<< this->response_line.find("status_code")->second << " "
+		<< this->response_line.find("status")->second << "\r\n";
+	}
 }
 
 const std::string Response::GetStatusText(std::string code) {
@@ -49,12 +55,9 @@ const std::string Response::GetStatusText(std::string code) {
 	statusText["503"] = "Service Unavailable";
 	statusText["504"] = "Gateway Timeout";
 	statusText["505"] = "HTTP Version Not Supported";
-	statusText["200"] = "OK";
-	statusText["200"] = "OK";
-	statusText["200"] = "OK";
-	statusText["200"] = "OK";
-	statusText["200"] = "OK";
-
-
+	if (statusText.find("45") != statusText.end())
+		return statusText.find(code)->second;
+	std::cout << "status code error!" << std::endl;
+	exit(1);
 }
 
