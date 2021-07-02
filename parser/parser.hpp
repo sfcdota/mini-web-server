@@ -1,15 +1,6 @@
 #ifndef WEBSERV_PARSER_HPP_
 #define WEBSERV_PARSER_HPP_
-#include <unistd.h>
-#include <cstring>
-#include <cstdlib>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <fcntl.h>
-#include <iostream>
-#include <string>
-#include <vector>
-#include <map>
+#include "../webserv/includes/allowed_library_includes.hpp"
 
 struct error {
 	int error_code;
@@ -31,6 +22,7 @@ struct loc {
 struct conf {
 	std::string host;
 	int port;
+	std::string root;
 	std::vector<std::string> server_names;
 	std::vector<error> error_pages;
 	int client_max_body_size;
@@ -78,6 +70,8 @@ void errors(std::string str);
 int to_int(std::string str);
 void isstring(std::vector<std::string> &bla, std::string &tmp);
 void word_spliter(char *line, std::vector<std::string> &bla);
+std::string rootDir();
+bool SeachForFile(const std::string &path);
 
 
 #endif //WEBSERV_PARSER_HPP_

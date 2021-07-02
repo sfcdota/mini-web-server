@@ -109,7 +109,9 @@ void parsLocation(parsConfig &con, int &i){
 
 void parsServer(parsConfig &con, int &i){
 	std::string tmp;
-
+//	con.serv.root = rootDir();
+//for now con.serv.root equal to "User/ljerrica/webserv/site";
+	con.serv.root = "/Users/ljerrica/Desktop/webserv";
   for(; i < con.vec.size(); i++){
 	if (con.vec[i] == "location")
 	  con.pars.location_status = 1;

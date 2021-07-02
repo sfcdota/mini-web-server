@@ -13,6 +13,36 @@ int to_int(std::string str){
 	return n;
 }
 
+bool SeachForFile(const std::string &path) {
+	DIR *dr;
+	struct dirent *en;
+	dr = opendir(path.c_str());
+	if (dr) {
+		while ((en = readdir(dr)) != NULL) {
+			if(strcmp(en->d_name, "index.html") == 0) {
+				closedir(dr);
+				return 1;
+			}
+		}
+		closedir(dr);
+	}
+	return 0;
+}
+
+std::string rootDir(){
+	std::array<char, 128> buffer;
+	char *cmd = "/bin/pwd";
+	std::string result;
+	std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+	if (!pipe) {
+		throw std::runtime_error("popen() failed!");
+	}
+	while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+		result += buffer.data();
+	}
+	return result;
+}
+
 void errors(std::string str){
 	std::cout << str << std::endl;
 	exit(1);

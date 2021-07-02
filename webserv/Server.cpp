@@ -1,7 +1,3 @@
-//
-// Created by sfcdo on 20.05.2021.
-//
-
 #include "Server.hpp"
 
 template <class T>

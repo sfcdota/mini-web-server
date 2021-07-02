@@ -2,7 +2,7 @@
 #define WEBSERV_INCLUDES_ALLOWED_LIBRARY_INCLUDES_HPP_
 #include <cstdlib>
 #include <sys/stat.h>
-//#include <sys/types.h>
+#include <sys/types.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <netinet/in.h>
@@ -22,6 +22,10 @@
 #include <algorithm>
 #include <fstream>
 #include <exception>
+#include <cstdio>
+#include <memory>
+#include <stdexcept>
+#include <array>
 #include "../../parser/parser.hpp"
 	#include <netdb.h> //????????
 

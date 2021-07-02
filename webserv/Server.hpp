@@ -1,7 +1,3 @@
-//
-// Created by sfcdo on 20.05.2021.
-//
-
 #ifndef WEBSERV_SERVER_HPP_
 #define WEBSERV_SERVER_HPP_
 #include "allowed_library_includes.hpp"

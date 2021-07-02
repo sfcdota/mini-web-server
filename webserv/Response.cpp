@@ -8,19 +8,36 @@ void Response::SetResponseLine(const std::map<std::string, std::string> &request
 	fout.open(path.c_str());
 
 	this->response_line["version"] = request_line.find("version")->second;
-	if (request_line.find("method")->second == "GET") {
-		this->response_line["status_code"] = "200";
+	if (SeachForFile(con.root + request_line.find("target")->second)) {
+		if (request_line.find("method")->second == "GET") {
+			this->response_line["status_code"] = "200";
+			this->response_line["status"] = GetStatusText(this->response_line.find("status_code")->second);
+		}
+		else if (request_line.find("method")->second == "POST" || request_line.find("method")->second == "DELETE"){
+			this->response_line["status_code"] = "201";
+			this->response_line["status"] = GetStatusText((this->response_line.find("status_code")->second));
+		}
+	}
+	else{
+		this->response_line["status_code"] = "404"; //го теннис быстренько!
 		this->response_line["status"] = GetStatusText(this->response_line.find("status_code")->second);
 	}
 	if (fout.is_open()){
 		fout << this->response_line.find("version")->second << " "
 		<< this->response_line.find("status_code")->second << " "
 		<< this->response_line.find("status")->second << "\r\n";
+//		std::cout << this->response_line.find("version")->second << " "
+//				  << this->response_line.find("status_code")->second << " "
+//				  << this->response_line.find("status")->second << "\r\n";
 	}
 }
 
 const std::string Response::GetStatusText(std::string code) {
 	std::map<std::string, std::string> statusText;
+	statusText["100"] = "Continue";
+	statusText["101"] = "Switching Protocols";
+	statusText["102"] = "Processing";
+	statusText["103"] = "Early Hints";
 	statusText["200"] = "OK";
 	statusText["201"] = "Created";
 	statusText["202"] = "Accepted";
@@ -55,7 +72,7 @@ const std::string Response::GetStatusText(std::string code) {
 	statusText["503"] = "Service Unavailable";
 	statusText["504"] = "Gateway Timeout";
 	statusText["505"] = "HTTP Version Not Supported";
-	if (statusText.find("45") != statusText.end())
+	if (statusText.find(code) != statusText.end())
 		return statusText.find(code)->second;
 	std::cout << "status code error!" << std::endl;
 	exit(1);
