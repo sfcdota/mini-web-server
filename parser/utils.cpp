@@ -13,13 +13,29 @@ int to_int(std::string str){
 	return n;
 }
 
-bool SeachForFile(const std::string &path) {
+bool SearchForDir(const std::string &path) {
 	DIR *dr;
 	struct dirent *en;
 	dr = opendir(path.c_str());
 	if (dr) {
 		while ((en = readdir(dr)) != NULL) {
 			if(strcmp(en->d_name, "index.html") == 0) {
+				closedir(dr);
+				return 1;
+			}
+		}
+		closedir(dr);
+	}
+	return 0;
+}
+
+bool SearchForFile(const std::string &path){
+	DIR *dr;
+	struct dirent *en;
+	dr = opendir(path.substr(0, path.rfind('/') + 1).c_str());
+	if (dr){
+		while ((en = readdir(dr)) != NULL){
+			if (strcmp(en->d_name, path.substr(path.rfind('/') + 1).c_str()) == 0){
 				closedir(dr);
 				return 1;
 			}

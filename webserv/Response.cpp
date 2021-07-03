@@ -1,35 +1,67 @@
 #include "Response.hpp"
 
-Response::Response(){ }
+Response::Response(){}
 
 void Response::SetResponseLine(const std::map<std::string, std::string> &request_line, conf &con) {
-	std::string path = "myFile.txt";
-	std::ofstream fout;
-	fout.open(path.c_str());
+	
 
 	this->response_line["version"] = request_line.find("version")->second;
-	if (SeachForFile(con.root + request_line.find("target")->second)) {
+	if (SearchForDir(con.root + request_line.find("target")->second)) {
 		if (request_line.find("method")->second == "GET") {
+			std::string path = "myFile.txt";
+			std::ofstream fout;
+			fout.open(path.c_str());
 			this->response_line["status_code"] = "200";
 			this->response_line["status"] = GetStatusText(this->response_line.find("status_code")->second);
+			if (fout.is_open()){
+				fout << this->response_line.find("version")->second << " "
+					 << this->response_line.find("status_code")->second << " "
+					 << this->response_line.find("status")->second << "\r\n"
+					 << "Content-Type text/html; charset=UTF-8\r\n\r\n";
+				std::string line;
+				std::ifstream fin;
+				fin.open(con.root + request_line.find("target")->second + "/index.html");
+				while(fin) {
+					getline(fin, line);
+					fout << line;
+				}
+//		Response StatusLine viewer
+				std::cout << this->response_line.find("version")->second << " "
+						  << this->response_line.find("status_code")->second << " "
+						  << this->response_line.find("status")->second << "\r\n";
+			}
+//			close(fout);
 		}
 		else if (request_line.find("method")->second == "POST" || request_line.find("method")->second == "DELETE"){
 			this->response_line["status_code"] = "201";
 			this->response_line["status"] = GetStatusText((this->response_line.find("status_code")->second));
 		}
 	}
+	else if (SearchForFile(con.root + request_line.find("target")->second)){
+		if (request_line.find("method")->second == "GET") {
+			std::string line;
+			std::ifstream fin;
+			fin.open(con.root + request_line.find("target")->second);
+			while(fin){
+				getline(fin, line);
+			}
+		}
+//		if (fout.is_open()){
+//			fout << this->response_line.find("version")->second << " "
+//				 << this->response_line.find("status_code")->second << " "
+//				 << this->response_line.find("status")->second << "\r\n";
+//
+////		Response StatusLine viewer
+//			std::cout << this->response_line.find("version")->second << " "
+//					  << this->response_line.find("status_code")->second << " "
+//					  << this->response_line.find("status")->second << "\r\n";
+//		}
+	}
 	else{
-		this->response_line["status_code"] = "404"; //го теннис быстренько!
+		this->response_line["status_code"] = "404";
 		this->response_line["status"] = GetStatusText(this->response_line.find("status_code")->second);
 	}
-	if (fout.is_open()){
-		fout << this->response_line.find("version")->second << " "
-		<< this->response_line.find("status_code")->second << " "
-		<< this->response_line.find("status")->second << "\r\n";
-//		std::cout << this->response_line.find("version")->second << " "
-//				  << this->response_line.find("status_code")->second << " "
-//				  << this->response_line.find("status")->second << "\r\n";
-	}
+	
 }
 
 const std::string Response::GetStatusText(std::string code) {

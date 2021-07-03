@@ -71,7 +71,8 @@ int to_int(std::string str);
 void isstring(std::vector<std::string> &bla, std::string &tmp);
 void word_spliter(char *line, std::vector<std::string> &bla);
 std::string rootDir();
-bool SeachForFile(const std::string &path);
+bool SearchForDir(const std::string &path);
+bool SearchForFile(const std::string &path);
 
 
 #endif //WEBSERV_PARSER_HPP_
