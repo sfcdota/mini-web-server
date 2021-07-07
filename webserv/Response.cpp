@@ -38,7 +38,7 @@ const std::string &Response::SetResponseLine(const std::map<std::string, std::st
 				getline(fin, line);
 				if (fin)
 					this->body += line + "\r\n";
-//				line.clear();
+				
 			}
 			//		headerLine
 			this->headers["Content-Type"] = "text/html; charset=UTF-8";
@@ -152,7 +152,7 @@ const std::string &Response::SetResponseLine(const std::map<std::string, std::st
 //		this->response_line["status_code"] = "404";
 //		this->response_line["status"] = GetStatusText(this->response_line.find("status_code")->second);
 //	}
-//	return SendResponse();
+	return SendResponse();
 	return webpage;
 }
 

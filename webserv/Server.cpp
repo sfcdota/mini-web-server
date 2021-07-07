@@ -8,7 +8,7 @@ bool Compare(const std::pair<int, T> p1, const std::pair<int, T> p2) {
 
 char webpage[] =
     "HTTP/1.1 200 OK\r\n"
-    "Content-Length 0\r\n"
+    "Content-Length 154\r\n"
     "Content-Type text/html; charset=UTF-8\r\n\r\n"
     "<!DOCTYPE html>\r\n"
     "<html><head><title>webserv</title>\r\n"
@@ -156,12 +156,12 @@ const char * Server::ResponsePrep(std::string & request) {
     request_.PrintHeaders();
     request_.PrintBody();
     response_.freeResponse();
-    /*std::string str = */response_.SetResponseLine(request_.GetRequestLine(), s);
-//    if (str.size()) {
-////    	std::cout << str;
-//    	const char *bla = str.c_str();
-//		return bla;
-//	}
+    std::string str = response_.SetResponseLine(request_.GetRequestLine(), s);
+    if (str.size()) {
+//    	std::cout << str;
+    	const char *bla = str.c_str();
+		return bla;
+	}
   }
   else
     std::cout << "Request sucks" << std::endl;
