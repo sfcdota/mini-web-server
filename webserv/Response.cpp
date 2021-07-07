@@ -9,9 +9,7 @@ const std::string &Response::SetResponseLine(const std::map<std::string, std::st
 //			"Content-Length 154\r\n"
 			"Content-Type text/html; charset=UTF-8\r\n\r\n"
 			"<!DOCTYPE html>\r\n"
-			"<html><head><title>webserv</title>\r\n"
-			"<style>body {background-color: #FFFF00}</style></head>\r\n"
-			"<body><center><h1>Bla bla!</h1><br>\r\n";
+			"c";
 	
 	if (request_line.find("version")->second == "HTTP/1.1")
 		this->response_line["version"] = request_line.find("version")->second;
@@ -34,11 +32,11 @@ const std::string &Response::SetResponseLine(const std::map<std::string, std::st
 			else
 				path += "/index.html";
 			fin.open(path);
-			while (fin){
+			while (!fin.eof()){
 				getline(fin, line);
 				if (fin)
 					this->body += line + "\r\n";
-				
+
 			}
 			//		headerLine
 			this->headers["Content-Type"] = "text/html; charset=UTF-8";
@@ -153,7 +151,7 @@ const std::string &Response::SetResponseLine(const std::map<std::string, std::st
 //		this->response_line["status"] = GetStatusText(this->response_line.find("status_code")->second);
 //	}
 	return SendResponse();
-	return webpage;
+//	return webpage;
 }
 
 void Response::freeResponse() {
@@ -179,7 +177,6 @@ const std::string &Response::SendResponse() {
 	response += "\r\n";
 	response += this->body;
 	
-	std::cout << response;
 	return response;
 }
 

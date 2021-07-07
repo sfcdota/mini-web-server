@@ -29,7 +29,7 @@ class Server {
   MessageValidator validator_;
   MessageParser parser_;
   Request request_;
-  Response response_;
+//  Response response_;
   conf	servConf_;
   void Init();
   Server();
@@ -37,6 +37,6 @@ class Server {
   void ConnectionAccept();
   void SocketRead();
   void SocketWrite();
-  const char * ResponsePrep(std::string& request);
+  std::string ResponsePrep(std::string& request);
 };
 #endif // WEBSERV_SERVER_HPP_

@@ -105,7 +105,7 @@ void Server::SocketRead() {
 void Server::SocketWrite() {
   for (std::vector<std::pair<int, std::string> >::iterator it = write.begin(); it != write.end(); it++) {
     if (FD_ISSET(it->first, &working_write)) {
-    	const char *bla = ResponsePrep(it->second);
+    	const char *bla = ResponsePrep(it->second).c_str();
 		printf("%s", bla);
       if ((status = Guard(send(it->first, bla, strlen(webpage), 0), true)) != -1)
         std::cout << status << " bytes answered to client with socket fd = " << it->first << std::endl;
@@ -147,8 +147,10 @@ void Server::Init() {
   }
 }
 
-const char * Server::ResponsePrep(std::string & request) {
+std::string Server::ResponsePrep(std::string & request) {
 	conf s;
+	std::string str;
+	Response response_;
 	s = parsConf();
   if (validator_.ValidRequest(request)) {
     request_ = parser_.ProcessRequest(request);
@@ -156,15 +158,13 @@ const char * Server::ResponsePrep(std::string & request) {
     request_.PrintHeaders();
     request_.PrintBody();
     response_.freeResponse();
-    std::string str = response_.SetResponseLine(request_.GetRequestLine(), s);
+    str = response_.SetResponseLine(request_.GetRequestLine(), s);
     if (str.size()) {
-//    	std::cout << str;
-    	const char *bla = str.c_str();
-		return bla;
+		return str;
 	}
   }
   else
     std::cout << "Request sucks" << std::endl;
-  return webpage;
+  return str;
 }
 
