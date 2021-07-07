@@ -8,11 +8,12 @@ bool Compare(const std::pair<int, T> p1, const std::pair<int, T> p2) {
 
 char webpage[] =
     "HTTP/1.1 200 OK\r\n"
+    "Content-Length 0\r\n"
     "Content-Type text/html; charset=UTF-8\r\n\r\n"
     "<!DOCTYPE html>\r\n"
     "<html><head><title>webserv</title>\r\n"
     "<style>body {background-color: #FFFF00}</style></head>\r\n"
-    "<body><center><h1>Hello world!</h1><br>\r\n";
+    "<body><center><h1>Bla bla!</h1><br>\r\n";
 
 
 
@@ -104,7 +105,9 @@ void Server::SocketRead() {
 void Server::SocketWrite() {
   for (std::vector<std::pair<int, std::string> >::iterator it = write.begin(); it != write.end(); it++) {
     if (FD_ISSET(it->first, &working_write)) {
-      if ((status = Guard(send(it->first, ResponsePrep(it->second), strlen(webpage), 0), true)) != -1)
+    	const char *bla = ResponsePrep(it->second);
+		printf("%s", bla);
+      if ((status = Guard(send(it->first, bla, strlen(webpage), 0), true)) != -1)
         std::cout << status << " bytes answered to client with socket fd = " << it->first << std::endl;
       close(it->first);
       FD_CLR(it->first, &master_write);
@@ -152,7 +155,13 @@ const char * Server::ResponsePrep(std::string & request) {
     request_.PrintRequestLine();
     request_.PrintHeaders();
     request_.PrintBody();
-    response_.SetResponseLine(request_.GetRequestLine(), s);
+    response_.freeResponse();
+    /*std::string str = */response_.SetResponseLine(request_.GetRequestLine(), s);
+//    if (str.size()) {
+////    	std::cout << str;
+//    	const char *bla = str.c_str();
+//		return bla;
+//	}
   }
   else
     std::cout << "Request sucks" << std::endl;

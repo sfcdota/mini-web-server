@@ -10,6 +10,7 @@
 #include <ctime>
 #include <cstring>
 #include <sys/select.h>
+#include <sstream>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <iostream>
