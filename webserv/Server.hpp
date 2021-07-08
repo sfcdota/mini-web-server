@@ -29,7 +29,7 @@ class Server {
   MessageValidator validator_;
   MessageParser parser_;
   Request request_;
-//  Response response_;
+  Response response_;
   conf	servConf_;
   void Init();
   Server();

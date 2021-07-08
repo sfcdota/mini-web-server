@@ -35,7 +35,7 @@ bool SearchForFile(const std::string &path){
 	dr = opendir(path.substr(0, path.rfind('/') + 1).c_str());
 	if (dr){
 		while ((en = readdir(dr)) != NULL){
-			if (strcmp(en->d_name, path.substr(path.rfind('/') + 1).c_str()) == 0){
+			if (strcmp(en->d_name, path.substr(path.rfind('/') + 1).c_str()) == 0 && !opendir(path.c_str())){
 				closedir(dr);
 				return 1;
 			}

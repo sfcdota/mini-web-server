@@ -11,9 +11,9 @@
 class Response {
 public:
 	Response();
-	const std::string &SetResponseLine(const std::map<std::string, std::string> &request_line, conf &con);
-	const std::string GetStatusText(std::string code);
-	const std::string &SendResponse();
+	std::string SetResponseLine(const std::map<std::string, std::string> &request_line, conf &con);
+	std::string GetStatusText(std::string code);
+	std::string SendResponse();
 	void	freeResponse();
 // private:
 	std::map<std::string, std::string> response_line;

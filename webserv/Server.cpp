@@ -105,9 +105,11 @@ void Server::SocketRead() {
 void Server::SocketWrite() {
   for (std::vector<std::pair<int, std::string> >::iterator it = write.begin(); it != write.end(); it++) {
     if (FD_ISSET(it->first, &working_write)) {
-    	const char *bla = ResponsePrep(it->second).c_str();
-		printf("%s", bla);
-      if ((status = Guard(send(it->first, bla, strlen(webpage), 0), true)) != -1)
+//    	unsigned const char *bla = ResponsePrep(it->second).c_str();
+		std::string str = ResponsePrep(it->second);
+//		printf("%s", bla);
+		std::cout << str;
+      if ((status = Guard(send(it->first, str.c_str(), sizeof(char) * str.size(), 0), true)) != -1)
         std::cout << status << " bytes answered to client with socket fd = " << it->first << std::endl;
       close(it->first);
       FD_CLR(it->first, &master_write);
@@ -150,7 +152,7 @@ void Server::Init() {
 std::string Server::ResponsePrep(std::string & request) {
 	conf s;
 	std::string str;
-	Response response_;
+//	Response response_;
 	s = parsConf();
   if (validator_.ValidRequest(request)) {
     request_ = parser_.ProcessRequest(request);

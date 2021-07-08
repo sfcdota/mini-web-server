@@ -2,15 +2,7 @@
 
 Response::Response(){}
 
-const std::string &Response::SetResponseLine(const std::map<std::string, std::string> &request_line, conf &con) {
-	
-	char webpage[] =
-			"HTTP/1.1 200 OK\r\n"
-//			"Content-Length 154\r\n"
-			"Content-Type text/html; charset=UTF-8\r\n\r\n"
-			"<!DOCTYPE html>\r\n"
-			"c";
-	
+std::string Response::SetResponseLine(const std::map<std::string, std::string> &request_line, conf &con) {
 	if (request_line.find("version")->second == "HTTP/1.1")
 		this->response_line["version"] = request_line.find("version")->second;
 	else{
@@ -40,118 +32,53 @@ const std::string &Response::SetResponseLine(const std::map<std::string, std::st
 			}
 			//		headerLine
 			this->headers["Content-Type"] = "text/html; charset=UTF-8";
-			this->headers["Content-Length"] = std::to_string(this->body.size() + 4);
+			this->headers["Content-Length"] = std::to_string(this->body.size());
 		}
-//		else if (SearchForFile(con.root + request_line.find("target")->second)){
-//			this->response_line["status_code"] = "200";
-//			this->response_line["status"] = GetStatusText(this->response_line.find("status_code")->second);
-//
-//			std::ifstream fin;
-//			std::string path;
-//			std::string line;
-//			path = con.root + request_line.find("target")->second;
-//			fin.open(path);
-//			while (fin){
-//				getline(fin, line);
-//				if (fin)
-//					this->body += line +  "\r\n";
-//			}
-//
-//			this->headers["Content-Type"] = "text/html; charset=UTF-8";
-//			this->headers["Content-Length"] = std::to_string(this->body.size());
-//		}
+		else if (SearchForFile(con.root + request_line.find("target")->second)){
+			this->response_line["status_code"] = "200";
+			this->response_line["status"] = GetStatusText(this->response_line.find("status_code")->second);
+			std::string path;
+			std::string line;
+			path = con.root + request_line.find("target")->second;
+			std::ifstream fin(path, std::ios::in|std::ios::binary|std::ios::ate);
+			int size;
+			if (fin.is_open())
+			{
+				fin.seekg(0, std::ios::end);
+				size = fin.tellg();
+				char *contents = new char [size];
+				fin.seekg (0, std::ios::beg);
+				fin.read (contents, size);
+				fin.close();
+				std::string str(contents, size);
+				delete [] contents;
+				this->body = str;
+			}
+			this->headers["Content-Type"] = "multipart/form-data; boundary=something";
+			this->headers["Content-Length"] = std::to_string(this->body.size());
+		}
+		else{
+			this->response_line["status_code"] = "404";
+			this->response_line["status"] = GetStatusText(this->response_line.find("status_code")->second);
+			std::ifstream fin(con.root + "/errors/" + this->response_line["status_code"] + ".html", std::ios::in|std::ios::binary|std::ios::ate);
+			int size;
+			if (fin.is_open())
+			{
+				fin.seekg(0, std::ios::end);
+				size = fin.tellg();
+				char *contents = new char [size];
+				fin.seekg (0, std::ios::beg);
+				fin.read (contents, size);
+				fin.close();
+				std::string str(contents, size);
+				delete [] contents;
+				this->body = str;
+			}
+			this->headers["Content-Type"] = "multipart/form-data; boundary=something";
+			this->headers["Content-Length"] = std::to_string(this->body.size());
+		}
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-//	if (SearchForDir(con.root + request_line.find("target")->second)) {
-//		if (request_line.find("method")->second == "GET") {
-//			std::string path = "myFile.txt";
-//			std::ofstream fout;
-//			fout.open(path.c_str());
-//			this->response_line["status_code"] = "200";
-//			this->response_line["status"] = GetStatusText(this->response_line.find("status_code")->second);
-//			if (fout.is_open()){
-//				fout << this->response_line.find("version")->second << " "
-//					 << this->response_line.find("status_code")->second << " "
-//					 << this->response_line.find("status")->second << "\r\n"
-//					 << "Content-Type text/html; charset=UTF-8\r\n\r\n";
-//				std::string line;
-//				std::ifstream fin;
-//				fin.open(con.root + request_line.find("target")->second + "/index.html");
-//				while(fin) {
-//					std::cout << fin << std::endl;
-//					getline(fin, line);
-//					if (fin)
-//						fout << line + "\n";
-//				}
-//				std::cout << fin << std::endl;
-//				fin.close();
-////		Response StatusLine viewer
-//				std::cout << this->response_line.find("version")->second << " "
-//						  << this->response_line.find("status_code")->second << " "
-//						  << this->response_line.find("status")->second << "\r\n";
-////			}
-//			std::ifstream fin;
-//			fin.open("/Users/ljerrica/Desktop/webserv/cmake-build-debug/myFile.txt");
-//			std::string str;
-//			std::string line;
-//			while(fin){
-//				getline(fin, line);
-//				if (fin)
-//					 str += line +  "\n";
-//			}
-//			return str.c_str();
-//			close(fout);
-//		}
-//		else if (request_line.find("method")->second == "POST" || request_line.find("method")->second == "DELETE"){
-//			this->response_line["status_code"] = "201";
-//			this->response_line["status"] = GetStatusText((this->response_line.find("status_code")->second));
-//		}
-//	}
-//	else if (SearchForFile(con.root + request_line.find("target")->second)){
-//		if (request_line.find("method")->second == "GET") {
-//			std::string line;
-//			std::ifstream fin;
-//			fin.open(con.root + request_line.find("target")->second);
-//			while(fin){
-//				getline(fin, line);
-//			}
-//		}f (fout.is_open()){
-//			fout << this->response_line.find("version")->second << " "
-//				 << this->response_line.find("status_code")->second << " "
-//				 << this->response_line.find("status")->second << "\r\n";
-//
-//			i
-////		Response StatusLine viewer
-//			std::cout << this->response_line.find("version")->second << " "
-//					  << this->response_line.find("status_code")->second << " "
-//					  << this->response_line.find("status")->second << "\r\n";
-//		}
-//	}
-//	else{
-//		this->response_line["status_code"] = "404";
-//		this->response_line["status"] = GetStatusText(this->response_line.find("status_code")->second);
-//	}
 	return SendResponse();
-//	return webpage;
 }
 
 void Response::freeResponse() {
@@ -161,7 +88,7 @@ void Response::freeResponse() {
 	this->status_codes.clear();
 }
 
-const std::string &Response::SendResponse() {
+std::string Response::SendResponse() {
 	std::string response;
 	std::map<std::string, std::string>::iterator begin;
 	
@@ -180,7 +107,7 @@ const std::string &Response::SendResponse() {
 	return response;
 }
 
-const std::string Response::GetStatusText(std::string code) {
+std::string Response::GetStatusText(std::string code) {
 	std::map<std::string, std::string> statusText;
 	statusText["100"] = "Continue";
 	statusText["101"] = "Switching Protocols";
