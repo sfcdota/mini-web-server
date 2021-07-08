@@ -14,6 +14,9 @@ public:
 	std::string SetResponseLine(const std::map<std::string, std::string> &request_line, conf &con);
 	std::string GetStatusText(std::string code);
 	std::string SendResponse();
+	void	ResponseBuilder(const std::string &path, const std::string &status_code);
+	void	HTTPVersionControl(const std::string &httpVersion);
+	void	GetRequest(const std::map<std::string, std::string> &request_line, conf &con);
 	void	freeResponse();
 // private:
 	std::map<std::string, std::string> response_line;

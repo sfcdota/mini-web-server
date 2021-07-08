@@ -2,82 +2,62 @@
 
 Response::Response(){}
 
-std::string Response::SetResponseLine(const std::map<std::string, std::string> &request_line, conf &con) {
-	if (request_line.find("version")->second == "HTTP/1.1")
-		this->response_line["version"] = request_line.find("version")->second;
+void Response::ResponseBuilder(const std::string &path, const std::string &status_code) {
+//	responseLine
+	this->response_line["status_code"] = status_code;
+	this->response_line["status"] = GetStatusText(this->response_line.find("status_code")->second);
+//	bodyLine
+	std::ifstream fin(path, std::ios::in|std::ios::binary|std::ios::ate);
+	int size;
+	if (fin.is_open())
+	{
+		fin.seekg(0, std::ios::end);
+		size = fin.tellg();
+		char *contents = new char [size];
+		fin.seekg (0, std::ios::beg);
+		fin.read (contents, size);
+		fin.close();
+		std::string str(contents, size);
+		delete [] contents;
+		this->body = str;
+	}
+//	headerLine
+	this->headers["Content-Type"] = "multipart/form-data; boundary=something";
+	this->headers["Content-Length"] = std::to_string(this->body.size());
+}
+
+void Response::HTTPVersionControl(const std::string &httpVersion) {
+	if (httpVersion == "HTTP/1.1")
+		this->response_line["version"] = httpVersion;
 	else{
 		std::cout << "HTTP version error!\n";
 		exit(1);
 	}
-	if(request_line.find("method")->second == "GET"){
-//		responseLine
-		if (SearchForDir(con.root + request_line.find("target")->second)){
-			this->response_line["status_code"] = "200";
-			this->response_line["status"] = GetStatusText(this->response_line.find("status_code")->second);
-//			bodyLine
-			std::ifstream fin;
-			std::string path;
-			std::string line;
-			path = con.root + request_line.find("target")->second;
-			if (path[path.size() - 1] == '/')
-				path += "index.html";
-			else
-				path += "/index.html";
-			fin.open(path);
-			while (!fin.eof()){
-				getline(fin, line);
-				if (fin)
-					this->body += line + "\r\n";
+}
 
-			}
-			//		headerLine
-			this->headers["Content-Type"] = "text/html; charset=UTF-8";
-			this->headers["Content-Length"] = std::to_string(this->body.size());
-		}
-		else if (SearchForFile(con.root + request_line.find("target")->second)){
-			this->response_line["status_code"] = "200";
-			this->response_line["status"] = GetStatusText(this->response_line.find("status_code")->second);
-			std::string path;
-			std::string line;
-			path = con.root + request_line.find("target")->second;
-			std::ifstream fin(path, std::ios::in|std::ios::binary|std::ios::ate);
-			int size;
-			if (fin.is_open())
-			{
-				fin.seekg(0, std::ios::end);
-				size = fin.tellg();
-				char *contents = new char [size];
-				fin.seekg (0, std::ios::beg);
-				fin.read (contents, size);
-				fin.close();
-				std::string str(contents, size);
-				delete [] contents;
-				this->body = str;
-			}
-			this->headers["Content-Type"] = "multipart/form-data; boundary=something";
-			this->headers["Content-Length"] = std::to_string(this->body.size());
-		}
-		else{
-			this->response_line["status_code"] = "404";
-			this->response_line["status"] = GetStatusText(this->response_line.find("status_code")->second);
-			std::ifstream fin(con.root + "/errors/" + this->response_line["status_code"] + ".html", std::ios::in|std::ios::binary|std::ios::ate);
-			int size;
-			if (fin.is_open())
-			{
-				fin.seekg(0, std::ios::end);
-				size = fin.tellg();
-				char *contents = new char [size];
-				fin.seekg (0, std::ios::beg);
-				fin.read (contents, size);
-				fin.close();
-				std::string str(contents, size);
-				delete [] contents;
-				this->body = str;
-			}
-			this->headers["Content-Type"] = "multipart/form-data; boundary=something";
-			this->headers["Content-Length"] = std::to_string(this->body.size());
-		}
+void Response::GetRequest(const std::map<std::string, std::string> &request_line, conf &con) {
+	if (SearchForDir(con.root + request_line.find("target")->second)){
+		std::string path = con.root + request_line.find("target")->second;
+		if (path[path.size() - 1] == '/')
+			ResponseBuilder(path + "index.html", "200");
+		else
+			ResponseBuilder(path + "/index.html", "200");
 	}
+	else if (SearchForFile(con.root + request_line.find("target")->second))
+		ResponseBuilder(con.root + request_line.find("target")->second, "200");
+	else{
+		std::string path = con.root;
+		if (path[path.size() - 1] == '/')
+			ResponseBuilder(path + "errors/404.html", "404");
+		else
+			ResponseBuilder(path + "/errors/404.html", "404");
+	}
+}
+
+std::string Response::SetResponseLine(const std::map<std::string, std::string> &request_line, conf &con) {
+	HTTPVersionControl(request_line.find("version")->second);
+	if(request_line.find("method")->second == "GET")
+		GetRequest(request_line, con);
 	return SendResponse();
 }
 
@@ -124,7 +104,7 @@ std::string Response::GetStatusText(std::string code) {
 	statusText["302"] = "Found";
 	statusText["303"] = "See Other";
 	statusText["305"] = "Use Proxy";
-	statusText["306"] = "(Unused";
+	statusText["306"] = "(Unused)";
 	statusText["307"] = "Temporary Redirect";
 	statusText["400"] = "Bad Request";
 	statusText["402"] = "Payment Required";
