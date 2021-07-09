@@ -140,7 +140,7 @@ int pars_client_max_body_size(parser &pars, server &serv) {
 int check_location(parser &pars, server &serv, location &loc) {
   if (pars.string_arr.size() >= 3) {
 	if (pars.string_arr[1][0] == COMMENT || pars.string_arr[2][0] == COMMENT) {
-	  pars.error_messoage = "Wrong config file:\n\t'location' format error!\n";
+	  pars.error_message = "Wrong config file:\n\t'location' format error!\n";
 	  return 1;
 	} else {
 	  loc.path = pars.string_arr[1];
