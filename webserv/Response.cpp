@@ -58,6 +58,7 @@ std::string Response::SetResponseLine(const std::map<std::string, std::string> &
 	HTTPVersionControl(request_line.find("version")->second);
 	if(request_line.find("method")->second == "GET")
 		GetRequest(request_line, con);
+
 	return SendResponse();
 }
 
@@ -74,11 +75,11 @@ std::string Response::SendResponse() {
 	
 	response = this->response_line.find("version")->second + " ";
 	response += this->response_line.find("status_code")->second + " ";
-	response += this->response_line.find("status")->second + "\r\n";
+	response += this->response_line.find("status")->second /*+ "\r\n"*/;
 	for (begin = this->headers.begin(); begin != this->headers.end(); begin++) {
-//		if (begin == this->headers.begin())
-//			response += "\r\n";
-		response += begin->first + " ";
+		if (begin == this->headers.begin())
+			response += "\r\n";
+		response += begin->first + ": ";
 		response += begin->second + "\r\n";
 	}
 	response += "\r\n";

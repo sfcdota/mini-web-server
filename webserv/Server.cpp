@@ -89,7 +89,7 @@ void Server::SocketRead() {
       while (!empty_line && (status = (Guard(recv(*it, buf, INPUT_BUFFER_SIZE, 0), true))) > 0) {
         std::cout << status << " bytes received from client with socket fd = " << *it << std::endl;
         input += std::string(buf);
-        if ((empty_line = !strncmp("\r\n\r\n", &buf[status - 4], 4)))
+        if ((empty_line = !strncmp("\r\n\r\n", &input[input.size() - 4], 4)))
           std::cout << "Client empty line found! Server will close connection" << std::endl;
         memset(buf, 0, INPUT_BUFFER_SIZE);
       }

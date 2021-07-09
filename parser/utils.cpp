@@ -13,6 +13,70 @@ int to_int(std::string str){
 	return n;
 }
 
+std::string autoIndexBegin = "<!DOCTYPE html>\n"
+							 "<html>\n"
+							 "<head>\n"
+							 "<title>Index of /</title></head>\n"
+							 "<body bgcolor=\"white\">\n"
+							  "<h1>Index of /</h1>\n"
+							  "<hr>\n"
+							  "<pre>\n";
+std::string autoIndexEnd = "</pre>\n"
+						   "<hr>\n"
+						   "</body>\n"
+						   "</html>\n";
+
+std::string getTimeModify(std::string path) {
+	struct stat file_info;
+	if (lstat(path.c_str(), &file_info) != 0) {
+		std::cout << "Error: lstat wtf?!" << std::endl;
+		exit(1);
+	}
+	char date[36];
+	strftime(date, 36, "%d.%m.%Y %H:%M:%S", localtime(&file_info.st_mtime));
+	std::string tmpDate = date;
+	return tmpDate + "\n";
+}
+
+void	createHTMLAutoIndex(conf &con, std::string linkPath) {
+	DIR *dir = opendir((con.root + linkPath).c_str());
+	std::ofstream fout;
+	std::string path = con.root + "/autoindex/autoindex.html";
+	fout.open(path);
+	if (dir == nullptr || !fout.is_open()) {
+		std::cout << "Error: cannot open dir (createAutoIndexHTML)" << std::endl;
+		exit(1);
+	}
+	std::string concatLink;
+	std::string fileName;
+	struct dirent *entity;
+	fout << autoIndexBegin;
+	while ((entity = readdir(dir))) {
+		if (strcmp(entity->d_name, ".") != 0) {
+			if (entity->d_type != DT_DIR) {
+				fileName = entity->d_name;
+			} else {
+				fileName = entity->d_name;
+				fileName += "/";
+			}
+			concatLink
+				.append("     <a href=\"")
+				.append(fileName)
+				.append("\">")
+				.append(fileName)
+				.append("</a>")
+				.append(60 - concatLink.length() + fileName.length(), ' ')
+				.append(getTimeModify(con.root + "/" + fileName));
+			fout << concatLink;
+			fileName.clear();
+			concatLink.clear();
+		}
+	}
+	fout << autoIndexEnd;
+	closedir(dir);
+	fout.close();
+}
+
 bool SearchForDir(const std::string &path) {
 	DIR *dr;
 	struct dirent *en;

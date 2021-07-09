@@ -73,6 +73,6 @@ void word_spliter(char *line, std::vector<std::string> &bla);
 std::string rootDir();
 bool SearchForDir(const std::string &path);
 bool SearchForFile(const std::string &path);
-
+void createHTMLAutoIndex(conf &con, std::string linkPath);
 
 #endif //WEBSERV_PARSER_HPP_
