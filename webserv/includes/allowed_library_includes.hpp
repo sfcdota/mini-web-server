@@ -27,6 +27,6 @@
 //  #include "libft.h"
 //  #include "get_next_line.h"
 #define MAX_CONNECTIONS 128
-#define TIMOUT_USEC 100
+#define TIMOUT_SEC 1
 #define DEFAULT_INPUT_BUFFERSIZE 2048
 #endif // WEBSERV_INCLUDES_ALLOWED_LIBRARY_INCLUDES_HPP_

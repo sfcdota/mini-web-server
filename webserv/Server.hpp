@@ -42,7 +42,8 @@ class Server {
   fd_set working_read;
   fd_set master_write;
   fd_set working_write;
-  timeval timout;
+  timeval timeout;
+  char *buf;
   const ssize_t INPUT_BUFFER_SIZE;
   int max_fd;
   unsigned status;
@@ -63,7 +64,7 @@ class Server {
   typedef std::vector<ServerElement>::iterator server_iterator;
   typedef std::vector<ReadElement>::iterator read_iterator;
   typedef std::vector<WriteElement>::iterator write_iterator;
-
+  bool isHeader;
 
 };
 #endif // WEBSERV_SERVER_HPP_

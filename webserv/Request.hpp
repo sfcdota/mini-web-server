@@ -29,6 +29,7 @@ class Request {
   bool chunked;
   bool headersReady;
   bool formed;
+  bool keep_alive;
   long long content_length;
   std::string buffer;
 };

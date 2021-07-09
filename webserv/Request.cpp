@@ -16,9 +16,10 @@ void Request::SetHeaders(const std::map<std::string, std::string> &headers) {
 void Request::SetBody(const std::string &body) {
   this->body = body;
 }
-Request::Request(): failed(false), status_code(0), formed(false), headersReady(false) {}
+Request::Request(): failed(false), status_code(0), formed(false), headersReady(false), keep_alive(true) {}
 Request::Request(const Request &in) { *this = in; }
 Request &Request::operator=(const Request &in) {
+  this->keep_alive = in.keep_alive;
   this->request_line = in.request_line;
   this->headers = in.headers;
   this->body = in.body;
@@ -56,6 +57,8 @@ const std::string &Request::GetBody() const {
 void Request::AdjustHeaders() {
   std::map<std::string, std::string>::iterator content = headers.find("Content-Length");
   std::map<std::string, std::string>::iterator transfer = headers.find("Transfer-Encoding");
+  std::map<std::string, std::string>::iterator connection = headers.find("Connection");
+
   if (content == transfer)
     formed = true;
   if (transfer != headers.end() && transfer->second.find("chunked") != -1) {
@@ -70,6 +73,8 @@ void Request::AdjustHeaders() {
     if (content_length < 0)
       SetFailed(400);
   }
+  if (connection != headers.end() && connection->second.find("close") != -1)
+    keep_alive = false;
 }
 
 void Request::SetFailed(size_t status_code) {
