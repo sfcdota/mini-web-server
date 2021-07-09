@@ -41,146 +41,121 @@ int to_int(std::string str){
 	return n;
 }
 
-void location_func(std::vector<std::string> vec, location &loc, std::map<std::string, short> location_body, parser & pars, int &i){
+void location_func(char *line, server &serv, std::map<std::string, int> location_body, parser & pars){
   std::string tmp;
-	for (; i < vec.size(); i++){
-	  if (vec[i] == "root"){
-		while (vec[++i] != ";");
+	while(*line){
+	  line = whitespace(line);
+	  if (*line == '#')
+	    break;
+	  if (split_to_word(line) == "root"){
+	    line += 4;
+	    line = whitespace(line);
+	    tmp = split_to_word(line);
+
 	  }
-	  else if (vec[i] == "autoindex" && !location_body["autoindex"]){
-	    location_body["autoindex"] = 1;
-		if (vec[i + 1] == "on")
-		  loc.autoindex = true;
-		else if (vec[i + 1] == "off")
-		  loc.autoindex = false;
-		else
-		  error_page("location autoindex error!");
-		if (vec[i + 2] != ";")
-		  error_page("location autoindex error!");
-		i += 2;
-	  }
-	  else if (vec[i] == "index" && !location_body["index"]){
-		while (++i < vec.size(), vec[i] != ";"){
-		  loc.index.push_back(vec[i]);
-		  if (!location_body["index"])
-		  location_body["index"] = 1;
-		}
-		if (i == vec.size() || !location_body["index"])
-		  error_page("location index error!");
-	  }
-	  else if (vec[i] == "limit_except" && !location_body["limit_except"]){
-		while (++i < vec.size(), vec[i] != ";"){
-		  if (vec[i] == "POST" || vec[i] == "PUT" || vec[i] == "DELETE" || vec[i] == "GET")
-			  loc.index.push_back(vec[i]);
-		  else
-			error_page("locaiton limit_except error!");
-		  if (!location_body["index"])
-			location_body["index"] = 1;
-		}
-		if (i == vec.size() || !location_body["index"])
-		  error_page("location index error!");
-	  }
-	  else if (vec[i] == "upload_path" && !location_body["upload_path"]){
-		location_body["upload_path"] = 1;
-		if (vec[i + 1] != ";")
-		  loc.upload_path = vec[i + 1];
-		else
-		  error_page("location upload_path error!");
-		if (vec[i + 2] != ";")
-		  error_page("location upload_path error!");
-		i += 2;
-	  }
-	  else if (vec[i] == "cgi_extension" && !location_body["cgi_extension"]){
-		location_body["cgi_extension"] = 1;
-		if (vec[i + 1] != ";")
-		  loc.cgi_extension = vec[i + 1];
-		else
-		  error_page("location cgi_extension error!");
-		if (vec[i + 2] != ";")
-		  error_page("location cgi_extension error!");
-		i += 2;
-	  }
-	  else if (vec[i] == "cgi_path" && !location_body["cgi_path"]){
-		location_body["cgi_path"] = 1;
-		if (vec[i + 1] != ";")
-		  loc.upload_path = vec[i + 1];
-		else
-		  error_page("location cgi_path error!");
-		if (vec[i + 2] != ";")
-		  error_page("location cg_path error!");
-		i += 2;
-	  }
-	  else if (vec[i] == "}")
-	    pars.location_status = false;
-	  else
-		error_page("location error!");
 	}
 }
 
-void server_func(location &loc, std::vector<std::string> vec, server &serv, std::map<std::string, short> server_body,std::map<std::string, short> location_body, parser &pars, int &i){
+void server_func(char *line, server &serv, std::map<std::string, int> server_body, parser &pars){
 	std::string tmp;
-
-  for(; i < vec.size(); i++){
-	if (vec[i] == "location")
-	  pars.location_status = 1;
-	else if (vec[i] != "{" && pars.location_status == 1) {
-	  loc.path = vec[i];
-	  pars.location_status = 2;
-	}
-	else if (vec[i] == "{" && pars.location_status == 2)
-	  pars.location_status = 3;
-	else if (pars.location_status == 3)
-	  location_func(vec, loc, location_body, pars, i);
-	else if (vec[i] == "listen" && !server_body["listen"]){
-	  server_body["listen"] = 1;
-	  while (++i < vec.size() && vec[i] != ";"){
-		int delimeter = vec[i].find(':');
-		if (delimeter == -1)
-		  error_page("server listen error!");
-		serv.host = vec[i].substr(0, delimeter);
-		serv.port = to_int(vec[i].substr(delimeter + 1, vec[i].size() - 1 - delimeter));
-		if (serv.port == -1)
-		  error_page("server listen port error!");
+	location loc;
+	std::map <std::string, int> location_body;
+	location_body["autoindex"] = 0;
+	location_body["limit_except"] = 0;
+	location_body["root"] = 0;
+	location_body["index"] = 0;
+	location_body["cgi_extension"] = 0;
+	location_body["cgi_path"] = 0;
+	location_body["upload_path"] = 0;
+  while(*line){
+  	line = whitespace(line);
+  	if (*line == '#')
+  		break;
+	  line = whitespace(line);
+	  if ((tmp = split_to_word(line)) == "location" || pars.location_status){
+		  if (tmp == "location") {
+			  line += 8;
+			  line = whitespace(line);
+			  tmp = split_to_word(line);
+			  if (*line == '{')
+				error_page("location body error!");
+			  loc.path = tmp;
+			  line += tmp.size();
+			  line = whitespace(line);
+			  if (*line == '{')
+				  line++;
+			  else
+				  error_page("server body error!");
+			pars.location_status = true;
+		  }
+		  location_func(line, serv, location_body, pars);
 	  }
-		if (i == vec.size())
+	  else if (split_to_word(line) == "listen" && !server_body["listen"]){
+	  	server_body["listen"] = 1;
+	  	line += 6;
+		  line = whitespace(line);
+		  tmp = split_to_word(line);
+		  line += tmp.size();
+		  line = whitespace(line);
+		  if (*line != ';')
+			  error_page("server listen error!");
+		int delimeter = tmp.find(':');
+		if (delimeter == -1)
 			error_page("server listen error!");
-	}
-	else if (vec[i] == "server_name" && !server_body["server_name"]){
-	  server_body["server_name"] = 1;
-	  if (vec[i + 1] != ";")
-	    serv.server_names.push_back(vec[i + 1]);
-	  if (vec[i + 2] != ";")
-			error_page("server: server_name error!");
-	  i += 2;
-	}
-	else if (vec[i] == "error_page" && !server_body["error_page"]){
-	  struct error_page err;
-	  server_body["error_page"] = 1;
-	  if (++i < vec.size() && vec[i] != ";")
-		  err.error_code = to_int(vec[i++]);
-	  if (err.error_code < 400 || err.error_code >= 500)
-		error_page("server wrong error code!");
-	  if (i < vec.size() && vec[i] != ";")
-		err.error_path = vec[i++];
+		serv.host = tmp.substr(0, delimeter);
+		serv.port = to_int(tmp.substr(delimeter + 1, tmp.size() - 1 - delimeter));
+		if (serv.port == -1)
+			error_page("server listen port error!");
+		line++;
+	  }
+	  else if (split_to_word(line) == "server_name" && !server_body["server_name"]){
+	  	server_body["server_name"] = 1;
+	  	line += 11;
+	  	line = whitespace(line);
+		  tmp = split_to_word(line);
+		  line += tmp.size();
+		  line = whitespace(line);
+		  if (*line != ';')
+			  error_page("server server_name error!");
+		  serv.server_names.push_back(tmp);
+		  line++;
+	  }
+	  else if (split_to_word(line) == "error_page" && !server_body["error_page"]){
+	  	struct error_page err;
+	  	server_body["error_page"] = 1;
+	  	line += 10;
+		  line = whitespace(line);
+		  tmp = split_to_word(line);
+		  line += tmp.size();
+		  line = whitespace(line);
+		  err.error_code = to_int(tmp);
+		  if (err.error_code < 400 || err.error_code >= 500)
+			  error_page("server wrong error code!");
+		  tmp = split_to_word(line);
+		  err.error_path = tmp;
+		  line += tmp.size();
+		  line = whitespace(line);
+		  if (*line != ';')
+			  error_page("server error_page error!");
+		  serv.error_pages.push_back(err);
+		  line++;
+	  }
+	  else if (split_to_word(line) == "client_max_body_size" && !server_body["client_max_body_size"]){
+		server_body["client_max_body_size"] = 1;
+	  	line += 20;
+		  line = whitespace(line);
+		  tmp = split_to_word(line);
+		  line += tmp.size();
+		  line = whitespace(line);
+		  serv.client_max_body_size = to_int(tmp);
+		  if (serv.client_max_body_size == -1)
+			  error_page("server body_size error!");
+		  if (*line != ';')
+			  error_page("server server_name error!");
+		  line++;
+	  }
 	  else
-		error_page("server error_page error!");
-	  if (i == vec.size() || vec[i] != ";")
-		error_page("server error_page error!");
-	  serv.error_pages.push_back(err);
-	}
-	else if (vec[i] == "client_max_body_size" && !server_body["client_max_body_size"]){
-	  server_body["client_max_body_size"] = 1;
-	  if (++i < vec.size())
-		serv.client_max_body_size = to_int(vec[i++]);
-	  if (serv.client_max_body_size == -1)
-		  error_page("server client_max_body_size error!");
-	  if (i == vec.size() || vec[i] != ";")
-		error_page("server client_max_body_size error!");
-	}
-	else if (vec[i] == "}")
-	    pars.server_status = false;
-	else
-	  error_page("server body error!");
+	  	error_page("server body error!");
   }
 }
 void isstring(std::vector<std::string> &bla, std::string &tmp){
@@ -190,8 +165,7 @@ void isstring(std::vector<std::string> &bla, std::string &tmp){
   }
 }
 void word_spliter(char *line, std::vector<std::string> &bla){
-  std::string tmp;
-
+  std::string tmp = "";
   while (*line){
     if (isspace(*line)) {
 	  isstring(bla, tmp);
@@ -213,44 +187,46 @@ void word_spliter(char *line, std::vector<std::string> &bla){
     tmp += *line;
     line++;
   }
-  isstring(bla, tmp);
+
 }
 
 int main() {
   parser pars;
   server serv;
-  location loc;
-  std::map <std::string, short> location_body;
-  location_body["autoindex"] = 0;
-  location_body["limit_except"] = 0;
-  location_body["root"] = 0;
-  location_body["index"] = 0;
-  location_body["cgi_extension"] = 0;
-  location_body["cgi_path"] = 0;
-  location_body["upload_path"] = 0;
-  std::map <std::string, short> server_body;
+  std::map <std::string, int> server_body;
   server_body["listen"] = 0;
   server_body["server_name"] = 0;
   server_body["error_page"] = 0;
   server_body["client_max_body_size"] = 0;
+  int server_b[6] = {0};
   char *line;
   std::string tmp;
   std::vector<std::string> vec;
-  pars.server_status = 0;
-  pars.location_status = 0;
   pars.fd = open("./server.conf", O_RDONLY);
   while ((pars.res = get_next_line(pars.fd, &line)) > -1) {
 	word_spliter(line, vec);
 	for (int i = 0; i < vec.size(); i++)
-	  if (vec[i] == "server")
-			pars.server_status = 1;
-	  else if (vec[i] == "{" && pars.server_status == 1)
-		  pars.server_status = 2;
-	  else if (pars.server_status == 2)
-		server_func(loc, vec, serv, server_body, location_body, pars, i);
-	  else
-		  error_page("server body error");
+	  std::cout << vec[i] << " ";
+	std::cout << std::endl;
 	vec.clear();
+//  	line = whitespace(line);
+//	if (*line == '#')
+//		continue;
+//	tmp = split_to_word(line);
+//	if (tmp == "server" || pars.server_status){
+//	  if (tmp == "server") {
+//		  line += 6;
+//		  line = whitespace(line);
+//		  pars.server_status = true;
+//		  if (*line == '{')
+//		  	line++;
+//		  else
+//			  error_page("server body error");
+//	  }
+//	  server_func(line, serv, server_body, pars);
+//    }
+//	else
+//		error_page("server body error");
 	if (!pars.res)
 	  break;
   }
