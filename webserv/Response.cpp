@@ -35,7 +35,7 @@ void Response::HTTPVersionControl(const std::string &httpVersion) {
 	}
 }
 
-void Response::GetRequest(const std::map<std::string, std::string> &request_line, conf &con) {
+void Response::GetRequest(const std::map<std::string, std::string> &request_line, const ServerConfig &con) {
 	if (SearchForDir(con.root + request_line.find("target")->second)){
 		std::string path = con.root + request_line.find("target")->second;
 		if (path[path.size() - 1] == '/')
@@ -54,10 +54,10 @@ void Response::GetRequest(const std::map<std::string, std::string> &request_line
 	}
 }
 
-std::string Response::SetResponseLine(const std::map<std::string, std::string> &request_line, conf &con) {
+std::string Response::SetResponseLine(const std::map<std::string, std::string> &request_line, const ServerConfig &con) {
 	HTTPVersionControl(request_line.find("version")->second);
 	if(request_line.find("method")->second == "GET")
-		GetRequest(request_line, con);
+		GetRequest(request_line,  con);
 
 	return SendResponse();
 }

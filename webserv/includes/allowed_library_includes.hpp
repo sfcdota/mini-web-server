@@ -22,7 +22,8 @@
 #include <algorithm>
 #include <exception>
 	#include <netdb.h> //????????
-
+#include <fstream>
+#include <array>
 //  #include "libft.h"
 //  #include "get_next_line.h"
 #define MAX_CONNECTIONS 128

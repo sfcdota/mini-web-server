@@ -6,17 +6,17 @@
 #define WEBSERV_RESPONSE_HPP
 
 #include "allowed_library_includes.hpp"
-
+#include "parser.hpp"
 
 class Response {
 public:
 	Response();
-	std::string SetResponseLine(const std::map<std::string, std::string> &request_line, conf &con);
+	std::string SetResponseLine(const std::map<std::string, std::string> &request_line, const ServerConfig &con);
 	std::string GetStatusText(std::string code);
 	std::string SendResponse();
 	void	ResponseBuilder(const std::string &path, const std::string &status_code);
 	void	HTTPVersionControl(const std::string &httpVersion);
-	void	GetRequest(const std::map<std::string, std::string> &request_line, conf &con);
+	void	GetRequest(const std::map<std::string, std::string> &request_line, const ServerConfig &con);
 	void	freeResponse();
 // private:
 	std::map<std::string, std::string> response_line;
@@ -24,7 +24,7 @@ public:
 	std::map<std::string, std::string> status_codes;
 	std::string body; //????????
 	size_t status_code;
-	conf s;
+	ServerConfig s;
 	bool failed;
 };
 

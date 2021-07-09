@@ -13,6 +13,7 @@ set(CMAKE_CXX_COMPILER "clang++")
 #set_source_files_properties(${libft} ${gnl} PROPERTIES LANGUAGE CXX )
 
 file(GLOB main "webserv/*.cpp")
+file(GLOB conf "webserv/parser/*.cpp")
 include_directories(webserv/includes /usr/local/include /usr/include)
 
 #Utils headers
@@ -21,4 +22,4 @@ include_directories(webserv/includes /usr/local/include /usr/include)
 
 add_executable(webserv
 #        ${gnl} ${libft}
-        ${main} webserv/Request.cpp webserv/Request.hpp webserv/sfinae.hpp)
+        ${main} ${conf} webserv/Request.cpp webserv/Request.hpp webserv/sfinae.hpp)

@@ -7,4 +7,4 @@ Used files:
     utils.cpp
     parser.hpp
     server.hpp
-    server.conf
+    server.ServerConfig

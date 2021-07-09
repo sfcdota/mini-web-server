@@ -38,7 +38,7 @@ std::string getTimeModify(std::string path) {
 	return tmpDate + "\n";
 }
 
-void	createHTMLAutoIndex(conf &con, std::string linkPath) {
+void	createHTMLAutoIndex(ServerConfig &con, std::string linkPath) {
 	DIR *dir = opendir((con.root + linkPath).c_str());
 	std::ofstream fout;
 	std::string path = con.root + "/autoindex/autoindex.html";

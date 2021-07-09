@@ -3,9 +3,7 @@
 //
 
 #include "Server.hpp"
-
-
-
+#include "Response.hpp"
 
 char webpage[] =
     "HTTP/1.1 200 OK\r\n"
@@ -139,7 +137,7 @@ void Server::GetBody(Request &request) {
 void Server::SocketWrite() {
   for (write_iterator it = write.begin(); it != write.end(); it++) {
     if (FD_ISSET(it->fd, &working_write)) {
-      if ((status = Guard(send(it->fd, Response(it->request), strlen(webpage), 0), true)) != -1)
+      if ((status = Guard(send(it->fd, SendResponse(it->request), kek, 0), true)) != -1)
 //        std::cout << status << " bytes answered to client with socket fd = " << it->first << std::endl;
       close(it->fd);
       FD_CLR(it->fd, &master_write);
@@ -180,7 +178,7 @@ void Server::Init() {
 
 
 
-const char * Server::Response(Request & req) {
+const char * Server::SendResponse(Request & req) {
   if (!req.failed) {
     req.PrintRequestLine();
     req.PrintHeaders();
@@ -189,6 +187,10 @@ const char * Server::Response(Request & req) {
   }
   else
     std::cout << "Request sucks" << std::endl;
-  return webpage;
+  Response resp;
+  resp.freeResponse();
+  std::string hui =  resp.SetResponseLine(req.GetRequestLine(), config.front());
+  kek = hui.length();
+  return hui.c_str();
 }
 

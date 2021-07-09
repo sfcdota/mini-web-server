@@ -137,13 +137,13 @@
 //  return 0;
 //}
 //
-//int check_location(parser &pars, server &serv, location &loc) {
+//int check_location(parser &pars, server &serv, location &location) {
 //  if (pars.string_arr.size() >= 3) {
 //	if (pars.string_arr[1][0] == COMMENT || pars.string_arr[2][0] == COMMENT) {
 //	  pars.error_messoage = "Wrong config file:\n\t'location' format error!\n";
 //	  return 1;
 //	} else {
-//	  loc.path = pars.string_arr[1];
+//	  location.path = pars.string_arr[1];
 //	  if (pars.string_arr[2] == "{")
 //		pars.location_status = true;
 //	  else {
@@ -159,7 +159,7 @@
 //  return 0;
 //}
 //
-//int deal_with_data(parser &pars, server &serv, location &loc) {
+//int deal_with_data(parser &pars, server &serv, location &location) {
 //
 //  if (pars.string_arr[0][0] == COMMENT)
 //	return 0;
@@ -171,13 +171,13 @@
 //	return 1;
 //  if (pars.string_arr[0] == "client_max_body_size" && pars_client_max_body_size(pars, serv))
 //	return 1;
-//  if ((pars.string_arr[0] == "location" || pars.location_status) && check_location(pars, serv, loc))
+//  if ((pars.string_arr[0] == "location" || pars.location_status) && check_location(pars, serv, location))
 //	return 1;
 //
 //  return 0;
 //}
 //
-//int check_location(parser &pars, location &loc) {
+//int check_location(parser &pars, location &location) {
 //
 //  return 0;
 //}
@@ -185,14 +185,14 @@
 //int main() {
 //  parser pars;
 //  server serv;
-//  location loc;
+//  location location;
 //  char *line;
 //
 //  init_parser(pars);
 ////	init_serv(serv);
-//  pars.fd = open("./server.conf", O_RDONLY);
+//  pars.fd = open("./server.ServerConfig", O_RDONLY);
 //  while ((pars.res = get_next_line(pars.fd, pars.str)) > -1) {
-////		init_loc(loc);
+////		init_loc(location);
 //	split_words(pars.str, pars.string_arr);
 //	if (pars.string_arr.size()) {
 //	  if (!pars.server_status) {
@@ -201,10 +201,10 @@
 //		  exit(1);
 //		}
 //	  } else if (pars.location_status) {
-//		if (check_location(pars, loc)) {
+//		if (check_location(pars, location)) {
 //
 //		}
-//	  } else if (deal_with_data(pars, serv, loc)) {
+//	  } else if (deal_with_data(pars, serv, location)) {
 //		std::cout << pars.error_message;
 //		exit(1);
 //	  }

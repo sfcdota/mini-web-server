@@ -1,13 +1,13 @@
 #ifndef WEBSERV_PARSER_HPP_
 #define WEBSERV_PARSER_HPP_
-#include "../webserv/includes/allowed_library_includes.hpp"
+#include "allowed_library_includes.hpp"
 
 struct error {
 	int error_code;
 	std::string error_path;
 };
 
-struct loc {
+struct location {
 	std::string path;
 	bool autoindex;
 	std::string root;
@@ -17,17 +17,18 @@ struct loc {
 	std::string cgi_extension;
 	std::string cgi_path;
 	std::vector<std::string> retur;
+    std::vector<error> error_pages;
 };
 
-struct conf {
-	std::string host;
+struct ServerConfig {
+	int host;
 	int port;
 	std::string root;
 	std::vector<std::string> server_names;
 	std::vector<error> error_pages;
 	int client_max_body_size;
 	std::vector<std::string> retur;
-	std::vector<loc> locations;
+	std::vector<location> locations;
 };
 
 struct parser {
@@ -44,8 +45,8 @@ struct parser {
 
 struct parsConfig {
 	parser pars;
-	conf serv;
-	loc location;
+	ServerConfig serv;
+	location location;
 	std::map <std::string, short> location_body;
 	std::map <std::string, short> server_body;
 	std::vector<std::string> vec;
@@ -57,7 +58,7 @@ int get_next_line(int fd, char **line);
 
 
 /*server config functions*/
-conf parsConf();
+ServerConfig parsConf();
 void parsServer(parsConfig &con, int &i);
 void parsLocation(parsConfig &con, int &i);
 
@@ -73,6 +74,6 @@ void word_spliter(char *line, std::vector<std::string> &bla);
 std::string rootDir();
 bool SearchForDir(const std::string &path);
 bool SearchForFile(const std::string &path);
-void createHTMLAutoIndex(conf &con, std::string linkPath);
+void createHTMLAutoIndex(ServerConfig &con, std::string linkPath);
 
 #endif //WEBSERV_PARSER_HPP_

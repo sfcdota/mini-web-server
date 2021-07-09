@@ -129,7 +129,8 @@ void parsServer(parsConfig &con, int &i){
 		int delimeter = con.vec[i].find(':');
 		if (delimeter == -1)
 			errors("server listen error!");
-		con.serv.host = con.vec[i].substr(0, delimeter);
+//		con.serv.host = con.vec[i].substr(0, delimeter);
+        con.serv.host = 0;
 		con.serv.port = to_int(con.vec[i].substr(delimeter + 1, con.vec[i].size() - 1 - delimeter));
 		if (con.serv.port == -1)
 			errors("server listen port error!");
@@ -196,11 +197,11 @@ void parsServer(parsConfig &con, int &i){
   }
 }
 
-conf	parsConf() {
+ServerConfig	parsConf() {
 	parsConfig con;
 	char *line;
 
-	con.pars.fd = open("../parser/server.conf", O_RDONLY);
+	con.pars.fd = open("../webserv/configs/server.conf", O_RDONLY);
 
 	init_location(con);
 	init_server(con);
@@ -224,7 +225,7 @@ conf	parsConf() {
 }
 
 //int main (){
-//	conf s;
+//	ServerConfig s;
 //	s = parsConf();
 //
 //	return 0;

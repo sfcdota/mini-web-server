@@ -5,7 +5,7 @@
 #ifndef WEBSERV_SERVER_HPP_
 #define WEBSERV_SERVER_HPP_
 #include "allowed_library_includes.hpp"
-#include "ServerConfig.hpp"
+#include "parser.hpp"
 #include "Request.hpp"
 #include "MessageParser.hpp"
 #include "MessageValidator.hpp"
@@ -57,9 +57,9 @@ class Server {
   void ProcessInputBuffer(char * buffer, Request & request);
   void GetHeaders(Request & request);
   void GetBody(Request & request);
-  const char * Response(Request& request);
+  const char * SendResponse(Request& req);
 
-
+  size_t kek;
   typedef std::vector<ServerElement>::iterator server_iterator;
   typedef std::vector<ReadElement>::iterator read_iterator;
   typedef std::vector<WriteElement>::iterator write_iterator;
