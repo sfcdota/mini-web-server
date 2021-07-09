@@ -41,54 +41,28 @@ int to_int(std::string str){
 	return n;
 }
 
-void location_func(char *line, server &serv, std::map<std::string, int> location_body, parser & pars){
-  std::string tmp;
-	while(*line){
-	  line = whitespace(line);
-	  if (*line == '#')
-	    break;
-	  if (split_to_word(line) == "root"){
-	    line += 4;
-	    line = whitespace(line);
-	    tmp = split_to_word(line);
+void location_func(char *line, server &serv, ){
 
-	  }
-	}
 }
 
 void server_func(char *line, server &serv, std::map<std::string, int> server_body, parser &pars){
 	std::string tmp;
-	location loc;
-	std::map <std::string, int> location_body;
-	location_body["autoindex"] = 0;
-	location_body["limit_except"] = 0;
-	location_body["root"] = 0;
-	location_body["index"] = 0;
-	location_body["cgi_extension"] = 0;
-	location_body["cgi_path"] = 0;
-	location_body["upload_path"] = 0;
   while(*line){
   	line = whitespace(line);
   	if (*line == '#')
   		break;
 	  line = whitespace(line);
-	  if ((tmp = split_to_word(line)) == "location" || pars.location_status){
-		  if (tmp == "location") {
-			  line += 8;
+	  if (split_to_word(line) == "location"){
+		  if (tmp == "server") {
+			  line += 6;
 			  line = whitespace(line);
-			  tmp = split_to_word(line);
-			  if (*line == '{')
-				error_page("location body error!");
-			  loc.path = tmp;
-			  line += tmp.size();
-			  line = whitespace(line);
+			  pars.server_status = true;
 			  if (*line == '{')
 				  line++;
 			  else
-				  error_page("server body error!");
-			pars.location_status = true;
+				  error_page("server body error");
 		  }
-		  location_func(line, serv, location_body, pars);
+		  location_func(line, serv, server_body, pars);
 	  }
 	  else if (split_to_word(line) == "listen" && !server_body["listen"]){
 	  	server_body["listen"] = 1;
@@ -158,41 +132,13 @@ void server_func(char *line, server &serv, std::map<std::string, int> server_bod
 	  	error_page("server body error!");
   }
 }
-void isstring(std::vector<std::string> &bla, std::string &tmp){
-  if (tmp.size()){
-	bla.push_back(tmp);
-	tmp = "";
-  }
-}
-void word_spliter(char *line, std::vector<std::string> &bla){
-  std::string tmp = "";
-  while (*line){
-    if (isspace(*line)) {
-	  isstring(bla, tmp);
-      line++;
-	  continue;
-	}
-    if (*line == '#') {
-	  isstring(bla, tmp);
-	  break;
-	}
-	if (*line == '{' || *line == '}' || *line == ';'){
-	  isstring(bla, tmp);
-	  tmp.push_back(*line);
-	  bla.push_back(tmp);
-	  tmp = "";
-	  line++;
-	  continue;
-	}
-    tmp += *line;
-    line++;
-  }
 
-}
+
 
 int main() {
   parser pars;
   server serv;
+  location loc;
   std::map <std::string, int> server_body;
   server_body["listen"] = 0;
   server_body["server_name"] = 0;
@@ -201,32 +147,27 @@ int main() {
   int server_b[6] = {0};
   char *line;
   std::string tmp;
-  std::vector<std::string> vec;
-  pars.fd = open("./server.conf", O_RDONLY);
+  pars.fd = open("../server.conf", O_RDONLY);
   while ((pars.res = get_next_line(pars.fd, &line)) > -1) {
-	word_spliter(line, vec);
-	for (int i = 0; i < vec.size(); i++)
-	  std::cout << vec[i] << " ";
-	std::cout << std::endl;
-	vec.clear();
-//  	line = whitespace(line);
-//	if (*line == '#')
-//		continue;
-//	tmp = split_to_word(line);
-//	if (tmp == "server" || pars.server_status){
-//	  if (tmp == "server") {
-//		  line += 6;
-//		  line = whitespace(line);
-//		  pars.server_status = true;
-//		  if (*line == '{')
-//		  	line++;
-//		  else
-//			  error_page("server body error");
-//	  }
-//	  server_func(line, serv, server_body, pars);
-//    }
-//	else
-//		error_page("server body error");
+  	line = whitespace(line);
+	if (*line == '#')
+		continue;
+	tmp = split_to_word(line);
+	if (tmp == "server" || pars.server_status){
+	  if (tmp == "server") {
+		  line += 6;
+		  line = whitespace(line);
+		  pars.server_status = true;
+		  if (*line == '{')
+		  	line++;
+		  else
+			  error_page("server body error");
+	  }
+	  server_func(line, serv, server_body, pars);
+
+    }
+	else
+		error_page("server body error");
 	if (!pars.res)
 	  break;
   }
