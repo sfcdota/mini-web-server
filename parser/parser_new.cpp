@@ -41,30 +41,14 @@ int to_int(std::string str){
 	return n;
 }
 
-void location_func(char *line, server &serv, ){
-
-}
-
-void server_func(char *line, server &serv, std::map<std::string, int> server_body, parser &pars){
+void server_func(char *line, server &serv, std::map<std::string, int> server_body){
 	std::string tmp;
   while(*line){
   	line = whitespace(line);
   	if (*line == '#')
   		break;
 	  line = whitespace(line);
-	  if (split_to_word(line) == "location"){
-		  if (tmp == "server") {
-			  line += 6;
-			  line = whitespace(line);
-			  pars.server_status = true;
-			  if (*line == '{')
-				  line++;
-			  else
-				  error_page("server body error");
-		  }
-		  location_func(line, serv, server_body, pars);
-	  }
-	  else if (split_to_word(line) == "listen" && !server_body["listen"]){
+	  if (split_to_word(line) == "listen" && !server_body["listen"]){
 	  	server_body["listen"] = 1;
 	  	line += 6;
 		  line = whitespace(line);
@@ -83,50 +67,20 @@ void server_func(char *line, server &serv, std::map<std::string, int> server_bod
 		line++;
 	  }
 	  else if (split_to_word(line) == "server_name" && !server_body["server_name"]){
-	  	server_body["server_name"] = 1;
-	  	line += 11;
-	  	line = whitespace(line);
-		  tmp = split_to_word(line);
-		  line += tmp.size();
-		  line = whitespace(line);
-		  if (*line != ';')
-			  error_page("server server_name error!");
-		  serv.server_names.push_back(tmp);
-		  line++;
+			line += 11;
+			line = whitespace(line);
 	  }
 	  else if (split_to_word(line) == "error_page" && !server_body["error_page"]){
-	  	struct error_page err;
-	  	server_body["error_page"] = 1;
-	  	line += 10;
+		  line += 10;
 		  line = whitespace(line);
-		  tmp = split_to_word(line);
-		  line += tmp.size();
-		  line = whitespace(line);
-		  err.error_code = to_int(tmp);
-		  if (err.error_code < 400 || err.error_code >= 500)
-			  error_page("server wrong error code!");
-		  tmp = split_to_word(line);
-		  err.error_path = tmp;
-		  line += tmp.size();
-		  line = whitespace(line);
-		  if (*line != ';')
-			  error_page("server error_page error!");
-		  serv.error_pages.push_back(err);
-		  line++;
 	  }
 	  else if (split_to_word(line) == "client_max_body_size" && !server_body["client_max_body_size"]){
-		server_body["client_max_body_size"] = 1;
-	  	line += 20;
+		  line += 20;
 		  line = whitespace(line);
-		  tmp = split_to_word(line);
-		  line += tmp.size();
+	  }
+	  else if (split_to_word(line) == "location"){
+		  line += 8;
 		  line = whitespace(line);
-		  serv.client_max_body_size = to_int(tmp);
-		  if (serv.client_max_body_size == -1)
-			  error_page("server body_size error!");
-		  if (*line != ';')
-			  error_page("server server_name error!");
-		  line++;
 	  }
 	  else
 	  	error_page("server body error!");
@@ -143,7 +97,7 @@ int main() {
   server_body["listen"] = 0;
   server_body["server_name"] = 0;
   server_body["error_page"] = 0;
-  server_body["client_max_body_size"] = 0;
+  server_body["client_max_body"] = 0;
   int server_b[6] = {0};
   char *line;
   std::string tmp;
@@ -163,7 +117,7 @@ int main() {
 		  else
 			  error_page("server body error");
 	  }
-	  server_func(line, serv, server_body, pars);
+	  server_func(line, serv, server_body);
 
     }
 	else
