@@ -45,8 +45,9 @@ MessageParser::~MessageParser() {}
 
  * message-body = *OCTET
  */
-Request MessageParser::ProcessHeaders(Request &request) {
-  msg = request.buffer;
+Request MessageParser::ProcessRequest(std::string &http_message) {
+  request_ = Request();
+  msg = http_message;
   std::map<std::string, std::string> request_line;
   std::map<std::string, std::string> headers;
   std::string body;
@@ -69,31 +70,14 @@ Request MessageParser::ProcessHeaders(Request &request) {
   }
   else
     body = msg.substr(pointer + 2);
-  request.SetRequestLine(request_line);
-  request.SetHeaders(headers);
-  request.SetBody(body);
-  return request;
+  request_.SetRequestLine(request_line);
+  request_.SetHeaders(headers);
+  request_.SetBody(body);
+  return request_;
 }
+MessageParser::MessageParser() {
 
-void MessageParser::ParseBody(Request & request) {
-  size_t pos = request.buffer.find("\r\n\r\n");
-  size_t tmp;
-  long length;
-  if (pos == std::string::npos)
-    return;
-  for (size_t index = 0; (tmp = request.buffer.find("\r\n")) != pos;) {
-    length = strtol(request.buffer.c_str(), NULL, 16);
-    if (length < 0)
-      request.SetFailed(400);
-    index += tmp + 2 + length;
-    request.body += request.buffer.substr(tmp + 2, index);
-  }
-  request.formed = true;
 }
-
-
-
-MessageParser::MessageParser(): remain(0) {}
 
 
 

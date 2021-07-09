@@ -5,14 +5,13 @@
 #ifndef WEBSERV_MESSAGEVALIDATOR_HPP_
 #define WEBSERV_MESSAGEVALIDATOR_HPP_
 #include <string>
-#include "sfinae.hpp"
-//#include "HeaderUtils.hpp"
+#include "MessageUtils.hpp"
 
 class MessageValidator {
  public:
   MessageValidator();
   ~MessageValidator();
-  bool ValidHeaders(std::string & request);
+  bool ValidRequest(std::string & request);
   bool ValidResponse(std::string & response);
  private:
   std::string message;
@@ -33,71 +32,6 @@ class MessageValidator {
   bool ValidQuotedString(const std::string &msg, size_t &pos);
   bool ValidComment(const std::string &msg, size_t &pos);
   bool ValidFieldContent(const std::string &msg, size_t &pos);
-  bool ValidBody(const std::string &msg);
-  bool ValidDefaultFieldValue(const std::string & msg, size_t &pos);
-  bool CheckAcceptCharsets(const std::string & msg, size_t &pos);
-  bool CheckAcceptLanguage(const std::string & msg, size_t &pos);
-  bool CheckAllow(const std::string & msg, size_t &pos);
-  bool CheckAuthorization(const std::string & msg, size_t &pos);
-  bool CheckContentLanguage(const std::string & msg, size_t &pos);
-  bool CheckContentLength(const std::string & msg, size_t &pos);
-  bool CheckContentLocation(const std::string & msg, size_t &pos);
-  bool CheckContentType(const std::string & msg, size_t &pos);
-  bool CheckDate(const std::string & msg, size_t &pos);
-  bool CheckHost(const std::string & msg, size_t &pos);
-  bool CheckLastModified(const std::string & msg, size_t &pos);
-  bool CheckLocation(const std::string & msg, size_t &pos);
-  bool CheckReferer(const std::string & msg, size_t &pos);
-  bool CheckRetryAfter(const std::string & msg, size_t &pos);
-  bool CheckServer(const std::string & msg, size_t &pos);
-  bool CheckTransferEncoding(const std::string & msg, size_t &pos);
-  bool CheckUserAgent(const std::string & msg, size_t &pos);
-  bool CheckWwwAuthenticate(const std::string & msg, size_t &pos);
- private:
-  size_t temp;
-  bool isdots(int c, int = 0);
-  bool istchar(int c, int = 0);
-  bool ishex(int c, int = 0);
-  bool ispchar(int c, int = 0);
-  bool isquery(int c, int = 0);
-  bool isows(int c, int = 0);
-  bool isobstext(int c, int = 0);
-  bool isvchar(int c, int = 0);
-  bool isobsfold(const std::string & s, size_t & index);
-  bool iscrlf(const std::string & s, size_t index);
-  bool ispctencoded(const std::string & s, size_t & index);
-  bool isqdtext(int c, int = 0);
-  bool isctext(int c, int = 0);
-  bool isreasonphrase(int c, int = 0);
-  bool isquotedpair(const std::string &s, size_t & index);
-  bool isstatuscode(const std::string &s, size_t & index);
-
-
-
-
-
-
-
-  bool exp_test_call(const std::string & s, size_t & index, bool (MessageValidator::*f)(int, int));
-
-  bool exp_test_call(const std::string & s, size_t & index, bool (MessageValidator::*f)(const std::string &, size_t &));
-
-
-
-  template<class T1, class T2>
-  bool expression_test(const std::string & s, size_t & index, bool (MessageValidator::*f)(T1, T2),
-      size_t status_code = 0, size_t step = 1, size_t min = 0, size_t max = -2);
-
-  template<class T, class Ret, int>
-  bool test_wrapper(T *class_pointer, const std::string & s, size_t & index, Ret (T::*f)(int, int), size_t status_code = 0, size_t step = 1, size_t min = 0, size_t max = -2);
-
-  template<class T, class Ret, std::string &, size_t &>
-  bool test_wrapper(T *class_pointer, const std::string & s, size_t & index, Ret (T::*f)(std::string &, size_t &), size_t status_code = 0, size_t step = 1, size_t min = 0, size_t max = -2);
-
-
-//  template<class T1, class T2>
-//  bool expression_test_abnf(const std::string & s, size_t & index, bool (MessageValidator::*f)(T1, T2), size_t status_code = 0, size_t step = 1, size_t min = 0, size_t max = -2);
-
-
+  bool ValidBody(const std::string &msg, size_t &pos);
 };
 #endif //WEBSERV_MESSAGEVALIDATOR_HPP_

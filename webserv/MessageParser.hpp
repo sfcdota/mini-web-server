@@ -5,7 +5,7 @@
 #ifndef WEBSERV_MESSAGEPARSER_HPP_
 #define WEBSERV_MESSAGEPARSER_HPP_
 #include "allowed_library_includes.hpp"
-#include "HeaderUtils.hpp"
+#include "MessageUtils.hpp"
 #include "Request.hpp"
 
 
@@ -13,8 +13,7 @@ class MessageParser {
  public:
   MessageParser();
   ~MessageParser();
-  Request ProcessHeaders(Request & request);
-  void ParseBody(Request & request);
+  Request ProcessRequest(std::string & request);
  private:
 
   std::map<std::string, std::string> & ParseRequestLine();
@@ -24,32 +23,13 @@ class MessageParser {
   void ParseRequestLineField(const std::pair<const std::string, bool (MessageParser::*)()>& pair);
   std::map<std::string, std::string> & ParseHeadersBlock();
   std::pair<std::string, std::string> & ParseHeader();
+  std::string & ParseBody();
   void ProcessMethod();
   void ProcessTarget();
   void ProcessVersion();
   void ProcessRequestLine();
   void ParseRequestMessage();
-  bool ParseDefaultFieldValue(const std::string & msg, size_t &pos);
-  bool ParseAcceptCharsets(const std::string & msg, size_t &pos);
-  bool ParseAcceptLanguage(const std::string & msg, size_t &pos);
-  bool ParseAllow(const std::string & msg, size_t &pos);
-  bool ParseAuthorization(const std::string & msg, size_t &pos);
-  bool ParseContentLanguage(const std::string & msg, size_t &pos);
-  bool ParseContentLength(const std::string & msg, size_t &pos);
-  bool ParseContentLocation(const std::string & msg, size_t &pos);
-  bool ParseContentType(const std::string & msg, size_t &pos);
-  bool ParseDate(const std::string & msg, size_t &pos);
-  bool ParseHost(const std::string & msg, size_t &pos);
-  bool ParseLastModified(const std::string & msg, size_t &pos);
-  bool ParseLocation(const std::string & msg, size_t &pos);
-  bool ParseReferer(const std::string & msg, size_t &pos);
-  bool ParseRetryAfter(const std::string & msg, size_t &pos);
-  bool ParseServer(const std::string & msg, size_t &pos);
-  bool ParseTransferEncoding(const std::string & msg, size_t &pos);
-  bool ParseUserAgent(const std::string & msg, size_t &pos);
-  bool ParseWwwAuthenticate(const std::string & msg, size_t &pos);
   std::string msg;
-  long remain;
   Request request_;
   std::map<std::string, bool (MessageParser::*)()> request_line_parse_mapping_;
 };
