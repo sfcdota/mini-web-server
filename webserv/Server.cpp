@@ -137,9 +137,6 @@ void Server::GetBody(Request &request) {
 void Server::SocketWrite() {
   for (write_iterator it = write.begin(); it != write.end(); it++) {
     if (FD_ISSET(it->fd, &working_write)) {
-//    	const char *ch = SendResponse(it->request);
-//    	std::cout << "\v";
-//    	std::cout << ch;
       if ((status = Guard(send(it->fd, SendResponse(it->request).c_str(), kek, 0), true)) != -1)
 //        std::cout << status << " bytes answered to client with socket fd = " << it->first << std::endl;
       close(it->fd);
@@ -181,7 +178,7 @@ void Server::Init() {
 
 
 
-std::string Server::SendResponse(Request & req) {
+std::string Server::SendResponse(Request &req) {
   if (!req.failed) {
     req.PrintRequestLine();
     req.PrintHeaders();
@@ -190,9 +187,10 @@ std::string Server::SendResponse(Request & req) {
   }
   else
     std::cout << "Request sucks" << std::endl;
-  Response resp;
-  resp.freeResponse();
-  std::string hui =  resp.SetResponseLine(req.GetRequestLine(), config.front(), req.headers);
+
+
+  Response resp(req);
+  std::string hui =  resp.SetResponseLine(config.front());
   kek = hui.length();
   std::cout << hui;
   return hui;
