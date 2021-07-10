@@ -1,6 +1,6 @@
 #include "Response.hpp"
 
-Response::Response(){}
+Response::Response(Request request): request_(request){}
 
 void Response::ResponseBuilder(const std::string &path, const std::string &status_code) {
 //	responseLine
