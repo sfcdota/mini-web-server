@@ -56,9 +56,13 @@ void Response::GetRequest(const std::map<std::string, std::string> &request_line
 
 std::string Response::SetResponseLine(const std::map<std::string, std::string> &request_line, const ServerConfig &con) {
 	HTTPVersionControl(request_line.find("version")->second);
-	if(request_line.find("method")->second == "GET")
+	if(request_line.find("method")->second == "GET") {
 		GetRequest(request_line,  con);
+	} else if (request_line.find("method")->second == "POST") {
 
+	} else if (request_line.find("method")->second == "PUT") {
+
+	}
 	return SendResponse();
 }
 
