@@ -4,7 +4,7 @@
 
 #include "Server.hpp"
 #include "Response.hpp"
-
+# include <sys/time.h>
 char webpage[] =
     "HTTP/1.1 200 OK\r\n"
     "Content-Type text/html; charset=UTF-8\r\n\r\n"
@@ -71,7 +71,8 @@ void Server::ConnectionAccept() {
         std::cout << "New connection accepted with fd = " << client_fd << std::endl;
         fcntl(client_fd, F_SETFL, O_NONBLOCK);
         FD_SET(client_fd, &master_read);
-        read.push_back(ReadElement(client_fd));
+        gettimeofday(&timev, NULL);
+        read.push_back(ReadElement(client_fd, timev.tv_sec));
       }
 //      std::cout << "Ended handle of incoming connections with max_fd = " << max_fd << std::endl;
 
@@ -82,14 +83,17 @@ void Server::SocketRead() {
   for (read_iterator it = read.begin(); it != read.end(); it++) {
     if (FD_ISSET(it->fd, &working_read)) {
       for (int i = 0; (status = recv(it->fd, buf, INPUT_BUFFER_SIZE, 0)) != -1 && status; i++) {
-        it->last_read = time(0);
+        gettimeofday(&timev, NULL);
+        it->last_read = timev.tv_sec;
         ProcessInputBuffer(buf, it->request);
         memset(buf, 0, INPUT_BUFFER_SIZE);
       }
     }
-    it->last_action_time = (time(0) - it->last_read) / 1000000000;
-    if (!status || it->last_action_time > 60) {
-      for(write_iterator wit = write.begin(); wit != write.end(); it++)
+    gettimeofday(&timev, NULL);
+    it->last_action_time = (timev.tv_sec - it->last_read);
+    if (!status || it->last_action_time > 15) {
+      std::cout << "Closed connection #" << it->fd << " after " << (status ? "inactivity " : "recieving eof ") << std::endl;
+      for(write_iterator wit = write.begin(); wit != write.end(); wit++)
         if (wit->fd == it->fd) {
           FD_CLR(wit->fd, &master_write);
           write.erase(wit--);
@@ -101,8 +105,8 @@ void Server::SocketRead() {
     }
     else if (it->request.formed) {
 //      it->request.buffer.clear();
-      FD_SET(it->fd, &master_write);
       FD_CLR(it->fd, &master_read);
+      FD_SET(it->fd, &master_write);
       write.push_back(WriteElement(it->fd, it->request));
       if (!it->request.keep_alive) {
         read.erase(it--);
@@ -136,15 +140,17 @@ void Server::GetHeaders(Request & request) {
 }
 
 void Server::GetBody(Request &request) {
-  if (request.chunked) {
-    if (validator_.ValidBody(request.buffer))
-      parser_.ParseBody(request);
-    else
-      request.SetFailed(validator_.GetStatusCode());
-  } else {
-    if (request.buffer.length() >= request.content_length) {
-      request.body = request.buffer.substr(0, request.content_length);
-      request.formed = true;
+  if (!request.formed) {
+    if (request.chunked) {
+      if (validator_.ValidBody(request.buffer))
+        parser_.ParseBody(request);
+      else
+        request.SetFailed(validator_.GetStatusCode());
+    } else {
+      if (request.buffer.length() >= request.content_length) {
+        request.body = request.buffer.substr(0, request.content_length);
+        request.formed = true;
+      }
     }
   }
   isHeader = true;
@@ -152,13 +158,17 @@ void Server::GetBody(Request &request) {
 
 void Server::SocketWrite() {
   for (write_iterator it = write.begin(); it != write.end(); it++) {
+    if (!it->request.formed)
+      return;
     if (FD_ISSET(it->fd, &working_write)) {
-      if ((status = Guard(send(it->fd, SendResponse(it->request), kek, 0), true)) != -1) {
-//        if ((status = Guard(send(it->fd, webpage, strlen(webpage), 0), true)) != -1) {
+//      if ((status = Guard(send(it->fd, SendResponse(it->request), kek, 0), true)) != -1) {
+        if ((status = Guard(send(it->fd, webpage, strlen(webpage), 0), true)) != -1) {
           std::cout << status << " bytes answered to client with socket fd = " << it->fd << std::endl;
           FD_CLR(it->fd, &master_write);
-          if (!it->request.keep_alive)
+          if (!it->request.keep_alive) {
+            std::cout << "closed " << it->fd << " connection" << std::endl;
             close(it->fd);
+          }
           else
             FD_SET(it->fd, &master_read);
           write.erase(it--);
@@ -177,7 +187,7 @@ void Server::Init() {
   FD_ZERO(&master_write);
   FD_ZERO(&working_read);
   FD_ZERO(&working_write);
-  for (std::vector<ServerConfig>::iterator it = config.begin(); it != config.end(); it++) {
+  for (std::vector<ServerConfig>::const_iterator it = config.begin(); it != config.end(); it++) {
     sockaddr_in addr = {};
     addr.sin_addr.s_addr = INADDR_ANY; // should be it->host
     addr.sin_family = AF_INET;

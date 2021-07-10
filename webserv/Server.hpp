@@ -22,12 +22,14 @@ class Server {
     ServerElement(int fd, sockaddr_in addr) : fd(fd), addr(addr) {};
   };
 
+  struct timeval timev;
+
   struct ReadElement {
     int fd;
     Request request;
-    time_t last_read;
+    size_t last_read;
     size_t last_action_time;
-    ReadElement(int fd): fd(fd), last_read(0), last_action_time(0) { };
+    ReadElement(int fd, size_t last_read = 0): fd(fd), last_read(last_read), last_action_time(last_read) { };
   };
 
   struct WriteElement {
