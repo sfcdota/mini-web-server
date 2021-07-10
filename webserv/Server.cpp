@@ -53,7 +53,7 @@ void Server::Run() {
     memcpy(&working_write, &master_write, sizeof(master_write));
     timeout.tv_sec = TIMOUT_SEC;
     if ((status = Guard(select(FD_SETSIZE, &working_read, &working_write, NULL, &timeout), false)) == 0) {
-      std::cout << "No incoming connections last " << timeout.tv_sec << " seconds" << std::endl;
+//      std::cout << "No incoming connections last " << timeout.tv_sec << " seconds" << std::endl;
     } else {
 //      std::cout << "Server ready for connections" << std::endl;
       ConnectionAccept();
@@ -82,17 +82,29 @@ void Server::SocketRead() {
   for (read_iterator it = read.begin(); it != read.end(); it++) {
     if (FD_ISSET(it->fd, &working_read)) {
       for (int i = 0; (status = recv(it->fd, buf, INPUT_BUFFER_SIZE, 0)) != -1 && status; i++) {
+        it->last_read = time(0);
         ProcessInputBuffer(buf, it->request);
         memset(buf, 0, INPUT_BUFFER_SIZE);
       }
-      buf = buf;
     }
-    if (it->request.formed) {
+    it->last_action_time = (time(0) - it->last_read) / 1000000000;
+    if (!status || it->last_action_time > 60) {
+      for(write_iterator wit = write.begin(); wit != write.end(); it++)
+        if (wit->fd == it->fd) {
+          FD_CLR(wit->fd, &master_write);
+          write.erase(wit--);
+        }
+      FD_CLR(it->fd, &master_read);
+      close(it->fd);
+      read.erase(it--);
+
+    }
+    else if (it->request.formed) {
 //      it->request.buffer.clear();
       FD_SET(it->fd, &master_write);
+      FD_CLR(it->fd, &master_read);
       write.push_back(WriteElement(it->fd, it->request));
       if (!it->request.keep_alive) {
-        FD_CLR(it->fd, &master_read);
         read.erase(it--);
       }
       it->request.formed = false;
@@ -141,13 +153,14 @@ void Server::GetBody(Request &request) {
 void Server::SocketWrite() {
   for (write_iterator it = write.begin(); it != write.end(); it++) {
     if (FD_ISSET(it->fd, &working_write)) {
-//      if ((status = Guard(send(it->fd, SendResponse(it->request), kek, 0), true)) != -1)
-        if ((status = Guard(send(it->fd, webpage, strlen(webpage), 0), true)) != -1) {
+      if ((status = Guard(send(it->fd, SendResponse(it->request), kek, 0), true)) != -1) {
+//        if ((status = Guard(send(it->fd, webpage, strlen(webpage), 0), true)) != -1) {
           std::cout << status << " bytes answered to client with socket fd = " << it->fd << std::endl;
-          if (!it->request.keep_alive) {
-            FD_CLR(it->fd, &master_write);
+          FD_CLR(it->fd, &master_write);
+          if (!it->request.keep_alive)
             close(it->fd);
-          }
+          else
+            FD_SET(it->fd, &master_read);
           write.erase(it--);
         }
     }
@@ -164,7 +177,7 @@ void Server::Init() {
   FD_ZERO(&master_write);
   FD_ZERO(&working_read);
   FD_ZERO(&working_write);
-  for (std::vector<ServerConfig>::const_iterator it = config.begin(); it != config.end(); it++) {
+  for (std::vector<ServerConfig>::iterator it = config.begin(); it != config.end(); it++) {
     sockaddr_in addr = {};
     addr.sin_addr.s_addr = INADDR_ANY; // should be it->host
     addr.sin_family = AF_INET;

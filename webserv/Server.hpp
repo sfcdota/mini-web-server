@@ -25,7 +25,9 @@ class Server {
   struct ReadElement {
     int fd;
     Request request;
-    ReadElement(int fd): fd(fd) { };
+    time_t last_read;
+    size_t last_action_time;
+    ReadElement(int fd): fd(fd), last_read(0), last_action_time(0) { };
   };
 
   struct WriteElement {
