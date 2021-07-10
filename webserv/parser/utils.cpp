@@ -110,16 +110,20 @@ bool SearchForFile(const std::string &path){
 }
 
 std::string rootDir(){
-	std::array<char, 128> buffer;
-	char *cmd = "/bin/pwd";
-	std::string result;
-	std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
-	if (!pipe) {
-		throw std::runtime_error("popen() failed!");
+	long n;
+	char *buf;
+	
+	n = pathconf(".", _PC_PATH_MAX);
+	assert(n != -1);
+	buf = (char*)malloc(n * sizeof(char));
+	assert(buf);
+	if (getcwd(buf, n) == NULL) {
+		std::cout << "path error!\n";
+		exit(1);
 	}
-	while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
-		result += buffer.data();
-	}
+	std::string result(buf);
+	free(buf);
+	result = result.substr(0,result.rfind('/'));
 	return result;
 }
 

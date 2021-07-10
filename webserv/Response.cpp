@@ -26,25 +26,25 @@ void Response::ResponseBuilder(const std::string &path, const std::string &statu
 	this->headers["Content-Length"] = std::to_string(this->body.size());
 }
 
-void Response::HTTPVersionControl(const std::string &httpVersion) {
-	if (httpVersion == "HTTP/1.1")
-		this->response_line["version"] = httpVersion;
+void Response::HTTPVersionControl() {
+	if (request_.request_line.find("version")->second == "HTTP/1.1")
+		this->response_line["version"] = "HTTP/1.1";
 	else{
 		std::cout << "HTTP version error!\n";
 		exit(1);
 	}
 }
 
-void Response::GetRequest(const std::map<std::string, std::string> &request_line, const ServerConfig &con) {
-	if (SearchForDir(con.root + request_line.find("target")->second)){
-		std::string path = con.root + request_line.find("target")->second;
+void Response::GetRequest(const ServerConfig &con) {
+	if (SearchForDir(con.root + request_.request_line.find("target")->second)){
+		std::string path = con.root + request_.request_line.find("target")->second;
 		if (path[path.size() - 1] == '/')
 			ResponseBuilder(path + "index.html", "200");
 		else
 			ResponseBuilder(path + "/index.html", "200");
 	}
-	else if (SearchForFile(con.root + request_line.find("target")->second))
-		ResponseBuilder(con.root + request_line.find("target")->second, "200");
+	else if (SearchForFile(con.root + request_.request_line.find("target")->second))
+		ResponseBuilder(con.root + request_.request_line.find("target")->second, "200");
 	else{
 		std::string path = con.root;
 		if (path[path.size() - 1] == '/')
@@ -59,17 +59,67 @@ static void createCGI(const std::map<std::string, std::string> &request_line, co
 	CGI cgi = CGI(request_line, con, headers);
 }
 
-std::string Response::SetResponseLine(const std::map<std::string, std::string> &request_line, const ServerConfig &con,
-									  const std::map<std::string, std::string> &headers) {
-	HTTPVersionControl(request_line.find("version")->second);
-	if(request_line.find("method")->second == "GET") {
-		GetRequest(request_line,  con);
-	} else if (request_line.find("method")->second == "POST") {
-		GetRequest(request_line,  con);
-		//createCGI(request_line, con, headers);
-	} else if (request_line.find("method")->second == "PUT") {
+void Response::PostRequest(const ServerConfig &con) {
+	this->response_line["status_code"] = "405";
+	this->response_line["status"] = GetStatusText(this->response_line.find("status_code")->second);
+//	bodyLine
+//	std::ifstream fin(path, std::ios::in|std::ios::binary|std::ios::ate);
+//	int size;
+//	if (fin.is_open())
+//	{
+//		fin.seekg(0, std::ios::end);
+//		size = fin.tellg();
+//		char *contents = new char [size];
+//		fin.seekg (0, std::ios::beg);
+//		fin.read (contents, size);
+//		fin.close();
+//		std::string str(contents, size);
+//		delete [] contents;
+//		this->body = str;
+//	}
+//	headerLine
+	this->headers["Content-Type"] = "text/html; charset=utf-8";
+	this->headers["Content-Length"] = std::to_string(this->body.size());
+}
+void Response::HeadRequest(const ServerConfig &con) {
+	this->response_line["status_code"] = "405";
+	this->response_line["status"] = GetStatusText(this->response_line.find("status_code")->second);
+//	bodyLine
+//	std::ifstream fin(path, std::ios::in|std::ios::binary|std::ios::ate);
+//	int size;
+//	if (fin.is_open())
+//	{
+//		fin.seekg(0, std::ios::end);
+//		size = fin.tellg();
+//		char *contents = new char [size];
+//		fin.seekg (0, std::ios::beg);
+//		fin.read (contents, size);
+//		fin.close();
+//		std::string str(contents, size);
+//		delete [] contents;
+//		this->body = str;
+//	}
+//	headerLine
+	this->headers["Content-Type"] = "text/html; charset=utf-8";
+	this->headers["Content-Length"] = std::to_string(this->body.size());
+}
 
+std::string Response::SetResponseLine(const ServerConfig &con) {
+	freeResponse();
+	HTTPVersionControl();
+	if(request_.request_line.find("method")->second == "GET" /*|| request_.request_line.find("method")->second == "HEAD"*/) {
+		GetRequest(con);
 	}
+	else if (request_.request_line.find("method")->second == "POST"){
+		PostRequest(con);
+	}
+	else if (request_.request_line.find("method")->second == "HEAD")
+		HeadRequest(con);
+//	else if (request_.request_line.find("method")->second == "POST") {
+//		createCGI(request_.request_line, con, headers);
+//	} else if (request_.request_line.find("method")->second == "PUT") {
+//
+//	}
 	return SendResponse();
 }
 
@@ -95,7 +145,10 @@ std::string Response::SendResponse() {
 		response += begin->second + "\r\n";
 	}
 	response += "\r\n";
-	response += this->body;
+		if (request_.request_line.find("method")->second != "HEAD") {
+
+			response += this->body;
+		}
 	
 	return response;
 }
