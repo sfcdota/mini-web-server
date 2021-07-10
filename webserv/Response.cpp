@@ -22,7 +22,7 @@ void Response::ResponseBuilder(const std::string &path, const std::string &statu
 		this->body = str;
 	}
 //	headerLine
-	this->headers["Content-Type"] = "multipart/form-data; boundary=something";
+	this->headers["Content-Type"] = "text/html; charset=utf-8";
 	this->headers["Content-Length"] = std::to_string(this->body.size());
 }
 

@@ -57,7 +57,7 @@ class Server {
   void ProcessInputBuffer(char * buffer, Request & request);
   void GetHeaders(Request & request);
   void GetBody(Request & request);
-  const char * SendResponse(Request& req);
+  std::string SendResponse(Request& req);
 
   size_t kek;
   typedef std::vector<ServerElement>::iterator server_iterator;
