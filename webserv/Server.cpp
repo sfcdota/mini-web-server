@@ -192,7 +192,7 @@ std::string Server::SendResponse(Request & req) {
     std::cout << "Request sucks" << std::endl;
   Response resp;
   resp.freeResponse();
-  std::string hui =  resp.SetResponseLine(req.GetRequestLine(), config.front());
+  std::string hui =  resp.SetResponseLine(req.GetRequestLine(), config.front(), req.headers);
   kek = hui.length();
   std::cout << hui;
   return hui;
