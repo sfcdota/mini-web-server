@@ -5,6 +5,7 @@ CGI::CGI(const std::map<std::string, std::string> &request_line, const ServerCon
 		 : _env(NULL), _headers(headers), _request_line(request_line), _con(con)
 {
 	setEnv();
+	executeCGI();
 }
 
 CGI::~CGI()
@@ -19,21 +20,26 @@ CGI::~CGI()
 }
 
 void CGI::executeCGI() {
-	int pipes[2];
-	int oldFdIn = dup(0);
-	int oldFdOut = dup(1);
+//	int oldFdIn = dup(0);
+//	int oldFdOut = dup(1);
 	int pid;
 
-	pipe(pipes);
+	int fd = open("cgiOut.txt", O_CREAT | O_RDWR | O_TRUNC);
+	if (fd == -1) {
+		throw std::runtime_error("Error: cannot open create/open file");
+	}
 	pid = fork();
 	if (pid == -1) {
 		throw std::runtime_error("error");
 	} if (pid == 0) {
-//		execve();
+		char * const * kek= NULL;
+		dup2(fd, STDOUT_FILENO);
+		if (execve((_con.root + "/cgi/cgi_tester").c_str(), kek, _env) == -1) {
+			throw std::runtime_error("Error: execve");
+		}
 	}
 	wait(NULL);
-	close(oldFdIn);
-	close(oldFdOut);
+	close(fd);
 }
 
 void CGI::mapToCString(std::map<std::string, std::string> &tmpEnv) {
@@ -47,13 +53,12 @@ void CGI::mapToCString(std::map<std::string, std::string> &tmpEnv) {
 
 void CGI::setEnv() {
 	std::map<std::string, std::string> tmpEnv;
-
 	tmpEnv["AUTH_TYPE="] = "basic";
-	tmpEnv["CONTENT_LENGTH="] = _headers.find("content-length")->second;
+	tmpEnv["CONTENT_LENGTH="] = std::to_string(1024);//_headers.find("content-length")->second;
 	tmpEnv["CONTENT_TYPE="] = "text/html";
 	tmpEnv["GATEWAY_INTERFACE="] = "CGI/1.1";
-	tmpEnv["PATH_INFO="] = "?????";
-	tmpEnv["PATH_TRANSLATED="] = "?????";
+	tmpEnv["PATH_INFO="] = _request_line.find("target")->second;
+	tmpEnv["PATH_TRANSLATED="] = "/Users/knfonda/CLionProjects/webserv/webserv/site/index.html";
 	std::string tmpStr = _request_line.find("target")->second;
 	tmpEnv["QUERY_STRING="] = tmpStr.erase(0, 2);
 	tmpEnv["REMOTE_ADDR="] = "?????";

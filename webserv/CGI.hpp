@@ -8,6 +8,8 @@
 #include "allowed_library_includes.hpp"
 #include "Server.hpp"
 #include <sstream>
+#include "unistd.h"
+#include "fcntl.h"
 // Сервер отправляет данные программе CGI с помощью переменных среды
 
 // Задача:

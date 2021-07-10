@@ -65,7 +65,8 @@ std::string Response::SetResponseLine(const std::map<std::string, std::string> &
 	if(request_line.find("method")->second == "GET") {
 		GetRequest(request_line,  con);
 	} else if (request_line.find("method")->second == "POST") {
-		createCGI(request_line, con, headers);
+		GetRequest(request_line,  con);
+		//createCGI(request_line, con, headers);
 	} else if (request_line.find("method")->second == "PUT") {
 
 	}
