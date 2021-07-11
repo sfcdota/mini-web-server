@@ -54,8 +54,6 @@ class Server {
 	send_out_bytes = 0;
     }
     ~WriteElement() {
-//      std::cout << "destructing output with value" << std::endl << output << std::endl;
-//      free( (void *)output);
     }
   };
   const std::vector<ServerConfig> config;
