@@ -8,7 +8,6 @@
 
 class Response {
 public:
-	Response(Request request_, const ServerConfig &Conf);
 	std::string SetResponseLine();
 	explicit Response(Request & request_);
 	std::string GetStatusText(std::string code);
