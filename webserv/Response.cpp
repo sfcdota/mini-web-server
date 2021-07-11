@@ -2,6 +2,7 @@
 
 Response::Response(Request & request): request_(request), ServerConf_(request_.server_config) {}
 
+
 void Response::ResponseBuilder(const std::string &path, const std::string &status_code) {
 //	responseLine
 	this->response_line["status_code"] = status_code;
@@ -21,7 +22,10 @@ void Response::ResponseBuilder(const std::string &path, const std::string &statu
 		this->body = str;
 	}
 //	headerLine
-	this->headers["Content-Type"] = "text/html; charset=utf-8";
+	if (path.substr(path.find('.') + 1) == "html")
+		this->headers["Content-Type"] = "text/html; charset=utf-8";
+	else
+		this->headers["Content-Type"] = "image/*";
 	this->headers["Content-Length"] = std::to_string(this->body.size());
 }
 
@@ -137,7 +141,10 @@ bool Response::CheckLocationCorrectness() {
 				location = location.substr(0, location.size() - 1);
 			if (path == location) {
 				location_ = ServerConf_.locations[i];
-				this->fullPath_ = ServerConf_.root + location_.root + this->cleanTarget_;
+				if (location_.root == "/" && this->cleanTarget_ == "/")
+					this->fullPath_ = ServerConf_.root + location_.root;
+				else
+					this->fullPath_ = ServerConf_.root + location_.root + this->cleanTarget_;
 				return 1;
 			}
 		}
@@ -322,7 +329,7 @@ bool Response::_SearchForDir() {
 	struct dirent *en;
 	dr = opendir(this->fullPath_.c_str());
 	if (dr) {
-		for (int i = 0; i < location_.index.size(); i++) {
+			for (int i = 0; i < location_.index.size(); i++) {
 			while ((en = readdir(dr)) != NULL) {
 				if (strcmp(en->d_name, location_.index[i].c_str()) == 0) {
 					closedir(dr);
