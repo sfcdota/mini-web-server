@@ -94,7 +94,10 @@ void Server::SocketRead() {
     gettimeofday(&timev, NULL);
     it->last_action_time = (timev.tv_sec - it->last_read);
     if (!status || it->last_action_time > 15) {
-      PrintLog(it, "closed connection after inactivity/EOF", it->fd);
+      if (!status)
+        PrintLog(it, "closed connection after EOF", it->fd);
+      else
+        PrintLog(it, "closed connection after inactivity", it->fd);
       for(write_iterator wit = write.begin(); wit != write.end(); wit++)
         if (wit->fd == it->fd) {
           FD_CLR(wit->fd, &master_write);

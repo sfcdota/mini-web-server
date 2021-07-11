@@ -47,9 +47,13 @@ class Server {
     WriteElement(int server_fd, int fd, Request & request): server_fd(server_fd), fd(fd), request(request) {
       Response response(request);
       const char * tmp = request.source_request.c_str();
-      output = response.SetResponseLine().c_str();
+      output = strdup(response.SetResponseLine().c_str());
       out_length = strlen(output);
       send_out_bytes = 0;
+    }
+    ~WriteElement() {
+//      std::cout << "destructing output with value" << std::endl << output << std::endl;
+//      free( (void *)output);
     }
   };
   const std::vector<ServerConfig> config;
