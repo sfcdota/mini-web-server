@@ -173,7 +173,7 @@ void Server::SocketWrite() {
       return;
     if (FD_ISSET(it->fd, &working_write)) {
       if ((status = Guard(
-          send(it->fd, &it->output[it->send_out_bytes], it->out_length - it->send_out_bytes, 0),
+          send(it->fd, &it->output.c_str()[it->send_out_bytes], it->out_length - it->send_out_bytes, 0),
           true
       )) != -1) {
         it->send_out_bytes += status;
