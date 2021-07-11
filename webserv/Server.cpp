@@ -86,23 +86,30 @@ void Server::ConnectionAccept() {
 }
 void Server::SocketRead() {
   for (read_iterator it = read.begin(); it != read.end(); it++) {
+
     if (FD_ISSET(it->fd, &working_read)) {
       PrintLog(it, "client IS_SET for read", it->fd);
-      for (int i = 0; (status = recv(it->fd, buf, INPUT_BUFFER_SIZE, 0)) != -1 && status; i++) {
+      for (; (status = recv(it->fd, buf, INPUT_BUFFER_SIZE, 0)) != -1 && status;) {
         std::stringstream ss;
         ss << "recv value = " << status;
         PrintLog(it, ss.str(), it->fd);
         gettimeofday(&timev, NULL);
         it->last_read = timev.tv_sec;
+//        if (it->request.request_line["method"] == "POST")
+          std::cout << "buf:"<<buf << "$" << std::endl;
         ProcessInputBuffer(buf, it->request);
         memset(buf, 0, INPUT_BUFFER_SIZE);
 //        it->request.PrintRequestLine();
 //        std::cout << "Source request was:" << std::setw(90) << it->request.source_request << std::endl;
       }
+      if (it->request.request_line.find("METHOD")->second == "POST")
+        std::cout << "read post iteration" << std::endl;
     }
+    std::cout << "status:" << status << std::endl;
     gettimeofday(&timev, NULL);
     it->last_action_time = (timev.tv_sec - it->last_read);
-    if (!status || it->last_action_time > 120) {
+    std::cout << "last action time:" << it->last_action_time << std::endl;
+    if (!status || it->last_action_time > 10) {
       if (!status)
         PrintLog(it, "closed connection after EOF", it->fd);
       else
@@ -137,17 +144,27 @@ void Server::SocketRead() {
 void Server::ProcessInputBuffer(char *buffer, Request &request) {
 //  std::cout << "Buffer before request formed:" << std::setw(90) << request.buffer << std::endl;
   request.buffer += buffer;
+//  std::cout << "Buffer = " << request.buffer << std::endl;
   size_t pos;
+  if (request.headersReady && request.chunked) {
+    std::cout << "body buf:" << request.buffer << "$" << std::endl;
+    std::cout << "found empty chunked response" << std::endl;
+    request.headers.insert(std::make_pair("Content-Length", "0"));
+    request.formed = true;
+    request.buffer.clear();
+  }
+  else {
   if ((pos = request.buffer.find("\r\n\r\n", 0)) == std::string::npos)
     return;
-  if (isHeader && !request.headersReady)
+  if (!request.headersReady)
     GetHeaders(request);
-  if (!isHeader && request.headersReady)
+  else
     GetBody(request);
 //  std::cout << "Buffer before clean:" << std::setw(90) << request.buffer << std::endl;
 
   request.source_request += request.buffer.substr(0, pos + 4);
   request.buffer = request.buffer.substr(pos + 4);
+  }
 //  if (request.formed)
 //    std::cout << "Buffer after clean of formed request:" << std::setw(90) << request.buffer << std::endl;
 
@@ -161,7 +178,8 @@ void Server::GetHeaders(Request & request) {
     request.SetFailed(validator_.GetStatusCode());
   request.headersReady = true;
   request.AdjustHeaders();
-  isHeader = false;
+  request.PrintRequestLine();
+  request.PrintHeaders();
 }
 
 void Server::GetBody(Request &request) {
@@ -180,7 +198,7 @@ void Server::GetBody(Request &request) {
       }
     }
   }
-  isHeader = true;
+  request.headersReady = false;
 }
 
 

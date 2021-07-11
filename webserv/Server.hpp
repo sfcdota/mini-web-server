@@ -33,7 +33,7 @@ class Server {
     size_t last_action_time;
     ReadElement(int server_fd, int fd, const ServerConfig& server_config, size_t last_read = 0):
       server_fd(server_fd), fd(fd), last_read(last_read), last_action_time(last_read) {
-      std::cout << "LOCATIONS SIZE" << server_config.locations.size() << std::endl;
+//      std::cout << "LOCATIONS SIZE" << server_config.locations.size() << std::endl;
       request.server_config = server_config;
     }
   };
@@ -53,9 +53,10 @@ class Server {
       const char * tmp = request.source_request.c_str();
       output = response.SetResponseLine();
 //      request.PrintRequestLine();
-      std::cout << "request: " << request.source_request.substr(0, 50) << "..." << std::endl;
+//      std::cout << "request: " << request.source_request.substr(0, 50) << "..." << std::endl;
+    request.PrintHeaders();
 	out_length = output.length();
-//	std::cout << "response: " << output.substr(0, 50) << "..." << std::endl;
+	std::cout << "response: " << output.substr(0, 50) << "..." << std::endl;
 	send_out_bytes = 0;
     }
     ~WriteElement() {
