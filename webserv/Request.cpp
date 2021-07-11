@@ -29,6 +29,8 @@ Request &Request::operator=(const Request &in) {
   this->headersReady = in.headersReady;
   this->formed = in.formed;
   this->buffer = in.buffer;
+  this->server_config = in.server_config;
+  this->source_request = in.source_request;
   return *this;
 }
 void Request::PrintRequestLine() {
@@ -67,8 +69,7 @@ void Request::AdjustHeaders() {
   if (content != headers.end()) {
     if (transfer != headers.end())
       headers.erase(content);
-  }
-  else {
+  } else {
     content_length = strtol(content->second.c_str(), NULL, 0);
     if (content_length < 0)
       SetFailed(400);
@@ -84,4 +85,13 @@ void Request::SetFailed(size_t status_code) {
   else
     this->status_code = 400;
   formed = true;
+}
+
+void Request::CleanUp() {
+  headers.clear();
+  request_line.clear();
+  source_request.clear();
+  body.clear();
+  content_length = 0;
+  status_code = 0;
 }

@@ -1,24 +1,27 @@
-//
-// Created by ljerrica on 29.06.2021.
-//
-
-#ifndef WEBSERV_RESPONSE_HPP
-#define WEBSERV_RESPONSE_HPP
+#ifndef WEBSERV_RESPONSE_HPP_
+#define WEBSERV_RESPONSE_HPP_
 
 #include "allowed_library_includes.hpp"
+#include "Request.hpp"
 #include "parser.hpp"
+#include "CGI.hpp"
 
 class Response {
 public:
-	Response();
-	std::string SetResponseLine(const std::map<std::string, std::string> &request_line, const ServerConfig &con);
+	explicit Response(Request & request_);
+	std::string SetResponseLine(const ServerConfig &con);
 	std::string GetStatusText(std::string code);
 	std::string SendResponse();
 	void	ResponseBuilder(const std::string &path, const std::string &status_code);
-	void	HTTPVersionControl(const std::string &httpVersion);
-	void	GetRequest(const std::map<std::string, std::string> &request_line, const ServerConfig &con);
+	void HTTPVersionControl();
+	void	GetRequest(const ServerConfig &con);
+	void	PostRequest(const ServerConfig &con);
+	void	HeadRequest(const ServerConfig &con);
 	void	freeResponse();
+//	void	createCGI(const std::map<std::string, std::string> &request_line, const ServerConfig &con,
+//				 const std::map<std::string, std::string> &headers);
 // private:
+	Request request_;
 	std::map<std::string, std::string> response_line;
 	std::map<std::string,std::string> headers;
 	std::map<std::string, std::string> status_codes;
@@ -29,4 +32,4 @@ public:
 };
 
 
-#endif //WEBSERV_RESPONSE_HPP
+#endif //WEBSERV_RESPONSE_HPP_

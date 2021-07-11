@@ -4,11 +4,10 @@
 
 #ifndef WEBSERV_SERVER_HPP_
 #define WEBSERV_SERVER_HPP_
-#include "allowed_library_includes.hpp"
-#include "parser.hpp"
-#include "Request.hpp"
+#include "Response.hpp"
 #include "MessageParser.hpp"
 #include "MessageValidator.hpp"
+
 class Server {
  public:
   Server(const std::vector<ServerConfig>& config, ssize_t INPUT_BUFFER_SIZE);
@@ -17,25 +16,41 @@ class Server {
  private:
 
   struct ServerElement {
-    int fd;
+    int server_fd;
     sockaddr_in addr;
-    ServerElement(int fd, sockaddr_in addr) : fd(fd), addr(addr) {};
+    ServerConfig server_config;
+    ServerElement(int fd, sockaddr_in addr, const ServerConfig &server_config):
+      server_fd(fd), addr(addr), server_config(server_config) {}
   };
 
   struct timeval timev;
 
   struct ReadElement {
+    int server_fd;
     int fd;
     Request request;
     size_t last_read;
     size_t last_action_time;
-    ReadElement(int fd, size_t last_read = 0): fd(fd), last_read(last_read), last_action_time(last_read) { };
+    ReadElement(int server_fd, int fd, const ServerConfig& server_config, size_t last_read = 0):
+      server_fd(server_fd), fd(fd), last_read(last_read), last_action_time(last_read) {
+      request.server_config = server_config;
+    }
   };
 
   struct WriteElement {
+    int server_fd;
     int fd;
     Request request;
-    WriteElement(int fd, Request & request): fd(fd) { this->request = request; };
+    const char* output;
+    size_t out_length;
+    size_t send_out_bytes;
+    WriteElement(int server_fd, int fd, Request & request): server_fd(server_fd), fd(fd), request(request) {
+      Response response(request);
+      const char * tmp = request.source_request.c_str();
+      output = response.SetResponseLine(request.server_config).c_str();
+      out_length = strlen(output);
+      send_out_bytes = 0;
+    }
   };
   const std::vector<ServerConfig> config;
   std::vector<ServerElement> server;
@@ -63,6 +78,8 @@ class Server {
   void GetHeaders(Request & request);
   void GetBody(Request & request);
   const char * SendResponse(Request& req);
+
+  template<class Iterator> void PrintLog(Iterator it, const std::string & msg, int client_fd);
 
   size_t kek;
   typedef std::vector<ServerElement>::iterator server_iterator;
