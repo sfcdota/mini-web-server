@@ -32,7 +32,7 @@ void parsLocation(parsConfig &con, int &i){
 		  con.location_body["index"] = 1;
 		}
 		if (i == con.vec.size() || !con.location_body["index"])
-			errors("location index error!");
+			errors("location index error1!");
 	  }
 	  else if (con.vec[i] == "limit_except" && !con.location_body["limit_except"]){
 		while (++i < con.vec.size(), con.vec[i] != ";"){
@@ -44,7 +44,7 @@ void parsLocation(parsConfig &con, int &i){
 			con.location_body["index"] = 1;
 		}
 		if (i == con.vec.size() || !con.location_body["index"])
-			errors("location index error!");
+			errors("location index error2!");
 	  }
 	  else if (con.vec[i] == "upload_path" && !con.location_body["upload_path"]){
 		con.location_body["upload_path"] = 1;

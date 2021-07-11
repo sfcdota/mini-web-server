@@ -7,16 +7,20 @@
 
 class Response {
 public:
-	Response(Request request_);
-	std::string SetResponseLine(const ServerConfig &con);
+	Response(Request request_, const ServerConfig &Conf);
+	std::string SetResponseLine();
 	std::string GetStatusText(std::string code);
 	std::string SendResponse();
 	void	ResponseBuilder(const std::string &path, const std::string &status_code);
 	void HTTPVersionControl();
-	void	GetRequest(const ServerConfig &con);
-	void	PostRequest(const ServerConfig &con);
-	void	HeadRequest(const ServerConfig &con);
+	void GetRequest();
+	void PostRequest();
+	void HeadRequest();
+	bool 	CheckMethodCorrectness();
+	bool 	CheckLocationCorrectness();
+	bool	CheckLocationMethods();
 	void	freeResponse();
+	void SetStatus(std::string code);
 //	void	createCGI(const std::map<std::string, std::string> &request_line, const ServerConfig &con,
 //				 const std::map<std::string, std::string> &headers);
 // private:
@@ -26,8 +30,18 @@ public:
 	std::map<std::string, std::string> status_codes;
 	std::string body; //????????
 	size_t status_code;
-	ServerConfig s;
+	location location_;
+	std::string cleanTarget_;
+	std::string fullPath_;
+	const ServerConfig &ServerConf_;
+	
 	bool failed;
+private:
+	bool _SearchForFile(const std::string &path);
+	bool _SearchForDir();
+	void _createHTMLAutoIndex(DIR *dir);
+	std::string _getTimeModify(std::string path);
+	
 };
 
 

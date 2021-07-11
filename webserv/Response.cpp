@@ -1,6 +1,6 @@
 #include "Response.hpp"
 
-Response::Response(Request request): request_(request){}
+Response::Response(Request request, const ServerConfig &Conf): request_(request), ServerConf_(Conf){}
 
 void Response::ResponseBuilder(const std::string &path, const std::string &status_code) {
 //	responseLine
@@ -35,18 +35,17 @@ void Response::HTTPVersionControl() {
 	}
 }
 
-void Response::GetRequest(const ServerConfig &con) {
-	if (SearchForDir(con.root + request_.request_line.find("target")->second)){
-		std::string path = con.root + request_.request_line.find("target")->second;
-		if (path[path.size() - 1] == '/')
-			ResponseBuilder(path + "index.html", "200");
+void Response::GetRequest() {
+	if (_SearchForDir()){
+		if (this->fullPath_[this->fullPath_.size() - 1] == '/')
+			ResponseBuilder(this->fullPath_ + "index.html", "200");
 		else
-			ResponseBuilder(path + "/index.html", "200");
+			ResponseBuilder(this->fullPath_ + "/index.html", "200");
 	}
-	else if (SearchForFile(con.root + request_.request_line.find("target")->second))
-		ResponseBuilder(con.root + request_.request_line.find("target")->second, "200");
+	else if (_SearchForFile(ServerConf_.root + request_.request_line.find("target")->second))
+		ResponseBuilder(ServerConf_.root + request_.request_line.find("target")->second, "200");
 	else{
-		std::string path = con.root;
+		std::string path = ServerConf_.root;
 		if (path[path.size() - 1] == '/')
 			ResponseBuilder(path + "errors/404.html", "404");
 		else
@@ -59,7 +58,7 @@ static void createCGI(const std::map<std::string, std::string> &request_line, co
 	CGI cgi = CGI(request_line, con, headers);
 }
 
-void Response::PostRequest(const ServerConfig &con) {
+void Response::PostRequest() {
 	this->response_line["status_code"] = "405";
 	this->response_line["status"] = GetStatusText(this->response_line.find("status_code")->second);
 //	bodyLine
@@ -81,7 +80,7 @@ void Response::PostRequest(const ServerConfig &con) {
 	this->headers["Content-Type"] = "text/html; charset=utf-8";
 	this->headers["Content-Length"] = std::to_string(this->body.size());
 }
-void Response::HeadRequest(const ServerConfig &con) {
+void Response::HeadRequest() {
 	this->response_line["status_code"] = "405";
 	this->response_line["status"] = GetStatusText(this->response_line.find("status_code")->second);
 //	bodyLine
@@ -104,22 +103,76 @@ void Response::HeadRequest(const ServerConfig &con) {
 	this->headers["Content-Length"] = std::to_string(this->body.size());
 }
 
-std::string Response::SetResponseLine(const ServerConfig &con) {
+bool Response::CheckMethodCorrectness() {
+	std::string methods[] = { "GET", "POST", "HEAD", "DELETE", "PUT" };
+	for (int i = 0; i < 5; i++){
+		if (methods[i] == request_.request_line.find("method")->second)
+			return 1;
+	}
+	SetStatus("405");
+	return 0;
+}
+
+bool Response::CheckLocationMethods() {
+	for (int i = 0; i < this->location_.http_methods.size(); i++) {
+		if (this->location_.http_methods[i] == request_.request_line.find("method")->second)
+			return 1;
+	}
+	SetStatus("405");
+	return 0;
+}
+
+bool Response::CheckLocationCorrectness() {
+	std::string path = request_.request_line.find("target")->second;
+	path = path.substr(0, path.find('?'));
+	this->cleanTarget_ = path;
+	bool flag = true;
+	while (flag) {
+		if (path == "/")
+			flag = false;
+		if (path != "/" && path[path.size() - 1] == '/')
+			path = path.substr(0, path.size() - 1);
+		for (int i = 0; i < ServerConf_.locations.size(); i++) {
+			std::string location = ServerConf_.locations[i].path;
+			if (location != "/" && location[location.size() - 1] == '/')
+				location = location.substr(0, location.size() - 1);
+			if (path == location) {
+				location_ = ServerConf_.locations[i];
+				this->fullPath_ = ServerConf_.root + location_.root + this->cleanTarget_;
+				return 1;
+			}
+		}
+		path = path.substr(0, path.rfind('/') + 1);
+	}
+	SetStatus("404");
+	return 0;
+}
+
+void Response::SetStatus(std::string code) {
+	this->response_line["status_code"] = code;
+	this->response_line["status"] = GetStatusText(code);
+}
+
+std::string Response::SetResponseLine() {
 	freeResponse();
 	HTTPVersionControl();
-	if(request_.request_line.find("method")->second == "GET" /*|| request_.request_line.find("method")->second == "HEAD"*/) {
-		GetRequest(con);
+	if (CheckMethodCorrectness() && CheckLocationCorrectness() && CheckLocationMethods()) {
+		DIR *dir = opendir(this->fullPath_.c_str());
+		if (location_.autoindex && dir) {
+			SetStatus("200");
+			_createHTMLAutoIndex(dir);
+			closedir(dir);
+		} else {
+			if(request_.request_line.find("method")->second == "GET" /*|| request_.request_line.find("method")->second == "HEAD"*/) {
+				GetRequest();
+			}
+			else if (request_.request_line.find("method")->second == "POST"){
+				PostRequest();
+			}
+			else if (request_.request_line.find("method")->second == "HEAD")
+				HeadRequest();
+		}
 	}
-	else if (request_.request_line.find("method")->second == "POST"){
-		PostRequest(con);
-	}
-	else if (request_.request_line.find("method")->second == "HEAD")
-		HeadRequest(con);
-//	else if (request_.request_line.find("method")->second == "POST") {
-//		createCGI(request_.request_line, con, headers);
-//	} else if (request_.request_line.find("method")->second == "PUT") {
-//
-//	}
 	return SendResponse();
 }
 
@@ -149,7 +202,6 @@ std::string Response::SendResponse() {
 
 			response += this->body;
 		}
-	
 	return response;
 }
 
@@ -198,4 +250,109 @@ std::string Response::GetStatusText(std::string code) {
 	std::cout << "status code error!" << std::endl;
 	exit(1);
 }
+
+
+
+
+
+
+
+
+
+
+std::string Response::_getTimeModify(std::string path) {
+	struct stat file_info;
+	if (lstat(path.c_str(), &file_info) != 0) {
+		std::cout << "Error: lstat wtf?!" << std::endl;
+		exit(1);
+	}
+	char date[36];
+	strftime(date, 36, "%d.%m.%Y %H:%M:%S", localtime(&file_info.st_mtime));
+	std::string tmpDate = date;
+	return tmpDate + "\n";
+}
+
+void Response::_createHTMLAutoIndex(DIR *dir) {
+	std::string autoIndexBegin = "<!DOCTYPE html>\n"
+								 "<html>\n"
+								 "<head>\n"
+								 "<title>Index of /</title></head>\n"
+								 "<body bgcolor=\"white\">\n"
+								 "<h1>Index of /</h1>\n"
+								 "<hr>\n"
+								 "<pre>\n";
+	std::string autoIndexEnd = "</pre>\n"
+							   "<hr>\n"
+							   "</body>\n"
+							   "</html>\n";
+	if (dir == nullptr) {
+		throw std::runtime_error("Error: cannot open dir (autoindex)");
+	}
+	std::string concatLink;
+	std::string fileName;
+	struct dirent *entity;
+	this->body = autoIndexBegin;
+	while ((entity = readdir(dir))) {
+		if (strcmp(entity->d_name, ".") != 0) {
+			if (entity->d_type != DT_DIR) {
+				fileName = entity->d_name;
+			} else {
+				fileName = entity->d_name;
+				fileName += "/";
+			}
+			concatLink
+					.append("     <a href=\"")
+					.append(fileName)
+					.append("\">")
+					.append(fileName)
+					.append("</a>")
+					.append(60 - concatLink.length() + fileName.length(), ' ')
+					.append(_getTimeModify(this->fullPath_ + "/" + fileName));
+			this->body += concatLink;
+			fileName.clear();
+			concatLink.clear();
+		}
+	}
+	this->body += autoIndexEnd;
+	this->headers["Content-Type"] = "text/html; charset=utf-8";
+	this->headers["Content-Length"] = std::to_string(this->body.size());
+}
+
+bool Response::_SearchForDir() {
+	DIR *dr;
+	struct dirent *en;
+	dr = opendir(this->fullPath_.c_str());
+	if (dr) {
+		for (int i = 0; i < location_.index.size(); i++) {
+			while ((en = readdir(dr)) != NULL) {
+				if (strcmp(en->d_name, location_.index[i].c_str()) == 0) {
+					closedir(dr);
+					return 1;
+				}
+			}
+		}
+		closedir(dr);
+	}
+	return 0;
+}
+
+bool Response::_SearchForFile(const std::string &path){
+	DIR *dr;
+	struct dirent *en;
+	dr = opendir(path.substr(0, path.rfind('/') + 1).c_str());
+	if (dr){
+		while ((en = readdir(dr)) != NULL){
+			if (strcmp(en->d_name, path.substr(path.rfind('/') + 1).c_str()) == 0 && !opendir(path.c_str())){
+				closedir(dr);
+				return 1;
+			}
+		}
+		closedir(dr);
+	}
+	return 0;
+}
+
+
+
+
 
