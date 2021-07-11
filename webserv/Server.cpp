@@ -129,7 +129,7 @@ void Server::SocketRead() {
 //        std::cout << "Client_fd = " << it->fd << " read ended due not keep alive connection" << std::endl;
         read.erase(it--);
       }
-      it->request = Request(it->request.buffer);
+      it->request = Request(it->request.buffer, it->request.server_config);
     }
   }
 }

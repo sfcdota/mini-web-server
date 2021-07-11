@@ -18,8 +18,9 @@ void Request::SetBody(const std::string &body) {
 }
 Request::Request(): failed(false), status_code(0), formed(false), headersReady(false), keep_alive(true) {}
 
-Request::Request(const std::string &buffer): failed(false), status_code(0), formed(false), headersReady(false),
-  keep_alive(true), buffer(buffer) {}
+Request::Request(const std::string &buffer, ServerConfig config): failed(false), status_code(0), formed(false), headersReady(false),
+  keep_alive(true), buffer(buffer),
+                                                                  server_config(config) {}
 
 Request::Request(const Request &in) { *this = in; }
 Request &Request::operator=(const Request &in) {

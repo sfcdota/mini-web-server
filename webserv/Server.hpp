@@ -33,6 +33,7 @@ class Server {
     size_t last_action_time;
     ReadElement(int server_fd, int fd, const ServerConfig& server_config, size_t last_read = 0):
       server_fd(server_fd), fd(fd), last_read(last_read), last_action_time(last_read) {
+      std::cout << "LOCATIONS SIZE" << server_config.locations.size() << std::endl;
       request.server_config = server_config;
     }
   };
@@ -45,6 +46,9 @@ class Server {
     size_t out_length;
     size_t send_out_bytes;
     WriteElement(int server_fd, int fd, Request & request): server_fd(server_fd), fd(fd), request(request) {
+//      if (request.source_request.find("GET /images/1.jpg") != -1)
+//        std::cout << "LOCATIONS SIZE" << request.server_config.locations.size() << std::endl;
+
       Response response(request);
       const char * tmp = request.source_request.c_str();
       output = response.SetResponseLine();
