@@ -16,9 +16,10 @@ void Request::SetHeaders(const std::map<std::string, std::string> &headers) {
 void Request::SetBody(const std::string &body) {
   this->body = body;
 }
-Request::Request(): failed(false), status_code(0), formed(false), headersReady(false) {}
+Request::Request(): failed(false), status_code(0), formed(false), headersReady(false), keep_alive(true) {}
 Request::Request(const Request &in) { *this = in; }
 Request &Request::operator=(const Request &in) {
+  this->keep_alive = in.keep_alive;
   this->request_line = in.request_line;
   this->headers = in.headers;
   this->body = in.body;
@@ -28,6 +29,8 @@ Request &Request::operator=(const Request &in) {
   this->headersReady = in.headersReady;
   this->formed = in.formed;
   this->buffer = in.buffer;
+  this->server_config = in.server_config;
+  this->source_request = in.source_request;
   return *this;
 }
 void Request::PrintRequestLine() {
@@ -56,6 +59,8 @@ const std::string &Request::GetBody() const {
 void Request::AdjustHeaders() {
   std::map<std::string, std::string>::iterator content = headers.find("Content-Length");
   std::map<std::string, std::string>::iterator transfer = headers.find("Transfer-Encoding");
+  std::map<std::string, std::string>::iterator connection = headers.find("Connection");
+
   if (content == transfer)
     formed = true;
   if (transfer != headers.end() && transfer->second.find("chunked") != -1) {
@@ -64,12 +69,13 @@ void Request::AdjustHeaders() {
   if (content != headers.end()) {
     if (transfer != headers.end())
       headers.erase(content);
-  }
-  else {
+  } else {
     content_length = strtol(content->second.c_str(), NULL, 0);
     if (content_length < 0)
       SetFailed(400);
   }
+  if (connection != headers.end() && connection->second.find("close") != -1)
+    keep_alive = false;
 }
 
 void Request::SetFailed(size_t status_code) {
@@ -79,4 +85,13 @@ void Request::SetFailed(size_t status_code) {
   else
     this->status_code = 400;
   formed = true;
+}
+
+void Request::CleanUp() {
+  headers.clear();
+  request_line.clear();
+  source_request.clear();
+  body.clear();
+  content_length = 0;
+  status_code = 0;
 }

@@ -190,8 +190,8 @@
 //
 //  init_parser(pars);
 ////	init_serv(serv);
-//  pars.fd = open("./server.ServerConfig", O_RDONLY);
-//  while ((pars.res = get_next_line(pars.fd, pars.str)) > -1) {
+//  pars.server_fd = open("./server.ServerConfig", O_RDONLY);
+//  while ((pars.res = get_next_line(pars.server_fd, pars.str)) > -1) {
 ////		init_loc(location);
 //	split_words(pars.str, pars.string_arr);
 //	if (pars.string_arr.size()) {

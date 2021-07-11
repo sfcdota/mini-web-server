@@ -2,6 +2,7 @@
 // Created by sfcdo on 04.06.2021.
 //
 
+#include <sstream>
 #include "MessageParser.hpp"
 
 enum MachineState {
@@ -47,31 +48,32 @@ MessageParser::~MessageParser() {}
  */
 Request MessageParser::ProcessHeaders(Request &request) {
   msg = request.buffer;
-  std::map<std::string, std::string> request_line;
-  std::map<std::string, std::string> headers;
-  std::string body;
-  size_t pointer = msg.find(' ');
-  size_t begin = 0;
-  size_t temp;
-  request_line.insert(std::make_pair("method", msg.substr(begin, pointer - begin)));
-  pointer = msg.find(' ', begin = pointer + 1);
-  request_line.insert(std::make_pair("target", msg.substr(begin, pointer - begin)));
-  pointer = msg.find("\r\n", begin = pointer + 1);
-  request_line.insert(std::make_pair("version", msg.substr(begin, pointer - begin)));
-  if ((pointer = msg.find("\r\n\r\n", begin = pointer + 2)) != std::string::npos) {
-    while(begin < pointer) {
-      temp = begin;
-      headers.insert(std::make_pair(msg.substr(begin, (temp = msg.find(':', begin)) - begin),
-                                    msg.substr(++temp, (begin = msg.find("\r\n", temp)) - temp)));
-      begin += 2;
-    }
-    body = msg.substr(pointer + 4);
+  std::string token;
+  size_t tmp = 0;
+  size_t pointer;
+  size_t end_of_header_value;
+  size_t end_of_header;
+  std::string value;
+  size_t tmp_end = msg.find("\r\n");
+  for (int i = 0; i < 3 ; i++) {
+    pointer = msg.find(' ', tmp);
+    request.request_line.insert(std::make_pair(request_line_fields[i], msg.substr(tmp, pointer < tmp_end ? pointer - tmp : tmp_end - tmp)));
+    tmp = pointer + 1;
   }
-  else
-    body = msg.substr(pointer + 2);
-  request.SetRequestLine(request_line);
-  request.SetHeaders(headers);
-  request.SetBody(body);
+  tmp = tmp_end + 2;
+  tmp_end = msg.find("\r\n\r\n", tmp_end);
+   for (; tmp < tmp_end ;) {
+     pointer = msg.find(':', tmp);
+     token = msg.substr(tmp, pointer - tmp);
+     pointer++;
+     pointer = msg.find_first_not_of(" \t", pointer);
+     end_of_header = msg.find("\r\n", tmp);
+     end_of_header_value = end_of_header;
+     while (isows(msg[end_of_header_value]))
+       end_of_header_value--;
+     request.headers.insert(std::make_pair(token, msg.substr(pointer, end_of_header_value - pointer)));
+     tmp = end_of_header + 2;
+   }
   return request;
 }
 

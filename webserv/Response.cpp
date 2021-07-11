@@ -1,6 +1,6 @@
 #include "Response.hpp"
 
-Response::Response(Request request, const ServerConfig &Conf): request_(request), ServerConf_(Conf){}
+Response::Response(Request & request): request_(request) {}
 
 void Response::ResponseBuilder(const std::string &path, const std::string &status_code) {
 //	responseLine
@@ -9,11 +9,10 @@ void Response::ResponseBuilder(const std::string &path, const std::string &statu
 //	bodyLine
 	std::ifstream fin(path, std::ios::in|std::ios::binary|std::ios::ate);
 	int size;
-	if (fin.is_open())
-	{
+	if (fin.is_open()) {
 		fin.seekg(0, std::ios::end);
 		size = fin.tellg();
-		char *contents = new char [size];
+		char *contents = new char[size];
 		fin.seekg (0, std::ios::beg);
 		fin.read (contents, size);
 		fin.close();
@@ -27,12 +26,12 @@ void Response::ResponseBuilder(const std::string &path, const std::string &statu
 }
 
 void Response::HTTPVersionControl() {
-	if (request_.request_line.find("version")->second == "HTTP/1.1")
-		this->response_line["version"] = "HTTP/1.1";
-	else{
-		std::cout << "HTTP version error!\n";
-		exit(1);
-	}
+  if (request_.request_line.find("version")->second == "HTTP/1.1") {
+    this->response_line["version"] = "HTTP/1.1";
+  } else {
+    std::cout << "HTTP version error!\n";
+    exit(1);
+  }
 }
 
 void Response::GetRequest() {

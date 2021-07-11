@@ -4,6 +4,8 @@
 
 #include "Server.hpp"
 #include "Response.hpp"
+# include <sys/time.h>
+#include <sys/wait.h>
 
 char webpage[] =
     "HTTP/1.1 200 OK\r\n"
@@ -18,10 +20,10 @@ char webpage[] =
 
 Server::Server(const std::vector<ServerConfig> &config, const ssize_t INPUT_BUFFER_SIZE)
     : config(config), master_read(), working_read(), master_write(), working_write(),
-    timout(), INPUT_BUFFER_SIZE(INPUT_BUFFER_SIZE), status(), max_fd(-1) {}
+      timeout(), INPUT_BUFFER_SIZE(INPUT_BUFFER_SIZE), status(), max_fd(-1), isHeader(true) {}
 
 Server::Server() : master_read(), working_read(), master_write(), working_write(),
-timout(), INPUT_BUFFER_SIZE(DEFAULT_INPUT_BUFFERSIZE), max_fd(), status() {}
+                   timeout(), INPUT_BUFFER_SIZE(DEFAULT_INPUT_BUFFERSIZE), max_fd(), status(), isHeader(true) {}
 
 /// Guard for libc function errors
 /// \param retval returned function value, that will go through this function if success.
@@ -51,9 +53,9 @@ void Server::Run() {
   while (true) {
     memcpy(&working_read, &master_read, sizeof(master_read));
     memcpy(&working_write, &master_write, sizeof(master_write));
-    timout.tv_sec = TIMOUT_USEC;
-    if ((status = Guard(select(FD_SETSIZE, &working_read, &working_write, NULL, &timout), false)) == 0) {
-//      std::cout << "No incoming connections last 3 seconds" << std::endl;
+    timeout.tv_sec = TIMOUT_SEC;
+    if ((status = Guard(select(FD_SETSIZE, &working_read, &working_write, NULL, &timeout), false)) == 0) {
+//      std::cout << "No incoming connections last " << timeout.tv_sec << " seconds" << std::endl;
     } else {
 //      std::cout << "Server ready for connections" << std::endl;
       ConnectionAccept();
@@ -65,13 +67,14 @@ void Server::Run() {
 void Server::ConnectionAccept() {
   int client_fd;
   for (server_iterator it = server.begin(); it != server.end(); it++) {
-    if (FD_ISSET(it->fd, &working_read)) {
-//      std::cout << "Listening socket " << it->first << " is ready for incoming connections" << std::endl;
-      while ((client_fd = Guard(accept(it->fd, NULL, NULL), false)) != -1) {
-//        std::cout << "New connection accepted with fd = " << client_fd << std::endl;
+    if (FD_ISSET(it->server_fd, &working_read)) {
+//      std::cout << "Listening socket " << it->server_fd << " is ready for incoming connections" << std::endl;
+      while ((client_fd = Guard(accept(it->server_fd, NULL, NULL), false)) != -1) {
+        PrintLog(it, "accepted client connection", client_fd);
         fcntl(client_fd, F_SETFL, O_NONBLOCK);
         FD_SET(client_fd, &master_read);
-        read.push_back(ReadElement(client_fd));
+        gettimeofday(&timev, NULL);
+        read.push_back(ReadElement(it->server_fd, client_fd, it->server_config, timev.tv_sec));
       }
 //      std::cout << "Ended handle of incoming connections with max_fd = " << max_fd << std::endl;
 
@@ -79,75 +82,125 @@ void Server::ConnectionAccept() {
   }
 }
 void Server::SocketRead() {
-  char *buf = reinterpret_cast<char *>(calloc(INPUT_BUFFER_SIZE, sizeof(char)));
   for (read_iterator it = read.begin(); it != read.end(); it++) {
     if (FD_ISSET(it->fd, &working_read)) {
-      for (int i = 0; recv(it->fd, buf, INPUT_BUFFER_SIZE, 0) != -1; i++) {
+      for (int i = 0; (status = recv(it->fd, buf, INPUT_BUFFER_SIZE, 0)) != -1 && status; i++) {
+        gettimeofday(&timev, NULL);
+        it->last_read = timev.tv_sec;
         ProcessInputBuffer(buf, it->request);
         memset(buf, 0, INPUT_BUFFER_SIZE);
       }
     }
-    if (it->request.formed) {
-      it->request.buffer.clear();
+    gettimeofday(&timev, NULL);
+    it->last_action_time = (timev.tv_sec - it->last_read);
+    if (!status || it->last_action_time > 15) {
+      PrintLog(it, "closed connection after inactivity/EOF", it->fd);
+      for(write_iterator wit = write.begin(); wit != write.end(); wit++)
+        if (wit->fd == it->fd) {
+          FD_CLR(wit->fd, &master_write);
+          write.erase(wit--);
+        }
+      FD_CLR(it->fd, &master_read);
+      close(it->fd);
+      read.erase(it--);
+    } else if (it->request.formed) {
+      PrintLog(it, "request was formed", it->fd);
+//      std::cout << "Request was formed on server_fd = " << it->server_fd
+//        << " by input message from client_fd = " << it->fd << std::endl;
+//      it->request.buffer.clear();
       FD_CLR(it->fd, &master_read);
       FD_SET(it->fd, &master_write);
-      write.push_back(WriteElement(it->fd, it->request));
-      read.erase(it--);
+      write.push_back(WriteElement(it->server_fd, it->fd, it->request));
+      if (!it->request.keep_alive) {
+        PrintLog(it, "ended read by not keep alive behavior", it->fd);
+//        std::cout << "Client_fd = " << it->fd << " read ended due not keep alive connection" << std::endl;
+        read.erase(it--);
+      }
+      it->request.formed = false;
     }
   }
 }
 
 void Server::ProcessInputBuffer(char *buffer, Request &request) {
   request.buffer += buffer;
-  if (!request.headersReady)
-    GetHeaders(request);
-  if (request.headersReady)
-    GetBody(request);
-}
-
-void Server::GetHeaders(Request & request) {
   size_t pos;
   if ((pos = request.buffer.find("\r\n\r\n", 0)) == std::string::npos)
     return;
+  if (isHeader && !request.headersReady)
+    GetHeaders(request);
+  if (!isHeader && request.headersReady)
+    GetBody(request);
+  request.source_request += request.buffer.substr(0, pos + 4);
+  request.buffer = request.buffer.substr(pos + 4);
+}
+
+void Server::GetHeaders(Request & request) {
+  request.CleanUp();
+  size_t pos;
   if (validator_.ValidHeaders(request.buffer))
     parser_.ProcessHeaders(request);
   else
     request.SetFailed(validator_.GetStatusCode());
   request.headersReady = true;
   request.AdjustHeaders();
-  request.buffer = request.buffer.substr(pos + 4);
+  isHeader = false;
 }
 
 void Server::GetBody(Request &request) {
-  if (request.chunked) {
-    if ((request.buffer.find("\r\n\r\n", 0)) == std::string::npos)
-      return;
-    if (validator_.ValidBody(request.buffer))
-      parser_.ParseBody(request);
-    else
-      request.SetFailed(validator_.GetStatusCode());
-  } else {
-    if (request.buffer.length() >= request.content_length) {
-      request.body = request.buffer.substr(0, request.content_length);
-      request.formed = true;
+  if (!request.formed) {
+    if (request.chunked) {
+      if (validator_.ValidBody(request.buffer))
+        parser_.ParseBody(request);
+      else
+        request.SetFailed(validator_.GetStatusCode());
+    } else {
+      if (request.buffer.length() >= request.content_length) {
+        request.body = request.buffer.substr(0, request.content_length);
+        request.formed = true;
+      }
     }
   }
+  isHeader = true;
 }
+
 
 void Server::SocketWrite() {
   for (write_iterator it = write.begin(); it != write.end(); it++) {
+    if (!it->request.formed)
+      return;
     if (FD_ISSET(it->fd, &working_write)) {
-      if ((status = Guard(send(it->fd, SendResponse(it->request).c_str(), kek, 0), true)) != -1)
-//        std::cout << status << " bytes answered to client with socket fd = " << it->first << std::endl;
-      close(it->fd);
-      FD_CLR(it->fd, &master_write);
-      write.erase(it--);
+      if ((status = Guard(
+          send(it->fd, &it->output[it->send_out_bytes], it->out_length - it->send_out_bytes, 0),
+          true
+      )) != -1) {
+        it->send_out_bytes += status;
+        std::stringstream ss;
+        if (!it->out_length) {
+          ss << "[ WARNING! Response length = 0 to request with length = " <<
+             it->request.source_request.length() << "] ";
+        }
+        ss << status << "/" << it->out_length << " bytes send";
+        PrintLog(it, ss.str(), it->fd);
+        if (it->send_out_bytes == it->out_length) {
+          FD_CLR(it->fd, &master_write);
+          if (!it->request.keep_alive) {
+            PrintLog(it, "closed connection (disabled keep-alive)", it->fd);
+            std::cout << "closed client_fd = " << it->fd << " connection due not keep alive" << std::endl;
+            close(it->fd);
+          }
+          else
+              FD_SET(it->fd, &master_read);
+          write.erase(it--);
+        }
+      }
+      if (status == -1)
+        PrintLog(it, "send returned -1 trying to response", it->fd);
     }
   }
 }
 
 Server::~Server() {
-
+  free(buf);
 }
 
 void Server::Init() {
@@ -171,28 +224,15 @@ void Server::Init() {
     Guard(bind(server_fd, (struct sockaddr *) &addr, sizeof(sockaddr_in)), false);
     Guard(listen(server_fd, MAX_CONNECTIONS), false);
     FD_SET(server_fd, &master_read);
-    server.push_back(ServerElement(server_fd, addr));
+    server.push_back(ServerElement(server_fd, addr, *it));
     max_fd = server_fd;
   }
+  buf = reinterpret_cast<char *>(calloc(INPUT_BUFFER_SIZE, sizeof(char)));
 }
 
-
-
-std::string Server::SendResponse(Request &req) {
-  if (!req.failed) {
-    req.PrintRequestLine();
-    req.PrintHeaders();
-    req.PrintBody();
-    std::cout << std::endl << std::endl;
-  }
-  else
-    std::cout << "Request sucks" << std::endl;
-
-
-  Response resp(req, config.front());
-  std::string hui = resp.SetResponseLine();
-  kek = hui.length();
-  std::cout << hui;
-  return hui;
+template<class Iterator>
+void Server::PrintLog(Iterator it, const std::string & msg, int client_fd) {
+  std::cout << "Server #" << it->server_fd << " " <<
+            std::setw(90) <<  msg << std::setw(10) << "| Client#" << client_fd << std::endl;
 }
 

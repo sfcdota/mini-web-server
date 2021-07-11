@@ -1,7 +1,8 @@
-#ifndef WEBSERV_RESPONSE_HPP
-#define WEBSERV_RESPONSE_HPP
+#ifndef WEBSERV_RESPONSE_HPP_
+#define WEBSERV_RESPONSE_HPP_
 
 #include "allowed_library_includes.hpp"
+#include "Request.hpp"
 #include "parser.hpp"
 #include "CGI.hpp"
 
@@ -9,6 +10,7 @@ class Response {
 public:
 	Response(Request request_, const ServerConfig &Conf);
 	std::string SetResponseLine();
+	explicit Response(Request & request_);
 	std::string GetStatusText(std::string code);
 	std::string SendResponse();
 	void	ResponseBuilder(const std::string &path, const std::string &status_code);
@@ -45,4 +47,4 @@ private:
 };
 
 
-#endif //WEBSERV_RESPONSE_HPP
+#endif //WEBSERV_RESPONSE_HPP_

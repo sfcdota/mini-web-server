@@ -7,6 +7,7 @@
 #include "allowed_library_includes.hpp"
 #include "HeaderUtils.hpp"
 #include "Request.hpp"
+static std::string request_line_fields [3] = {"method", "target", "version"};
 
 
 class MessageParser {

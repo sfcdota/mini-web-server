@@ -2,7 +2,7 @@
 #ifndef WEBSERV_REQUEST_HPP_
 #define WEBSERV_REQUEST_HPP_
 #include "allowed_library_includes.hpp"
-
+#include "../includes/parser.hpp"
 
 class Request {
  public:
@@ -20,6 +20,7 @@ class Request {
   void PrintBody();
   void AdjustHeaders();
   void SetFailed(size_t status_code);
+  void CleanUp();
 // private:
   std::map<std::string, std::string> request_line;
   std::map<std::string,std::string> headers;
@@ -29,7 +30,10 @@ class Request {
   bool chunked;
   bool headersReady;
   bool formed;
-  long long content_length;
+  bool keep_alive;
+  int64_t content_length;
   std::string buffer;
+  ServerConfig server_config;
+  std::string source_request;
 };
 #endif // WEBSERV_REQUEST_HPP_

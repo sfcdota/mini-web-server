@@ -2,11 +2,12 @@
 // Created by Knot Fonda on 7/10/21.
 //
 
-#ifndef WEBSERV_CGI_HPP
-#define WEBSERV_CGI_HPP
+#ifndef WEBSERV_CGI_HPP_
+#define WEBSERV_CGI_HPP_
 
 #include "allowed_library_includes.hpp"
-#include "Server.hpp"
+//#include "Server.hpp"
+#include "parser.hpp"
 #include <sstream>
 #include "unistd.h"
 #include "fcntl.h"
@@ -52,4 +53,4 @@ public:
 	const ServerConfig &_con;
 };
 
-#endif //WEBSERV_CGI_HPP
+#endif //WEBSERV_CGI_HPP_

@@ -2,14 +2,12 @@
 
 CGI::CGI(const std::map<std::string, std::string> &request_line, const ServerConfig &con,
 		 const std::map<std::string, std::string> &headers)
-		 : _env(NULL), _headers(headers), _request_line(request_line), _con(con)
-{
+		 : _env(NULL), _headers(headers), _request_line(request_line), _con(con) {
 	setEnv();
 	executeCGI();
 }
 
-CGI::~CGI()
-{
+CGI::~CGI() {
 	if (_env) {
 		for (int i = 0; _env[i] != NULL; ++i) {
 			delete[] _env[i];
@@ -31,19 +29,20 @@ void CGI::executeCGI() {
 	pid = fork();
 	if (pid == -1) {
 		throw std::runtime_error("error");
-	} if (pid == 0) {
+	} else if (pid == 0) {
 		char * const * kek= NULL;
 		dup2(fd, STDOUT_FILENO);
+
 		if (execve((_con.root + "/cgi/cgi_tester").c_str(), kek, _env) == -1) {
 			throw std::runtime_error("Error: execve");
 		}
 	}
-	wait(NULL);
+//	wait(NULL);
 	close(fd);
 }
 
 void CGI::mapToCString(std::map<std::string, std::string> &tmpEnv) {
-	_env = (char **)calloc(tmpEnv.size() + 1, sizeof(char *));
+	_env = reinterpret_cast<char **>(calloc(tmpEnv.size() + 1, sizeof(char *)));
 	std::map<std::string, std::string>::iterator it = tmpEnv.begin();
 	for (int index = 0; it != tmpEnv.end(); ++it, ++index) {
 		_env[index] = strdup((it->first + it->second).c_str());
@@ -78,4 +77,4 @@ void CGI::setEnv() {
 	tmpEnv["HTTP_X_SECRET_HEADER_FOR_TEST="] = "1";
 	mapToCString(tmpEnv);
 	tmpEnv.clear();
-};
+}
