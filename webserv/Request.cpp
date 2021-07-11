@@ -17,6 +17,10 @@ void Request::SetBody(const std::string &body) {
   this->body = body;
 }
 Request::Request(): failed(false), status_code(0), formed(false), headersReady(false), keep_alive(true) {}
+
+Request::Request(const std::string &buffer): failed(false), status_code(0), formed(false), headersReady(false),
+  keep_alive(true), buffer(buffer) {}
+
 Request::Request(const Request &in) { *this = in; }
 Request &Request::operator=(const Request &in) {
   this->keep_alive = in.keep_alive;
@@ -88,10 +92,11 @@ void Request::SetFailed(size_t status_code) {
 }
 
 void Request::CleanUp() {
-  headers.clear();
-  request_line.clear();
-  source_request.clear();
-  body.clear();
+  headers = std::map<std::string, std::string>();
+  request_line = std::map<std::string, std::string>();
+  source_request = std::string();
+  body = std::string();
   content_length = 0;
   status_code = 0;
+
 }

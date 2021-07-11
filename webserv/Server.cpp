@@ -59,8 +59,11 @@ void Server::Run() {
     } else {
 //      std::cout << "Server ready for connections" << std::endl;
       ConnectionAccept();
+//      std::cout << std::setw(50) << "END OF ACCEPT CYCLE | read vector size = " << read.size() << " write vector size = " << write.size() << std::endl;
       SocketRead();
+//      std::cout << std::setw(50) << "END OF READ CYCLE | read vector size = " << read.size() << " write vector size = " << write.size() << std::endl;
       SocketWrite();
+//      std::cout << std::setw(50) << "END OF WRITE CYCLE | read vector size = " << read.size() << " write vector size = " << write.size() << std::endl;
     }
   }
 }
@@ -69,7 +72,7 @@ void Server::ConnectionAccept() {
   for (server_iterator it = server.begin(); it != server.end(); it++) {
     if (FD_ISSET(it->server_fd, &working_read)) {
 //      std::cout << "Listening socket " << it->server_fd << " is ready for incoming connections" << std::endl;
-      while ((client_fd = Guard(accept(it->server_fd, NULL, NULL), false)) != -1) {
+      if ((client_fd = Guard(accept(it->server_fd, NULL, NULL), false)) != -1) {
         PrintLog(it, "accepted client connection", client_fd);
         fcntl(client_fd, F_SETFL, O_NONBLOCK);
         FD_SET(client_fd, &master_read);
@@ -84,16 +87,22 @@ void Server::ConnectionAccept() {
 void Server::SocketRead() {
   for (read_iterator it = read.begin(); it != read.end(); it++) {
     if (FD_ISSET(it->fd, &working_read)) {
+      PrintLog(it, "client IS_SET for read", it->fd);
       for (int i = 0; (status = recv(it->fd, buf, INPUT_BUFFER_SIZE, 0)) != -1 && status; i++) {
+        std::stringstream ss;
+        ss << "recv value = " << status;
+        PrintLog(it, ss.str(), it->fd);
         gettimeofday(&timev, NULL);
         it->last_read = timev.tv_sec;
         ProcessInputBuffer(buf, it->request);
         memset(buf, 0, INPUT_BUFFER_SIZE);
+//        it->request.PrintRequestLine();
+//        std::cout << "Source request was:" << std::setw(90) << it->request.source_request << std::endl;
       }
     }
     gettimeofday(&timev, NULL);
     it->last_action_time = (timev.tv_sec - it->last_read);
-    if (!status || it->last_action_time > 15) {
+    if (!status || it->last_action_time > 120) {
       if (!status)
         PrintLog(it, "closed connection after EOF", it->fd);
       else
@@ -114,17 +123,19 @@ void Server::SocketRead() {
       FD_CLR(it->fd, &master_read);
       FD_SET(it->fd, &master_write);
       write.push_back(WriteElement(it->server_fd, it->fd, it->request));
+
       if (!it->request.keep_alive) {
         PrintLog(it, "ended read by not keep alive behavior", it->fd);
 //        std::cout << "Client_fd = " << it->fd << " read ended due not keep alive connection" << std::endl;
         read.erase(it--);
       }
-      it->request.formed = false;
+      it->request = Request(it->request.buffer);
     }
   }
 }
 
 void Server::ProcessInputBuffer(char *buffer, Request &request) {
+//  std::cout << "Buffer before request formed:" << std::setw(90) << request.buffer << std::endl;
   request.buffer += buffer;
   size_t pos;
   if ((pos = request.buffer.find("\r\n\r\n", 0)) == std::string::npos)
@@ -133,12 +144,16 @@ void Server::ProcessInputBuffer(char *buffer, Request &request) {
     GetHeaders(request);
   if (!isHeader && request.headersReady)
     GetBody(request);
+//  std::cout << "Buffer before clean:" << std::setw(90) << request.buffer << std::endl;
+
   request.source_request += request.buffer.substr(0, pos + 4);
   request.buffer = request.buffer.substr(pos + 4);
+//  if (request.formed)
+//    std::cout << "Buffer after clean of formed request:" << std::setw(90) << request.buffer << std::endl;
+
 }
 
 void Server::GetHeaders(Request & request) {
-  request.CleanUp();
   size_t pos;
   if (validator_.ValidHeaders(request.buffer))
     parser_.ProcessHeaders(request);
@@ -154,8 +169,10 @@ void Server::GetBody(Request &request) {
     if (request.chunked) {
       if (validator_.ValidBody(request.buffer))
         parser_.ParseBody(request);
-      else
+      else {
+        std::cout << "input request is invalid" << std::endl;
         request.SetFailed(validator_.GetStatusCode());
+      }
     } else {
       if (request.buffer.length() >= request.content_length) {
         request.body = request.buffer.substr(0, request.content_length);
@@ -176,6 +193,9 @@ void Server::SocketWrite() {
           send(it->fd, &it->output.c_str()[it->send_out_bytes], it->out_length - it->send_out_bytes, 0),
           true
       )) != -1) {
+//        std::cout << "sending response with size = " << it->out_length << ":" << std::endl;
+//        PrintLog(it, it->output, it->fd);
+        std::cout << std::endl;
         it->send_out_bytes += status;
         std::stringstream ss;
         if (!it->out_length) {

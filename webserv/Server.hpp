@@ -48,9 +48,10 @@ class Server {
       Response response(request);
       const char * tmp = request.source_request.c_str();
       output = response.SetResponseLine();
-      request.PrintRequestLine();
+//      request.PrintRequestLine();
+      std::cout << "request: " << request.source_request.substr(0, 50) << "..." << std::endl;
 	out_length = output.length();
-	std::cout << std::endl << output;
+//	std::cout << "response: " << output.substr(0, 50) << "..." << std::endl;
 	send_out_bytes = 0;
     }
     ~WriteElement() {

@@ -25,7 +25,7 @@ public:
 //	void	createCGI(const std::map<std::string, std::string> &request_line, const ServerConfig &con,
 //				 const std::map<std::string, std::string> &headers);
 // private:
-	Request &request_;
+	Request request_;
 	std::map<std::string, std::string> response_line;
 	std::map<std::string,std::string> headers;
 	std::map<std::string, std::string> status_codes;

@@ -39,6 +39,7 @@ void Response::HTTPVersionControl() {
 }
 
 void Response::GetRequest() {
+  std::cout << this->fullPath_ << std::endl;
 	if (_SearchForDir()){
 		if (this->fullPath_[this->fullPath_.size() - 1] == '/')
 			ResponseBuilder(this->fullPath_ + "index.html", "200");
