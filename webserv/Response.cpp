@@ -2,45 +2,89 @@
 
 Response::Response(Request & request): request_(request), ServerConf_(request_.server_config) {
 //	Status code explanation
-	this->status_text_["100"] = "Continue";
-	this->status_text_["101"] = "Switching Protocols";
-	this->status_text_["102"] = "Processing";
-	this->status_text_["103"] = "Early Hints";
-	this->status_text_["200"] = "OK";
-	this->status_text_["201"] = "Created";
-	this->status_text_["202"] = "Accepted";
-	this->status_text_["203"] = "Non_Authoritative Information";
-	this->status_text_["204"] = "No Content";
-	this->status_text_["205"] = "Reset Content";
-	this->status_text_["300"] = "Multiple Choices";
-	this->status_text_["301"] = "Moved Permanently";
-	this->status_text_["302"] = "Found";
-	this->status_text_["303"] = "See Other";
-	this->status_text_["305"] = "Use Proxy";
-	this->status_text_["306"] = "(Unused)";
-	this->status_text_["307"] = "Temporary Redirect";
-	this->status_text_["400"] = "Bad Request";
-	this->status_text_["402"] = "Payment Required";
-	this->status_text_["403"] = "Forbidden";
-	this->status_text_["404"] = "Not Found";
-	this->status_text_["405"] = "Method Not Allowed";
-	this->status_text_["406"] = "Not Acceptable";
-	this->status_text_["408"] = "Request Timeout";
-	this->status_text_["409"] = "Conflict";
-	this->status_text_["410"] = "Gone";
-	this->status_text_["411"] = "Length Required";
-	this->status_text_["413"] = "Payload Too Large";
-	this->status_text_["414"] = "URI Too Long";
-	this->status_text_["415"] = "Unsupported Media Type";
-	this->status_text_["417"] = "Expectation Failed";
-	this->status_text_["426"] = "Upgrade Required";
-	this->status_text_["500"] = "Internal Server Error";
-	this->status_text_["501"] = "Not Implemented";
-	this->status_text_["502"] = "Bad Gateway";
-	this->status_text_["503"] = "Service Unavailable";
-	this->status_text_["504"] = "Gateway Timeout";
-	this->status_text_["505"] = "HTTP Version Not Supported";
+//	this->status_text_["100"] = "Continue";
+//	this->status_text_["101"] = "Switching Protocols";
+//	this->status_text_["102"] = "Processing";
+//	this->status_text_["103"] = "Early Hints";
+//	this->status_text_["200"] = "OK";
+//	this->status_text_["201"] = "Created";
+//	this->status_text_["202"] = "Accepted";
+//	this->status_text_["203"] = "Non_Authoritative Information";
+//	this->status_text_["204"] = "No Content";
+//	this->status_text_["205"] = "Reset Content";
+//	this->status_text_["300"] = "Multiple Choices";
+//	this->status_text_["301"] = "Moved Permanently";
+//	this->status_text_["302"] = "Found";
+//	this->status_text_["303"] = "See Other";
+//	this->status_text_["305"] = "Use Proxy";
+//	this->status_text_["306"] = "(Unused)";
+//	this->status_text_["307"] = "Temporary Redirect";
+//	this->status_text_["400"] = "Bad Request";
+//	this->status_text_["402"] = "Payment Required";
+//	this->status_text_["403"] = "Forbidden";
+//	this->status_text_["404"] = "Not Found";
+//	this->status_text_["405"] = "Method Not Allowed";
+//	this->status_text_["406"] = "Not Acceptable";
+//	this->status_text_["408"] = "Request Timeout";
+//	this->status_text_["409"] = "Conflict";
+//	this->status_text_["410"] = "Gone";
+//	this->status_text_["411"] = "Length Required";
+//	this->status_text_["413"] = "Payload Too Large";
+//	this->status_text_["414"] = "URI Too Long";
+//	this->status_text_["415"] = "Unsupported Media Type";
+//	this->status_text_["417"] = "Expectation Failed";
+//	this->status_text_["426"] = "Upgrade Required";
+//	this->status_text_["500"] = "Internal Server Error";
+//	this->status_text_["501"] = "Not Implemented";
+//	this->status_text_["502"] = "Bad Gateway";
+//	this->status_text_["503"] = "Service Unavailable";
+//	this->status_text_["504"] = "Gateway Timeout";
+//	this->status_text_["505"] = "HTTP Version Not Supported";
 //	Content type explanation
+//	this->content_type_[] = "application/x-executable";
+//	this->content_type_[] = "application/graphql";
+	this->content_type_[".js"] = "application/javascript";
+	this->content_type_[".json"] = "application/json";
+//	this->content_type_[] = "application/ld+json";
+	this->content_type_[".doc"] = "application/msword (.doc)";
+	this->content_type_[".pdf"] = "application/pdf";
+	this->content_type_[".sql"] = "application/sql";
+//	this->content_type_[] = "application/vnd.api+json";
+	this->content_type_[".xls"] = "application/vnd.ms-excel (.xls)";
+	this->content_type_[".ppt"] = "application/vnd.ms-powerpoint (.ppt)";
+	this->content_type_[".odt"] = "application/vnd.oasis.opendocument.text (.odt)";
+	this->content_type_[".pptx"] = "application/vnd.openxmlformats-officedocument.presentationml.presentation (.pptx)";
+	this->content_type_[".xlsx"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet (.xlsx)";
+	this->content_type_[".docx"] = "application/vnd.openxmlformats-officedocument.wordprocessingml.document (.docx)";
+//	this->content_type_[] = "application/x-www-form-urlencoded";
+	this->content_type_[".xml"] = "application/xml";
+	this->content_type_[".zip"] = "application/zip";
+	this->content_type_[".zst"] = "application/zstd (.zst)";
+	this->content_type_[".bin"] = "application/macbinary (.bin)";
+//	this->content_type_[] = "audio/mpeg";
+//	this->content_type_[] = "audio/ogg";
+//	this->content_type_[] = "image/apng";
+//	this->content_type_[] = "image/avif";
+//	this->content_type_[] = "image/flif";
+//	this->content_type_[] = "image/gif";
+	this->content_type_[".jpg"] = "image/jpeg (.jpg, .jpeg, .jfif, .pjpeg, .pjp) [11]";
+	this->content_type_[".jpeg"] = "image/jpeg";
+	this->content_type_[".jfif"] = "image/jpeg";
+	this->content_type_[".pjpeg"] = "image/jpeg";
+	this->content_type_[".pjp"] = "image/jpeg";
+//	this->content_type_[] = "image/jxl";
+	this->content_type_[".png"] = "image/png";
+	this->content_type_[".svg"] = "image/svg+xml (.svg)";
+//	this->content_type_[] = "image/webp";
+//	this->content_type_[] = "image/x-mng";
+//	this->content_type_[] = "multipart/form-data";
+	this->content_type_[".ico"] = "image/x-icon";
+	this->content_type_[".css"] = "text/css";
+	this->content_type_[".csv"] = "text/csv";
+	this->content_type_[".html"] = "text/html";
+	this->content_type_[".php"] = "text/php";
+//	this->content_type_[] = "text/plain";
+	this->content_type_[".xml"] = "text/xml";
 
 }
 
@@ -66,10 +110,13 @@ void Response::ResponseBuilder(const std::string &path, const std::string &statu
 		this->body = str;
 	}
 //	headerLine
-	if (path.substr(path.find('.') + 1) == "html")
-		this->headers["Content-Type"] = "text/html; charset=utf-8";
+//	if (path.substr(path.find('.')) == "html")
+	if (!this->content_type_.find(path.substr(path.find('.')))->second.size() < 1)
+		this->headers["Content-Type"] = "text/plane";
 	else
-		this->headers["Content-Type"] = "image/*";
+		this->headers["Content-Type"] = this->content_type_.find(path.substr(path.find('.')))->second;
+//	else
+//		this->headers["Content-Type"] = "image/*";
 	SetHeaders();
 //	this->headers["Content-Length"] = std::to_string(this->body.size());
 }
@@ -113,7 +160,7 @@ void Response::PostRequest() {
 //		this->body = str;
 //	}
 //	headerLine
-	this->headers["Content-Type"] = "text/html; charset=utf-8";
+	this->headers["Content-Type"] = this->content_type_.find(".html")->second;
 	this->headers["Content-Length"] = std::to_string(this->body.size());
 }
 void Response::HeadRequest() {
@@ -355,7 +402,7 @@ void Response::_createHTMLAutoIndex(DIR *dir) {
 		}
 	}
 	this->body += autoIndexEnd;
-	this->headers["Content-Type"] = "text/html; charset=utf-8";
+	this->headers["Content-Type"] = this->content_type_.find(".html")->second;
 	this->headers["Content-Length"] = std::to_string(this->body.size());
 }
 
@@ -387,7 +434,8 @@ std::string Response::GetTimeGMT() {
 }
 
 void Response::SetHeaders() {
-	this->headers["Content-Type"] = "text/html; charset=utf-8";
+	if (!this->headers.find("Content-Type")->second.size())
+		this->headers["Content-Type"] = this->content_type_.find(".html")->second;
 	this->headers["Content-Length"] = std::to_string(this->body.size());
 	this->headers["Date"] = GetTimeGMT();
 }
