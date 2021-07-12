@@ -46,43 +46,19 @@ Response::Response(Request & request): request_(request), ServerConf_(request_.s
 
 
 void Response::ResponseBuilder(const std::string &path, const std::string &status_code) {
-//	responseLine
 	SetStatus(status_code);
-//	bodyLine
-//	if (status_code > 399) {
-//		path = ServerConf_.root + "/error/" + status_code + ".html";
-//	}
-	std::ifstream fin(path, std::ios::in|std::ios::binary|std::ios::ate);
-	int size;
-	if (fin.is_open()) {
-		fin.seekg(0, std::ios::end);
-		size = fin.tellg();
-		char *contents = new char[size];
-		fin.seekg (0, std::ios::beg);
-		fin.read (contents, size);
-		fin.close();
-		std::string str(contents, size);
-		delete [] contents;
-		this->body = str;
-	}
-//	headerLine
-	if (path.substr(path.find('.') + 1) == "html")
-		this->headers["Content-Type"] = "text/html; charset=utf-8";
-	else
-		this->headers["Content-Type"] = "image/*";
+	SetBody(path);
 	SetHeaders();
-//	this->headers["Content-Length"] = std::to_string(this->body.size());
 }
 
-void Response::HTTPVersionControl() {
+bool Response::HTTPVersionControl() {
 	if (request_.request_line.find("version")->second == "HTTP/1.1") {
 		this->response_line["version"] = "HTTP/1.1";
-	} else {
-//		SetStatus();
-//		SetHeaders();
-		std::cout << "HTTP version error!\n";
-		exit(1);
+		return 1;
 	}
+	SetStatus("505");
+	SetHeaders();
+	return 0;
 }
 
 void Response::GetRequest() {
@@ -97,22 +73,6 @@ static void createCGI(const std::map<std::string, std::string> &request_line, co
 void Response::PostRequest() {
 	this->response_line["status_code"] = "405";
 	this->response_line["status"] = GetStatusText(this->response_line.find("status_code")->second);
-//	bodyLine
-//	std::ifstream fin(path, std::ios::in|std::ios::binary|std::ios::ate);
-//	int size;
-//	if (fin.is_open())
-//	{
-//		fin.seekg(0, std::ios::end);
-//		size = fin.tellg();
-//		char *contents = new char [size];
-//		fin.seekg (0, std::ios::beg);
-//		fin.read (contents, size);
-//		fin.close();
-//		std::string str(contents, size);
-//		delete [] contents;
-//		this->body = str;
-//	}
-//	headerLine
 	this->headers["Content-Type"] = "text/html; charset=utf-8";
 	this->headers["Content-Length"] = std::to_string(this->body.size());
 }
@@ -191,8 +151,7 @@ void Response::SetStatus(std::string code) {
 
 std::string Response::SetResponseLine() {
 	freeResponse();
-	HTTPVersionControl();
-	if (CheckMethodCorrectness() && CheckLocationCorrectness() && CheckLocationMethods()) {
+	if (HTTPVersionControl() && CheckMethodCorrectness() && CheckLocationCorrectness() && CheckLocationMethods()) {
 		DIR *dir = opendir(this->fullPath_.c_str());
 		if (location_.autoindex && dir) {
 			SetStatus("200");
@@ -239,10 +198,9 @@ std::string Response::SendResponse() {
 		response += begin->second + "\r\n";
 	}
 	response += "\r\n";
-		if (request_.request_line.find("method")->second != "HEAD") {
-
-			response += this->body;
-		}
+	if (request_.request_line.find("method")->second != "HEAD") {
+		response += this->body;
+	}
 	return response;
 }
 
@@ -412,8 +370,7 @@ bool Response::_SearchForDir() {
 		ResponseBuilder(ServerConf_.root + request_.request_line.find("target")->second, "200");
 		return 1;
 	}
-	SetStatus("404");
-	SetHeaders();
+	SetErrorResponse("404");
 	return 0;
 }
 
@@ -434,7 +391,32 @@ bool Response::_SearchForFile(const std::string &path){
 	return 0;
 }
 
+void Response::SetBody(const std::string &path) {
+	std::ifstream fin(path, std::ios::in|std::ios::binary|std::ios::ate);
+	int size;
+	if (fin.is_open()) {
+		fin.seekg(0, std::ios::end);
+		size = fin.tellg();
+		char *contents = new char[size];
+		fin.seekg (0, std::ios::beg);
+		fin.read (contents, size);
+		fin.close();
+		std::string str(contents, size);
+		delete [] contents;
+		this->body = str;
+	} else {
+		SetStatus("500");
+		SetHeaders();
+	}
+}
 
-
-
-
+std::string Response::SetErrorResponse(std::string status_code) {
+	std::vector<error> tmpVec = ServerConf_.error_pages;
+	for (int index = 0; index < tmpVec.size(); index++) {
+		if (status_code == std::to_string(tmpVec[index].error_code)) {
+			ResponseBuilder(ServerConf_.root + tmpVec[index].error_path, status_code);
+//			SetBody(ServerConf_.root + tmpVec[index].error_path);
+		}
+	}
+	ResponseBuilder(ServerConf_.root + "/errors/" + this->headers["status_code"] + ".html", status_code);
+};
