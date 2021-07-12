@@ -1,6 +1,48 @@
 #include "Response.hpp"
 
-Response::Response(Request & request): request_(request), ServerConf_(request_.server_config) {}
+Response::Response(Request & request): request_(request), ServerConf_(request_.server_config) {
+//	Status code explanation
+	this->status_text_["100"] = "Continue";
+	this->status_text_["101"] = "Switching Protocols";
+	this->status_text_["102"] = "Processing";
+	this->status_text_["103"] = "Early Hints";
+	this->status_text_["200"] = "OK";
+	this->status_text_["201"] = "Created";
+	this->status_text_["202"] = "Accepted";
+	this->status_text_["203"] = "Non_Authoritative Information";
+	this->status_text_["204"] = "No Content";
+	this->status_text_["205"] = "Reset Content";
+	this->status_text_["300"] = "Multiple Choices";
+	this->status_text_["301"] = "Moved Permanently";
+	this->status_text_["302"] = "Found";
+	this->status_text_["303"] = "See Other";
+	this->status_text_["305"] = "Use Proxy";
+	this->status_text_["306"] = "(Unused)";
+	this->status_text_["307"] = "Temporary Redirect";
+	this->status_text_["400"] = "Bad Request";
+	this->status_text_["402"] = "Payment Required";
+	this->status_text_["403"] = "Forbidden";
+	this->status_text_["404"] = "Not Found";
+	this->status_text_["405"] = "Method Not Allowed";
+	this->status_text_["406"] = "Not Acceptable";
+	this->status_text_["408"] = "Request Timeout";
+	this->status_text_["409"] = "Conflict";
+	this->status_text_["410"] = "Gone";
+	this->status_text_["411"] = "Length Required";
+	this->status_text_["413"] = "Payload Too Large";
+	this->status_text_["414"] = "URI Too Long";
+	this->status_text_["415"] = "Unsupported Media Type";
+	this->status_text_["417"] = "Expectation Failed";
+	this->status_text_["426"] = "Upgrade Required";
+	this->status_text_["500"] = "Internal Server Error";
+	this->status_text_["501"] = "Not Implemented";
+	this->status_text_["502"] = "Bad Gateway";
+	this->status_text_["503"] = "Service Unavailable";
+	this->status_text_["504"] = "Gateway Timeout";
+	this->status_text_["505"] = "HTTP Version Not Supported";
+//	Content type explanation
+
+}
 
 
 void Response::ResponseBuilder(const std::string &path, const std::string &status_code) {
@@ -28,13 +70,16 @@ void Response::ResponseBuilder(const std::string &path, const std::string &statu
 		this->headers["Content-Type"] = "text/html; charset=utf-8";
 	else
 		this->headers["Content-Type"] = "image/*";
-	this->headers["Content-Length"] = std::to_string(this->body.size());
+	SetHeaders();
+//	this->headers["Content-Length"] = std::to_string(this->body.size());
 }
 
 void Response::HTTPVersionControl() {
 	if (request_.request_line.find("version")->second == "HTTP/1.1") {
 		this->response_line["version"] = "HTTP/1.1";
 	} else {
+//		SetStatus();
+//		SetHeaders();
 		std::cout << "HTTP version error!\n";
 		exit(1);
 	}
@@ -73,24 +118,7 @@ void Response::PostRequest() {
 }
 void Response::HeadRequest() {
 	SetStatus("405");
-//	bodyLine
-//	std::ifstream fin(path, std::ios::in|std::ios::binary|std::ios::ate);
-//	int size;
-//	if (fin.is_open())
-//	{
-//		fin.seekg(0, std::ios::end);
-//		size = fin.tellg();
-//		char *contents = new char [size];
-//		fin.seekg (0, std::ios::beg);
-//		fin.read (contents, size);
-//		fin.close();
-//		std::string str(contents, size);
-//		delete [] contents;
-//		this->body = str;
-//	}
-//	headerLine
-	this->headers["Content-Type"] = "text/html; charset=utf-8";
-	this->headers["Content-Length"] = std::to_string(this->body.size());
+	SetHeaders();
 }
 
 bool Response::CheckMethodCorrectness() {
@@ -100,6 +128,7 @@ bool Response::CheckMethodCorrectness() {
 			return 1;
 	}
 	SetStatus("405");
+	SetHeaders();
 	return 0;
 }
 
@@ -109,6 +138,7 @@ bool Response::CheckLocationMethods() {
 			return 1;
 	}
 	SetStatus("405");
+	SetHeaders();
 	return 0;
 }
 void Response::CorrectPath()
@@ -150,6 +180,7 @@ bool Response::CheckLocationCorrectness() {
 		path = path.substr(0, path.rfind('/') + 1);
 	}
 	SetStatus("404");
+	SetHeaders();
 	return 0;
 }
 
@@ -168,7 +199,7 @@ std::string Response::SetResponseLine() {
 			_createHTMLAutoIndex(dir);
 			closedir(dir);
 		} else {
-			if(request_.request_line.find("method")->second == "GET" /*|| request_.request_line.find("method")->second == "HEAD"*/) {
+			if(request_.request_line.find("method")->second == "GET") {
 				GetRequest();
 			}
 			else if (request_.request_line.find("method")->second == "POST"){
@@ -179,9 +210,7 @@ std::string Response::SetResponseLine() {
 			}
 			else if (request_.request_line.find("method")->second == "PUT") {
 				SetStatus("201");
-
-				this->headers["Content-Type"] = "text/html; charset=utf-8";
-				this->headers["Content-Length"] = std::to_string(this->body.size());
+				SetHeaders();
 			}
 		}
 	}
@@ -217,50 +246,50 @@ std::string Response::SendResponse() {
 	return response;
 }
 
+
+
 std::string Response::GetStatusText(std::string code) {
-	std::map<std::string, std::string> statusText;
-	statusText["100"] = "Continue";
-	statusText["101"] = "Switching Protocols";
-	statusText["102"] = "Processing";
-	statusText["103"] = "Early Hints";
-	statusText["200"] = "OK";
-	statusText["201"] = "Created";
-	statusText["202"] = "Accepted";
-	statusText["203"] = "Non_Authoritative Information";
-	statusText["204"] = "No Content";
-	statusText["205"] = "Reset Content";
-	statusText["300"] = "Multiple Choices";
-	statusText["301"] = "Moved Permanently";
-	statusText["302"] = "Found";
-	statusText["303"] = "See Other";
-	statusText["305"] = "Use Proxy";
-	statusText["306"] = "(Unused)";
-	statusText["307"] = "Temporary Redirect";
-	statusText["400"] = "Bad Request";
-	statusText["402"] = "Payment Required";
-	statusText["403"] = "Forbidden";
-	statusText["404"] = "Not Found";
-	statusText["405"] = "Method Not Allowed";
-	statusText["406"] = "Not Acceptable";
-	statusText["408"] = "Request Timeout";
-	statusText["409"] = "Conflict";
-	statusText["410"] = "Gone";
-	statusText["411"] = "Length Required";
-	statusText["413"] = "Payload Too Large";
-	statusText["414"] = "URI Too Long";
-	statusText["415"] = "Unsupported Media Type";
-	statusText["417"] = "Expectation Failed";
-	statusText["426"] = "Upgrade Required";
-	statusText["500"] = "Internal Server Error";
-	statusText["501"] = "Not Implemented";
-	statusText["502"] = "Bad Gateway";
-	statusText["503"] = "Service Unavailable";
-	statusText["504"] = "Gateway Timeout";
-	statusText["505"] = "HTTP Version Not Supported";
-	if (statusText.find(code) != statusText.end())
-		return statusText.find(code)->second;
-	std::cout << "status code error!" << std::endl;
-	exit(1);
+	std::map<std::string, std::string> status_text_;
+	status_text_["100"] = "Continue";
+	status_text_["101"] = "Switching Protocols";
+	status_text_["102"] = "Processing";
+	status_text_["103"] = "Early Hints";
+	status_text_["200"] = "OK";
+	status_text_["201"] = "Created";
+	status_text_["202"] = "Accepted";
+	status_text_["203"] = "Non_Authoritative Information";
+	status_text_["204"] = "No Content";
+	status_text_["205"] = "Reset Content";
+	status_text_["300"] = "Multiple Choices";
+	status_text_["301"] = "Moved Permanently";
+	status_text_["302"] = "Found";
+	status_text_["303"] = "See Other";
+	status_text_["305"] = "Use Proxy";
+	status_text_["306"] = "(Unused)";
+	status_text_["307"] = "Temporary Redirect";
+	status_text_["400"] = "Bad Request";
+	status_text_["402"] = "Payment Required";
+	status_text_["403"] = "Forbidden";
+	status_text_["404"] = "Not Found";
+	status_text_["405"] = "Method Not Allowed";
+	status_text_["406"] = "Not Acceptable";
+	status_text_["408"] = "Request Timeout";
+	status_text_["409"] = "Conflict";
+	status_text_["410"] = "Gone";
+	status_text_["411"] = "Length Required";
+	status_text_["413"] = "Payload Too Large";
+	status_text_["414"] = "URI Too Long";
+	status_text_["415"] = "Unsupported Media Type";
+	status_text_["417"] = "Expectation Failed";
+	status_text_["426"] = "Upgrade Required";
+	status_text_["500"] = "Internal Server Error";
+	status_text_["501"] = "Not Implemented";
+	status_text_["502"] = "Bad Gateway";
+	status_text_["503"] = "Service Unavailable";
+	status_text_["504"] = "Gateway Timeout";
+	status_text_["505"] = "HTTP Version Not Supported";
+	if (status_text_.find(code) != status_text_.end())
+		return status_text_.find(code)->second;
 }
 
 
@@ -330,6 +359,39 @@ void Response::_createHTMLAutoIndex(DIR *dir) {
 	this->headers["Content-Length"] = std::to_string(this->body.size());
 }
 
+static std::string getNumber(int num) {
+	if (num < 10) {
+		return "0" + std::to_string(num);
+	}
+	return std::to_string(num);
+}
+
+std::string Response::GetTimeGMT() {
+	std::stringstream ss;
+	time_t t = time(NULL);
+	struct tm *gm = gmtime(&t);
+	std::string month[] = {"Jun", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+	std::string days[] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+	for (int index = 0; index < 7; index++) {
+		if (index == gm->tm_wday) {
+			ss << days[index] << ", " << gm->tm_mday << " ";
+		}
+	}
+	for (int index = 0; index < 12; index++) {
+		if (index == gm->tm_mon) {
+			ss << month[index] << " " << (gm->tm_year + 1900) << " " <<
+			getNumber(gm->tm_hour) << ":" << getNumber(gm->tm_min) << ":" << getNumber(gm->tm_sec) << " GMT";
+		}
+	}
+	return ss.str();
+}
+
+void Response::SetHeaders() {
+	this->headers["Content-Type"] = "text/html; charset=utf-8";
+	this->headers["Content-Length"] = std::to_string(this->body.size());
+	this->headers["Date"] = GetTimeGMT();
+}
+
 bool Response::_SearchForDir() {
 	DIR *dr;
 	struct dirent *en;
@@ -339,23 +401,19 @@ bool Response::_SearchForDir() {
 			while ((en = readdir(dr)) != NULL) {
 				if (strcmp(en->d_name, location_.index[i].c_str()) == 0) {
 					closedir(dr);
-					ResponseBuilder(this->fullPath_ + location_.index[i], "200");
+					ResponseBuilder(this->fullPath_ + "/" + location_.index[i], "200");
 					return 1;
 				}
 			}
 		}
-		SetStatus("404");
-		this->headers["Content-Type"] = "text/html; charset=utf-8";
-		this->headers["Content-Length"] = std::to_string(this->body.size());
 		closedir(dr);
 	}
-	else if (_SearchForFile(this->fullPath_))
+	else if (_SearchForFile(this->fullPath_)) {
 		ResponseBuilder(ServerConf_.root + request_.request_line.find("target")->second, "200");
-	else {
-		SetStatus("404");
-		this->headers["Content-Type"] = "text/html; charset=utf-8";
-		this->headers["Content-Length"] = std::to_string(this->body.size());
+		return 1;
 	}
+	SetStatus("404");
+	SetHeaders();
 	return 0;
 }
 
