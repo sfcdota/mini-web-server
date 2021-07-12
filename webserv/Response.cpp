@@ -41,6 +41,50 @@ Response::Response(Request & request): request_(request), ServerConf_(request_.s
 	this->status_text_["504"] = "Gateway Timeout";
 	this->status_text_["505"] = "HTTP Version Not Supported";
 //	Content type explanation
+//	this->content_type_[] = "application/x-executable";
+//	this->content_type_[] = "application/graphql";
+	this->content_type_[".js"] = "application/javascript";
+	this->content_type_[".json"] = "application/json";
+//	this->content_type_[] = "application/ld+json";
+	this->content_type_[".doc"] = "application/msword (.doc)";
+	this->content_type_[".pdf"] = "application/pdf";
+	this->content_type_[".sql"] = "application/sql";
+//	this->content_type_[] = "application/vnd.api+json";
+	this->content_type_[".xls"] = "application/vnd.ms-excel (.xls)";
+	this->content_type_[".ppt"] = "application/vnd.ms-powerpoint (.ppt)";
+	this->content_type_[".odt"] = "application/vnd.oasis.opendocument.text (.odt)";
+	this->content_type_[".pptx"] = "application/vnd.openxmlformats-officedocument.presentationml.presentation (.pptx)";
+	this->content_type_[".xlsx"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet (.xlsx)";
+	this->content_type_[".docx"] = "application/vnd.openxmlformats-officedocument.wordprocessingml.document (.docx)";
+//	this->content_type_[] = "application/x-www-form-urlencoded";
+	this->content_type_[".xml"] = "application/xml";
+	this->content_type_[".zip"] = "application/zip";
+	this->content_type_[".zst"] = "application/zstd (.zst)";
+	this->content_type_[".bin"] = "application/macbinary (.bin)";
+//	this->content_type_[] = "audio/mpeg";
+//	this->content_type_[] = "audio/ogg";
+//	this->content_type_[] = "image/apng";
+//	this->content_type_[] = "image/avif";
+//	this->content_type_[] = "image/flif";
+//	this->content_type_[] = "image/gif";
+	this->content_type_[".jpg"] = "image/jpeg (.jpg, .jpeg, .jfif, .pjpeg, .pjp) [11]";
+	this->content_type_[".jpeg"] = "image/jpeg";
+	this->content_type_[".jfif"] = "image/jpeg";
+	this->content_type_[".pjpeg"] = "image/jpeg";
+	this->content_type_[".pjp"] = "image/jpeg";
+//	this->content_type_[] = "image/jxl";
+	this->content_type_[".png"] = "image/png";
+	this->content_type_[".svg"] = "image/svg+xml (.svg)";
+//	this->content_type_[] = "image/webp";
+//	this->content_type_[] = "image/x-mng";
+//	this->content_type_[] = "multipart/form-data";
+	this->content_type_[".ico"] = "image/x-icon";
+	this->content_type_[".css"] = "text/css";
+	this->content_type_[".csv"] = "text/csv";
+	this->content_type_[".html"] = "text/html";
+	this->content_type_[".php"] = "text/php";
+//	this->content_type_[] = "text/plain";
+	this->content_type_[".xml"] = "text/xml";
 
 }
 
@@ -48,6 +92,10 @@ Response::Response(Request & request): request_(request), ServerConf_(request_.s
 void Response::ResponseBuilder(const std::string &path, const std::string &status_code) {
 	SetStatus(status_code);
 	SetBody(path);
+	if (path.empty() || !this->content_type_.find(path.substr(path.find('.')))->second.size() < 1)
+		this->headers["Content-Type"] = "text/plane";
+	else
+		this->headers["Content-Type"] = this->content_type_.find(path.substr(path.find('.')))->second;
 	SetHeaders();
 }
 
@@ -73,12 +121,24 @@ static void createCGI(const std::map<std::string, std::string> &request_line, co
 void Response::PostRequest() {
 	this->response_line["status_code"] = "405";
 	this->response_line["status"] = GetStatusText(this->response_line.find("status_code")->second);
-	this->headers["Content-Type"] = "text/html; charset=utf-8";
+	this->headers["Content-Type"] = this->content_type_.find(".html")->second;
 	this->headers["Content-Length"] = std::to_string(this->body.size());
 }
 void Response::HeadRequest() {
 	SetStatus("405");
 	SetHeaders();
+}
+
+void Response::PutRequest() {
+	int fd = open((this->ServerConf_.root + "/bin" + this->fullPath_.substr(this->fullPath_.rfind('/'))).c_str(), O_CREAT | O_RDWR | O_TRUNC , 0777);
+	if (fd == -1) {
+		throw std::runtime_error("Error: cannot open create/open file");
+	}
+	
+	write(fd, this->request_.body.c_str(), this->request_.body.size());
+	close(fd);
+	ResponseBuilder("", "201");
+	
 }
 
 bool Response::CheckMethodCorrectness() {
@@ -168,8 +228,9 @@ std::string Response::SetResponseLine() {
 				HeadRequest();
 			}
 			else if (request_.request_line.find("method")->second == "PUT") {
-				SetStatus("201");
-				SetHeaders();
+//				SetStatus("201");
+//				SetHeaders();
+				PutRequest();
 			}
 		}
 	}
@@ -313,7 +374,7 @@ void Response::_createHTMLAutoIndex(DIR *dir) {
 		}
 	}
 	this->body += autoIndexEnd;
-	this->headers["Content-Type"] = "text/html; charset=utf-8";
+	this->headers["Content-Type"] = this->content_type_.find(".html")->second;
 	this->headers["Content-Length"] = std::to_string(this->body.size());
 }
 
@@ -345,7 +406,9 @@ std::string Response::GetTimeGMT() {
 }
 
 void Response::SetHeaders() {
-	this->headers["Content-Type"] = "text/html; charset=utf-8";
+	if(this->response_line.find("method")->second == "GET")
+		if (!this->headers.find("Content-Type")->second.size())
+			this->headers["Content-Type"] = this->content_type_.find(".html")->second;
 	this->headers["Content-Length"] = std::to_string(this->body.size());
 	this->headers["Date"] = GetTimeGMT();
 }
@@ -404,10 +467,11 @@ void Response::SetBody(const std::string &path) {
 		std::string str(contents, size);
 		delete [] contents;
 		this->body = str;
-	} else {
-		SetStatus("500");
-		SetHeaders();
 	}
+//	else {
+//		SetStatus("500");
+//		SetHeaders();
+//	}
 }
 
 void Response::SetErrorResponse(std::string status_code) {
