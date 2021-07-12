@@ -74,7 +74,6 @@ class Server {
   timeval timeout;
   char *buf;
   const ssize_t INPUT_BUFFER_SIZE;
-  int max_fd;
   unsigned status;
   MessageValidator validator_;
   MessageParser parser_;

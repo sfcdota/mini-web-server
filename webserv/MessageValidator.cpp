@@ -332,7 +332,6 @@ bool MessageValidator::ValidStatusLine(const std::string &msg, size_t &pos) {
 }
 
 bool MessageValidator::ValidBody(const std::string &msg) {
-
   return true;
 }
 
