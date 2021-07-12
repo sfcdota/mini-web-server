@@ -14,8 +14,9 @@ public:
 	void	GetContentType();
 	std::string SendResponse();
 	void	ResponseBuilder(const std::string &path, const std::string &status_code);
-	void HTTPVersionControl();
+	bool HTTPVersionControl();
 	void GetRequest();
+	void SetErrorResponse(std::string status_code);
 	void PostRequest();
 	void HeadRequest();
 	bool 	CheckMethodCorrectness();
@@ -25,6 +26,7 @@ public:
 	void SetStatus(std::string code);
 	void SetHeaders();
 	std::string GetTimeGMT();
+	void SetBody(const std::string &path);
 //	void	createCGI(const std::map<std::string, std::string> &request_line, const ServerConfig &con,
 //				 const std::map<std::string, std::string> &headers);
 // private:

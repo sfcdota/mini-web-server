@@ -2,44 +2,44 @@
 
 Response::Response(Request & request): request_(request), ServerConf_(request_.server_config) {
 //	Status code explanation
-//	this->status_text_["100"] = "Continue";
-//	this->status_text_["101"] = "Switching Protocols";
-//	this->status_text_["102"] = "Processing";
-//	this->status_text_["103"] = "Early Hints";
-//	this->status_text_["200"] = "OK";
-//	this->status_text_["201"] = "Created";
-//	this->status_text_["202"] = "Accepted";
-//	this->status_text_["203"] = "Non_Authoritative Information";
-//	this->status_text_["204"] = "No Content";
-//	this->status_text_["205"] = "Reset Content";
-//	this->status_text_["300"] = "Multiple Choices";
-//	this->status_text_["301"] = "Moved Permanently";
-//	this->status_text_["302"] = "Found";
-//	this->status_text_["303"] = "See Other";
-//	this->status_text_["305"] = "Use Proxy";
-//	this->status_text_["306"] = "(Unused)";
-//	this->status_text_["307"] = "Temporary Redirect";
-//	this->status_text_["400"] = "Bad Request";
-//	this->status_text_["402"] = "Payment Required";
-//	this->status_text_["403"] = "Forbidden";
-//	this->status_text_["404"] = "Not Found";
-//	this->status_text_["405"] = "Method Not Allowed";
-//	this->status_text_["406"] = "Not Acceptable";
-//	this->status_text_["408"] = "Request Timeout";
-//	this->status_text_["409"] = "Conflict";
-//	this->status_text_["410"] = "Gone";
-//	this->status_text_["411"] = "Length Required";
-//	this->status_text_["413"] = "Payload Too Large";
-//	this->status_text_["414"] = "URI Too Long";
-//	this->status_text_["415"] = "Unsupported Media Type";
-//	this->status_text_["417"] = "Expectation Failed";
-//	this->status_text_["426"] = "Upgrade Required";
-//	this->status_text_["500"] = "Internal Server Error";
-//	this->status_text_["501"] = "Not Implemented";
-//	this->status_text_["502"] = "Bad Gateway";
-//	this->status_text_["503"] = "Service Unavailable";
-//	this->status_text_["504"] = "Gateway Timeout";
-//	this->status_text_["505"] = "HTTP Version Not Supported";
+	this->status_text_["100"] = "Continue";
+	this->status_text_["101"] = "Switching Protocols";
+	this->status_text_["102"] = "Processing";
+	this->status_text_["103"] = "Early Hints";
+	this->status_text_["200"] = "OK";
+	this->status_text_["201"] = "Created";
+	this->status_text_["202"] = "Accepted";
+	this->status_text_["203"] = "Non_Authoritative Information";
+	this->status_text_["204"] = "No Content";
+	this->status_text_["205"] = "Reset Content";
+	this->status_text_["300"] = "Multiple Choices";
+	this->status_text_["301"] = "Moved Permanently";
+	this->status_text_["302"] = "Found";
+	this->status_text_["303"] = "See Other";
+	this->status_text_["305"] = "Use Proxy";
+	this->status_text_["306"] = "(Unused)";
+	this->status_text_["307"] = "Temporary Redirect";
+	this->status_text_["400"] = "Bad Request";
+	this->status_text_["402"] = "Payment Required";
+	this->status_text_["403"] = "Forbidden";
+	this->status_text_["404"] = "Not Found";
+	this->status_text_["405"] = "Method Not Allowed";
+	this->status_text_["406"] = "Not Acceptable";
+	this->status_text_["408"] = "Request Timeout";
+	this->status_text_["409"] = "Conflict";
+	this->status_text_["410"] = "Gone";
+	this->status_text_["411"] = "Length Required";
+	this->status_text_["413"] = "Payload Too Large";
+	this->status_text_["414"] = "URI Too Long";
+	this->status_text_["415"] = "Unsupported Media Type";
+	this->status_text_["417"] = "Expectation Failed";
+	this->status_text_["426"] = "Upgrade Required";
+	this->status_text_["500"] = "Internal Server Error";
+	this->status_text_["501"] = "Not Implemented";
+	this->status_text_["502"] = "Bad Gateway";
+	this->status_text_["503"] = "Service Unavailable";
+	this->status_text_["504"] = "Gateway Timeout";
+	this->status_text_["505"] = "HTTP Version Not Supported";
 //	Content type explanation
 //	this->content_type_[] = "application/x-executable";
 //	this->content_type_[] = "application/graphql";
@@ -90,46 +90,23 @@ Response::Response(Request & request): request_(request), ServerConf_(request_.s
 
 
 void Response::ResponseBuilder(const std::string &path, const std::string &status_code) {
-//	responseLine
 	SetStatus(status_code);
-//	bodyLine
-//	if (status_code > 399) {
-//		path = ServerConf_.root + "/error/" + status_code + ".html";
-//	}
-	std::ifstream fin(path, std::ios::in|std::ios::binary|std::ios::ate);
-	int size;
-	if (fin.is_open()) {
-		fin.seekg(0, std::ios::end);
-		size = fin.tellg();
-		char *contents = new char[size];
-		fin.seekg (0, std::ios::beg);
-		fin.read (contents, size);
-		fin.close();
-		std::string str(contents, size);
-		delete [] contents;
-		this->body = str;
-	}
-//	headerLine
-//	if (path.substr(path.find('.')) == "html")
+	SetBody(path);
 	if (!this->content_type_.find(path.substr(path.find('.')))->second.size() < 1)
 		this->headers["Content-Type"] = "text/plane";
 	else
 		this->headers["Content-Type"] = this->content_type_.find(path.substr(path.find('.')))->second;
-//	else
-//		this->headers["Content-Type"] = "image/*";
 	SetHeaders();
-//	this->headers["Content-Length"] = std::to_string(this->body.size());
 }
 
-void Response::HTTPVersionControl() {
+bool Response::HTTPVersionControl() {
 	if (request_.request_line.find("version")->second == "HTTP/1.1") {
 		this->response_line["version"] = "HTTP/1.1";
-	} else {
-//		SetStatus();
-//		SetHeaders();
-		std::cout << "HTTP version error!\n";
-		exit(1);
+		return 1;
 	}
+	SetStatus("505");
+	SetHeaders();
+	return 0;
 }
 
 void Response::GetRequest() {
@@ -144,22 +121,6 @@ static void createCGI(const std::map<std::string, std::string> &request_line, co
 void Response::PostRequest() {
 	this->response_line["status_code"] = "405";
 	this->response_line["status"] = GetStatusText(this->response_line.find("status_code")->second);
-//	bodyLine
-//	std::ifstream fin(path, std::ios::in|std::ios::binary|std::ios::ate);
-//	int size;
-//	if (fin.is_open())
-//	{
-//		fin.seekg(0, std::ios::end);
-//		size = fin.tellg();
-//		char *contents = new char [size];
-//		fin.seekg (0, std::ios::beg);
-//		fin.read (contents, size);
-//		fin.close();
-//		std::string str(contents, size);
-//		delete [] contents;
-//		this->body = str;
-//	}
-//	headerLine
 	this->headers["Content-Type"] = this->content_type_.find(".html")->second;
 	this->headers["Content-Length"] = std::to_string(this->body.size());
 }
@@ -238,8 +199,7 @@ void Response::SetStatus(std::string code) {
 
 std::string Response::SetResponseLine() {
 	freeResponse();
-	HTTPVersionControl();
-	if (CheckMethodCorrectness() && CheckLocationCorrectness() && CheckLocationMethods()) {
+	if (HTTPVersionControl() && CheckMethodCorrectness() && CheckLocationCorrectness() && CheckLocationMethods()) {
 		DIR *dir = opendir(this->fullPath_.c_str());
 		if (location_.autoindex && dir) {
 			SetStatus("200");
@@ -286,10 +246,9 @@ std::string Response::SendResponse() {
 		response += begin->second + "\r\n";
 	}
 	response += "\r\n";
-		if (request_.request_line.find("method")->second != "HEAD") {
-
-			response += this->body;
-		}
+	if (request_.request_line.find("method")->second != "HEAD") {
+		response += this->body;
+	}
 	return response;
 }
 
@@ -457,11 +416,10 @@ bool Response::_SearchForDir() {
 		closedir(dr);
 	}
 	else if (_SearchForFile(this->fullPath_)) {
-		ResponseBuilder(ServerConf_.root + request_.request_line.find("target")->second, "200");
+		ResponseBuilder(this->fullPath_, "200");
 		return 1;
 	}
-	SetStatus("404");
-	SetHeaders();
+	SetErrorResponse("404");
 	return 0;
 }
 
@@ -482,7 +440,32 @@ bool Response::_SearchForFile(const std::string &path){
 	return 0;
 }
 
+void Response::SetBody(const std::string &path) {
+	std::ifstream fin(path, std::ios::in|std::ios::binary|std::ios::ate);
+	int size;
+	if (fin.is_open()) {
+		fin.seekg(0, std::ios::end);
+		size = fin.tellg();
+		char *contents = new char[size];
+		fin.seekg (0, std::ios::beg);
+		fin.read (contents, size);
+		fin.close();
+		std::string str(contents, size);
+		delete [] contents;
+		this->body = str;
+	} else {
+		SetStatus("500");
+		SetHeaders();
+	}
+}
 
-
-
-
+void Response::SetErrorResponse(std::string status_code) {
+	std::vector<error> tmpVec = ServerConf_.error_pages;
+	for (int index = 0; index < tmpVec.size(); index++) {
+		if (status_code == std::to_string(tmpVec[index].error_code)) {
+			ResponseBuilder(ServerConf_.root + tmpVec[index].error_path, status_code);
+			return;
+		}
+	}
+	ResponseBuilder(ServerConf_.root + "/errors/" + this->headers["status_code"] + ".html", status_code);
+};

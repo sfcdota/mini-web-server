@@ -47,13 +47,16 @@ class Server {
 	size_t send_out_bytes;
 	WriteElement(int server_fd, int fd, Request & request): server_fd(server_fd), fd(fd), request(request) {
 		Response response(request);
-		const char * tmp = request.source_request.c_str();
-		output = response.SetResponseLine();
-//		std::cout << "fullPath_: " << response.fullPath_ << std::endl;
-		request.PrintRequestLine();
-		request.PrintBody();
+//		const char * tmp = request.source_request.c_str();
+//		std::cout << tmp;
+//        request.PrintRequestLine();
+//        request.PrintBody();
+        output = response.SetResponseLine();
+		std::cout << "fullPath_: " << response.fullPath_ << std::endl;
+//		request.PrintRequestLine();
+//		request.PrintBody();
 		out_length = output.length();
-		std::cout << output << std::endl;
+		std::cout << "output: " << output << std::endl;
 		send_out_bytes = 0;
 	}
 	~WriteElement() {
@@ -84,7 +87,9 @@ class Server {
   void ProcessInputBuffer(char * buffer, Request & request);
   void GetHeaders(Request & request);
   void GetBody(Request & request);
-  const char * SendResponse(Request& req);
+  void GetChunkedBody(Request & request);
+  long GetTimeInSeconds();
+  void ClearBrokenConnection(int fd);
 
   template<class Iterator> void PrintLog(Iterator it, const std::string & msg, int client_fd);
 
