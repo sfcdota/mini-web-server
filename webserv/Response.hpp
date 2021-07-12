@@ -16,7 +16,7 @@ public:
 	void	ResponseBuilder(const std::string &path, const std::string &status_code);
 	bool HTTPVersionControl();
 	void GetRequest();
-	std::string SetErrorResponse(std::string status_code);
+	void SetErrorResponse(std::string status_code);
 	void PostRequest();
 	void HeadRequest();
 	bool 	CheckMethodCorrectness();

@@ -367,7 +367,7 @@ bool Response::_SearchForDir() {
 		closedir(dr);
 	}
 	else if (_SearchForFile(this->fullPath_)) {
-		ResponseBuilder(ServerConf_.root + request_.request_line.find("target")->second, "200");
+		ResponseBuilder(this->fullPath_, "200");
 		return 1;
 	}
 	SetErrorResponse("404");
@@ -410,12 +410,12 @@ void Response::SetBody(const std::string &path) {
 	}
 }
 
-std::string Response::SetErrorResponse(std::string status_code) {
+void Response::SetErrorResponse(std::string status_code) {
 	std::vector<error> tmpVec = ServerConf_.error_pages;
 	for (int index = 0; index < tmpVec.size(); index++) {
 		if (status_code == std::to_string(tmpVec[index].error_code)) {
 			ResponseBuilder(ServerConf_.root + tmpVec[index].error_path, status_code);
-//			SetBody(ServerConf_.root + tmpVec[index].error_path);
+			return;
 		}
 	}
 	ResponseBuilder(ServerConf_.root + "/errors/" + this->headers["status_code"] + ".html", status_code);
