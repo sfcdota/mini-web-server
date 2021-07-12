@@ -19,6 +19,7 @@ public:
 	void SetErrorResponse(std::string status_code);
 	void PostRequest();
 	void HeadRequest();
+	void PutRequest();
 	bool 	CheckMethodCorrectness();
 	bool 	CheckLocationCorrectness();
 	bool	CheckLocationMethods();

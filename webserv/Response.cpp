@@ -92,7 +92,7 @@ Response::Response(Request & request): request_(request), ServerConf_(request_.s
 void Response::ResponseBuilder(const std::string &path, const std::string &status_code) {
 	SetStatus(status_code);
 	SetBody(path);
-	if (!this->content_type_.find(path.substr(path.find('.')))->second.size() < 1)
+	if (path.empty() || !this->content_type_.find(path.substr(path.find('.')))->second.size() < 1)
 		this->headers["Content-Type"] = "text/plane";
 	else
 		this->headers["Content-Type"] = this->content_type_.find(path.substr(path.find('.')))->second;
@@ -127,6 +127,18 @@ void Response::PostRequest() {
 void Response::HeadRequest() {
 	SetStatus("405");
 	SetHeaders();
+}
+
+void Response::PutRequest() {
+	int fd = open((this->ServerConf_.root + "/bin" + this->fullPath_.substr(this->fullPath_.rfind('/'))).c_str(), O_CREAT | O_RDWR | O_TRUNC , 0777);
+	if (fd == -1) {
+		throw std::runtime_error("Error: cannot open create/open file");
+	}
+	
+	write(fd, this->request_.body.c_str(), this->request_.body.size());
+	close(fd);
+	ResponseBuilder("", "201");
+	
 }
 
 bool Response::CheckMethodCorrectness() {
@@ -216,8 +228,9 @@ std::string Response::SetResponseLine() {
 				HeadRequest();
 			}
 			else if (request_.request_line.find("method")->second == "PUT") {
-				SetStatus("201");
-				SetHeaders();
+//				SetStatus("201");
+//				SetHeaders();
+				PutRequest();
 			}
 		}
 	}
@@ -393,8 +406,9 @@ std::string Response::GetTimeGMT() {
 }
 
 void Response::SetHeaders() {
-	if (!this->headers.find("Content-Type")->second.size())
-		this->headers["Content-Type"] = this->content_type_.find(".html")->second;
+	if(this->response_line.find("method")->second == "GET")
+		if (!this->headers.find("Content-Type")->second.size())
+			this->headers["Content-Type"] = this->content_type_.find(".html")->second;
 	this->headers["Content-Length"] = std::to_string(this->body.size());
 	this->headers["Date"] = GetTimeGMT();
 }
@@ -453,10 +467,11 @@ void Response::SetBody(const std::string &path) {
 		std::string str(contents, size);
 		delete [] contents;
 		this->body = str;
-	} else {
-		SetStatus("500");
-		SetHeaders();
 	}
+//	else {
+//		SetStatus("500");
+//		SetHeaders();
+//	}
 }
 
 void Response::SetErrorResponse(std::string status_code) {
