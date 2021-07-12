@@ -32,7 +32,6 @@ void Response::ResponseBuilder(const std::string &path, const std::string &statu
 }
 
 void Response::HTTPVersionControl() {
-	std::cout << request_.request_line.find("version")->second << std::endl;
 	if (request_.request_line.find("version")->second == "HTTP/1.1") {
 		this->response_line["version"] = "HTTP/1.1";
 	} else {
@@ -126,7 +125,6 @@ void Response::CorrectPath()
 		this->fullPath_ += this->cleanTarget_.substr(0, this->cleanTarget_.size() - 1);
 	else
 		this->fullPath_ += this->cleanTarget_;
-	std::cout << this->fullPath_ << std::endl;
 }
 
 bool Response::CheckLocationCorrectness() {

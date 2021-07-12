@@ -39,29 +39,25 @@ class Server {
   };
 
   struct WriteElement {
-    int server_fd;
-    int fd;
-    Request request;
-    std::string output;
-    size_t out_length;
-    size_t send_out_bytes;
-    WriteElement(int server_fd, int fd, Request & request): server_fd(server_fd), fd(fd), request(request) {
-//      if (request.source_request.find("GET /images/1.jpg") != -1)
-//        std::cout << "LOCATIONS SIZE" << request.server_config.locations.size() << std::endl;
-
-      Response response(request);
-      const char * tmp = request.source_request.c_str();
-      output = response.SetResponseLine();
-//      request.PrintRequestLine();
-//      std::cout << "request: " << request.source_request.substr(0, 50) << "..." << std::endl;
-//    request.PrintHeaders();
-	out_length = output.length();
-	request.PrintBody();
-	std::cout << "response: " << output << std::endl;
-	send_out_bytes = 0;
-    }
-    ~WriteElement() {
-    }
+	int server_fd;
+	int fd;
+	Request request;
+	std::string output;
+	size_t out_length;
+	size_t send_out_bytes;
+	WriteElement(int server_fd, int fd, Request & request): server_fd(server_fd), fd(fd), request(request) {
+		Response response(request);
+		const char * tmp = request.source_request.c_str();
+		output = response.SetResponseLine();
+//		std::cout << "fullPath_: " << response.fullPath_ << std::endl;
+		request.PrintRequestLine();
+		request.PrintBody();
+		out_length = output.length();
+		std::cout << output << std::endl;
+		send_out_bytes = 0;
+	}
+	~WriteElement() {
+	}
   };
   const std::vector<ServerConfig> config;
   std::vector<ServerElement> server;
