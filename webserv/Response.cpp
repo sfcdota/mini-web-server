@@ -339,7 +339,7 @@ bool Response::_SearchForDir() {
 			while ((en = readdir(dr)) != NULL) {
 				if (strcmp(en->d_name, location_.index[i].c_str()) == 0) {
 					closedir(dr);
-					ResponseBuilder(this->fullPath_ + location_.index[i], "200");
+					ResponseBuilder(this->fullPath_ + '/' + location_.index[i], "200");
 					return 1;
 				}
 			}

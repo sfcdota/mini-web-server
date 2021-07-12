@@ -7,14 +7,6 @@
 # include <sys/time.h>
 #include <sys/wait.h>
 
-char webpage[] =
-    "HTTP/1.1 200 OK\r\n"
-    "Content-Type text/html; charset=UTF-8\r\n\r\n"
-    "<!DOCTYPE html>\r\n"
-    "<html><head><title>webserv</title>\r\n"
-    "<style>body {background-color: #FFFF00}</style></head>\r\n"
-    "<body><center><h1>Hello world!</h1><br>\r\n";
-
 
 
 
@@ -41,7 +33,7 @@ int Server::Guard(ssize_t retval, bool rw_operation) {
         exit(EXIT_FAILURE);
       }
     } else {
-        std::cout << "Read/write error occured" << std::endl;
+        std::cout << "Recv/Send error occured with status = -1" << std::endl;
         return -1;
       }
   }
@@ -76,25 +68,33 @@ void Server::ConnectionAccept() {
 //        PrintLog(it, "accepted client connection", client_fd);
         fcntl(client_fd, F_SETFL, O_NONBLOCK);
         FD_SET(client_fd, &master_read);
-        gettimeofday(&timev, NULL);
-        read.push_back(ReadElement(it->server_fd, client_fd, it->server_config, timev.tv_sec));
+        read.push_back(ReadElement(it->server_fd, client_fd, it->server_config, GetTimeInSeconds()));
       }
 //      std::cout << "Ended handle of incoming connections with max_fd = " << max_fd << std::endl;
 
     }
   }
 }
+
+std::string update_string_to_see_crlf(std::string in) {
+  size_t pos;
+  while ((pos = in.find('\r')) != -1)
+    in.replace(pos, 1, "\\r");
+  while ((pos = in.find('\n')) != -1)
+    in.replace(pos, 1, "\\n");
+  return in;
+}
+
+
 void Server::SocketRead() {
   for (read_iterator it = read.begin(); it != read.end(); it++) {
-
     if (FD_ISSET(it->fd, &working_read)) {
-//      PrintLog(it, "client IS_SET for read", it->fd);
+      PrintLog(it, "client IS_SET for read", it->fd);
       for (; (status = recv(it->fd, buf, INPUT_BUFFER_SIZE, 0)) != -1 && status;) {
         std::stringstream ss;
-        ss << "recv value = " << status;
+//        ss << "recv value = " << status  << "|buf = [" << buf << "]";
 //        PrintLog(it, ss.str(), it->fd);
-        gettimeofday(&timev, NULL);
-        it->last_read = timev.tv_sec;
+        it->last_read = GetTimeInSeconds();
 //        if (it->request.request_line["method"] == "POST")
 //          std::cout << "buf:"<<buf << "$" << std::endl;
         ProcessInputBuffer(buf, it->request);
@@ -102,31 +102,16 @@ void Server::SocketRead() {
 //        it->request.PrintRequestLine();
 //        std::cout << "Source request was:" << std::setw(90) << it->request.source_request << std::endl;
       }
-//      if (it->request.request_line.find("METHOD")->second == "POST")
-//        std::cout << "read post iteration" << std::endl;
+      if (it->request.request_line.find("METHOD")->second == "POST")
+        std::cout << "read post iteration" << std::endl;
     }
-//    std::cout << "status:" << status << std::endl;
-    gettimeofday(&timev, NULL);
-    it->last_action_time = (timev.tv_sec - it->last_read);
-//    std::cout << "last action time:" << it->last_action_time << std::endl;
+    it->last_action_time = (GetTimeInSeconds() - it->last_read);
+//    std::cout << "status = " << status << std::endl;
     if (!status || it->last_action_time > 10) {
-//      if (!status)
-//        PrintLog(it, "closed connection after EOF", it->fd);
-//      else
-//        PrintLog(it, "closed connection after inactivity", it->fd);
-      for(write_iterator wit = write.begin(); wit != write.end(); wit++)
-        if (wit->fd == it->fd) {
-          FD_CLR(wit->fd, &master_write);
-          write.erase(wit--);
-        }
-      FD_CLR(it->fd, &master_read);
-      close(it->fd);
+      ClearBrokenConnection(it->fd);
       read.erase(it--);
     } else if (it->request.formed) {
-//      PrintLog(it, "request was formed", it->fd);
-//      std::cout << "Request was formed on server_fd = " << it->server_fd
-//        << " by input message from client_fd = " << it->fd << std::endl;
-//      it->request.buffer.clear();
+      it->request.Print();
       FD_CLR(it->fd, &master_read);
       FD_SET(it->fd, &master_write);
       write.push_back(WriteElement(it->server_fd, it->fd, it->request));
@@ -142,32 +127,22 @@ void Server::SocketRead() {
 }
 
 void Server::ProcessInputBuffer(char *buffer, Request &request) {
-//  std::cout << "Buffer before request formed:" << std::setw(90) << request.buffer << std::endl;
   request.buffer += buffer;
-//  std::cout << "Buffer = " << request.buffer << std::endl;
+  request.source_request += buffer;
   size_t pos;
-  if (request.headersReady && request.chunked) {
-//    std::cout << "body buf:" << request.buffer << "$" << std::endl;
-//    std::cout << "found empty chunked response" << std::endl;
-    request.headers.insert(std::make_pair("Content-Length", "0"));
-    request.formed = true;
-    request.buffer.clear();
-  }
-  else {
-  if ((pos = request.buffer.find("\r\n\r\n", 0)) == std::string::npos)
-    return;
-  if (!request.headersReady)
+  if (!request.recieved_headers) {
+    if((pos = request.buffer.find("\r\n\r\n", 0)) == std::string::npos)
+      return;
     GetHeaders(request);
-  else
-    GetBody(request);
-//  std::cout << "Buffer before clean:" << std::setw(90) << request.buffer << std::endl;
-
-  request.source_request += request.buffer.substr(0, pos + 4);
-  request.buffer = request.buffer.substr(pos + 4);
+    request.buffer = request.buffer.substr(pos + 4);
   }
-//  if (request.formed)
-//    std::cout << "Buffer after clean of formed request:" << std::setw(90) << request.buffer << std::endl;
-
+  if (!request.recieved_body) {
+    std::cout << "buf = " + request.buffer << std::endl;
+    if ((pos = request.buffer.find("\r\n\r\n")) == std::string::npos || pos != 0 && request.buffer[pos - 1] != '0')
+      return;
+    request.chunked ? GetChunkedBody(request) : GetBody(request);
+    request.buffer = request.buffer.erase(0, pos);
+  }
 }
 
 void Server::GetHeaders(Request & request) {
@@ -176,31 +151,31 @@ void Server::GetHeaders(Request & request) {
     parser_.ProcessHeaders(request);
   else
     request.SetFailed(validator_.GetStatusCode());
-  request.headersReady = true;
+  request.recieved_headers = true;
   request.AdjustHeaders();
-  request.PrintRequestLine();
-  request.PrintHeaders();
 }
 
 void Server::GetBody(Request &request) {
-  if (!request.formed) {
-    if (request.chunked) {
-      if (validator_.ValidBody(request.buffer))
-        parser_.ParseBody(request);
-      else {
-//        std::cout << "input request is invalid" << std::endl;
-        request.SetFailed(validator_.GetStatusCode());
-      }
-    } else {
-      if (request.buffer.length() >= request.content_length) {
-        request.body = request.buffer.substr(0, request.content_length);
-        request.formed = true;
-      }
-    }
+  if (request.buffer.length() >= request.content_length) {
+    request.body = request.buffer.substr(0, request.content_length);
   }
-  request.headersReady = false;
+  request.recieved_body = true;
 }
 
+void Server::GetChunkedBody(Request &request) {
+  request.formed = true;
+  request.buffer.clear();
+    if (validator_.ValidBody(request.buffer))
+      parser_.ParseBody(request);
+    else {
+//        std::cout << "input request is invalid" << std::endl;
+      request.SetFailed(validator_.GetStatusCode());
+    }
+  std::stringstream ss;
+    ss << request.body.length();
+  request.headers.insert(std::make_pair("Content-Length", ss.str()));
+  request.recieved_body = true;
+}
 
 void Server::SocketWrite() {
   for (write_iterator it = write.begin(); it != write.end(); it++) {
@@ -211,7 +186,7 @@ void Server::SocketWrite() {
           send(it->fd, &it->output.c_str()[it->send_out_bytes], it->out_length - it->send_out_bytes, 0),
           true
       )) != -1) {
-//        std::cout << "sending response with size = " << it->out_length << ":" << std::endl;
+        std::cout << "sending response with size = " << it->out_length << ":" << std::endl;
 //        PrintLog(it, it->output, it->fd);
 //        std::cout << std::endl;
         it->send_out_bytes += status;
@@ -221,7 +196,7 @@ void Server::SocketWrite() {
              it->request.source_request.length() << "] ";
         }
         ss << status << "/" << it->out_length << " bytes send";
-//        PrintLog(it, ss.str(), it->fd);
+        PrintLog(it, ss.str(), it->fd);
         if (it->send_out_bytes == it->out_length) {
           FD_CLR(it->fd, &master_write);
           if (!it->request.keep_alive) {
@@ -273,7 +248,21 @@ void Server::Init() {
 
 template<class Iterator>
 void Server::PrintLog(Iterator it, const std::string & msg, int client_fd) {
-//  std::cout << "Server #" << it->server_fd << " " <<
-//            std::setw(90) <<  msg << std::setw(10) << "| Client#" << client_fd << std::endl;
+  std::cout << "Server #" << it->server_fd << " " <<
+            std::setw(90) <<  msg << std::setw(10) << "| Client#" << client_fd << std::endl;
 }
 
+long Server::GetTimeInSeconds() {
+  gettimeofday(&timev, NULL);
+  return timev.tv_sec;
+}
+
+void Server::ClearBrokenConnection(int fd) {
+  for(write_iterator wit = write.begin(); wit != write.end(); wit++)
+    if (wit->fd == fd) {
+      FD_CLR(wit->fd, &master_write);
+      write.erase(wit--);
+    }
+  FD_CLR(fd, &master_read);
+  close(fd);
+}

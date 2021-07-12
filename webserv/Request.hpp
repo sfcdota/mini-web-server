@@ -19,6 +19,7 @@ class Request {
   void PrintRequestLine();
   void PrintHeaders();
   void PrintBody();
+  void Print();
   void AdjustHeaders();
   void SetFailed(size_t status_code);
   void CleanUp();
@@ -29,9 +30,10 @@ class Request {
   size_t status_code;
   bool failed;
   bool chunked;
-  bool headersReady;
-  bool formed;
+  bool recieved_headers;
+  bool recieved_body;
   bool keep_alive;
+  bool formed;
   int64_t content_length;
   std::string buffer;
   ServerConfig server_config;
