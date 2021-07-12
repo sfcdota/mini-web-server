@@ -5,9 +5,11 @@ Response::Response(Request & request): request_(request), ServerConf_(request_.s
 
 void Response::ResponseBuilder(const std::string &path, const std::string &status_code) {
 //	responseLine
-	this->response_line["status_code"] = status_code;
-	this->response_line["status"] = GetStatusText(this->response_line.find("status_code")->second);
+	SetStatus(status_code);
 //	bodyLine
+//	if (status_code > 399) {
+//		path = ServerConf_.root + "/error/" + status_code + ".html";
+//	}
 	std::ifstream fin(path, std::ios::in|std::ios::binary|std::ios::ate);
 	int size;
 	if (fin.is_open()) {
@@ -40,21 +42,7 @@ void Response::HTTPVersionControl() {
 }
 
 void Response::GetRequest() {
-	if (_SearchForDir()){
-		if (this->fullPath_[this->fullPath_.size() - 1] == '/')
-			ResponseBuilder(this->fullPath_ + "index.html", "200");
-		else
-			ResponseBuilder(this->fullPath_ + "/index.html", "200");
-	}
-	else if (_SearchForFile(this->fullPath_))
-		ResponseBuilder(ServerConf_.root + request_.request_line.find("target")->second, "200");
-	else{
-		std::string path = ServerConf_.root;
-		if (path[path.size() - 1] == '/')
-			ResponseBuilder(path + "errors/404.html", "404");
-		else
-			ResponseBuilder(path + "/errors/404.html", "404");
-	}
+	_SearchForDir();
 }
 
 static void createCGI(const std::map<std::string, std::string> &request_line, const ServerConfig &con,
@@ -353,11 +341,22 @@ bool Response::_SearchForDir() {
 			while ((en = readdir(dr)) != NULL) {
 				if (strcmp(en->d_name, location_.index[i].c_str()) == 0) {
 					closedir(dr);
+					ResponseBuilder(this->fullPath_ + location_.index[i], "200");
 					return 1;
 				}
 			}
 		}
+		SetStatus("404");
+		this->headers["Content-Type"] = "text/html; charset=utf-8";
+		this->headers["Content-Length"] = std::to_string(this->body.size());
 		closedir(dr);
+	}
+	else if (_SearchForFile(this->fullPath_))
+		ResponseBuilder(ServerConf_.root + request_.request_line.find("target")->second, "200");
+	else {
+		SetStatus("404");
+		this->headers["Content-Type"] = "text/html; charset=utf-8";
+		this->headers["Content-Length"] = std::to_string(this->body.size());
 	}
 	return 0;
 }
