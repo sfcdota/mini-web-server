@@ -73,7 +73,7 @@ void Server::ConnectionAccept() {
     if (FD_ISSET(it->server_fd, &working_read)) {
 //      std::cout << "Listening socket " << it->server_fd << " is ready for incoming connections" << std::endl;
       if ((client_fd = Guard(accept(it->server_fd, NULL, NULL), false)) != -1) {
-        PrintLog(it, "accepted client connection", client_fd);
+//        PrintLog(it, "accepted client connection", client_fd);
         fcntl(client_fd, F_SETFL, O_NONBLOCK);
         FD_SET(client_fd, &master_read);
         gettimeofday(&timev, NULL);
@@ -88,32 +88,32 @@ void Server::SocketRead() {
   for (read_iterator it = read.begin(); it != read.end(); it++) {
 
     if (FD_ISSET(it->fd, &working_read)) {
-      PrintLog(it, "client IS_SET for read", it->fd);
+//      PrintLog(it, "client IS_SET for read", it->fd);
       for (; (status = recv(it->fd, buf, INPUT_BUFFER_SIZE, 0)) != -1 && status;) {
         std::stringstream ss;
         ss << "recv value = " << status;
-        PrintLog(it, ss.str(), it->fd);
+//        PrintLog(it, ss.str(), it->fd);
         gettimeofday(&timev, NULL);
         it->last_read = timev.tv_sec;
 //        if (it->request.request_line["method"] == "POST")
-          std::cout << "buf:"<<buf << "$" << std::endl;
+//          std::cout << "buf:"<<buf << "$" << std::endl;
         ProcessInputBuffer(buf, it->request);
         memset(buf, 0, INPUT_BUFFER_SIZE);
 //        it->request.PrintRequestLine();
 //        std::cout << "Source request was:" << std::setw(90) << it->request.source_request << std::endl;
       }
-      if (it->request.request_line.find("METHOD")->second == "POST")
-        std::cout << "read post iteration" << std::endl;
+//      if (it->request.request_line.find("METHOD")->second == "POST")
+//        std::cout << "read post iteration" << std::endl;
     }
-    std::cout << "status:" << status << std::endl;
+//    std::cout << "status:" << status << std::endl;
     gettimeofday(&timev, NULL);
     it->last_action_time = (timev.tv_sec - it->last_read);
-    std::cout << "last action time:" << it->last_action_time << std::endl;
+//    std::cout << "last action time:" << it->last_action_time << std::endl;
     if (!status || it->last_action_time > 10) {
-      if (!status)
-        PrintLog(it, "closed connection after EOF", it->fd);
-      else
-        PrintLog(it, "closed connection after inactivity", it->fd);
+//      if (!status)
+//        PrintLog(it, "closed connection after EOF", it->fd);
+//      else
+//        PrintLog(it, "closed connection after inactivity", it->fd);
       for(write_iterator wit = write.begin(); wit != write.end(); wit++)
         if (wit->fd == it->fd) {
           FD_CLR(wit->fd, &master_write);
@@ -123,7 +123,7 @@ void Server::SocketRead() {
       close(it->fd);
       read.erase(it--);
     } else if (it->request.formed) {
-      PrintLog(it, "request was formed", it->fd);
+//      PrintLog(it, "request was formed", it->fd);
 //      std::cout << "Request was formed on server_fd = " << it->server_fd
 //        << " by input message from client_fd = " << it->fd << std::endl;
 //      it->request.buffer.clear();
@@ -132,7 +132,7 @@ void Server::SocketRead() {
       write.push_back(WriteElement(it->server_fd, it->fd, it->request));
 
       if (!it->request.keep_alive) {
-        PrintLog(it, "ended read by not keep alive behavior", it->fd);
+//        PrintLog(it, "ended read by not keep alive behavior", it->fd);
 //        std::cout << "Client_fd = " << it->fd << " read ended due not keep alive connection" << std::endl;
         read.erase(it--);
       }
@@ -147,8 +147,8 @@ void Server::ProcessInputBuffer(char *buffer, Request &request) {
 //  std::cout << "Buffer = " << request.buffer << std::endl;
   size_t pos;
   if (request.headersReady && request.chunked) {
-    std::cout << "body buf:" << request.buffer << "$" << std::endl;
-    std::cout << "found empty chunked response" << std::endl;
+//    std::cout << "body buf:" << request.buffer << "$" << std::endl;
+//    std::cout << "found empty chunked response" << std::endl;
     request.headers.insert(std::make_pair("Content-Length", "0"));
     request.formed = true;
     request.buffer.clear();
@@ -188,7 +188,7 @@ void Server::GetBody(Request &request) {
       if (validator_.ValidBody(request.buffer))
         parser_.ParseBody(request);
       else {
-        std::cout << "input request is invalid" << std::endl;
+//        std::cout << "input request is invalid" << std::endl;
         request.SetFailed(validator_.GetStatusCode());
       }
     } else {
@@ -213,7 +213,7 @@ void Server::SocketWrite() {
       )) != -1) {
 //        std::cout << "sending response with size = " << it->out_length << ":" << std::endl;
 //        PrintLog(it, it->output, it->fd);
-        std::cout << std::endl;
+//        std::cout << std::endl;
         it->send_out_bytes += status;
         std::stringstream ss;
         if (!it->out_length) {
@@ -221,12 +221,12 @@ void Server::SocketWrite() {
              it->request.source_request.length() << "] ";
         }
         ss << status << "/" << it->out_length << " bytes send";
-        PrintLog(it, ss.str(), it->fd);
+//        PrintLog(it, ss.str(), it->fd);
         if (it->send_out_bytes == it->out_length) {
           FD_CLR(it->fd, &master_write);
           if (!it->request.keep_alive) {
-            PrintLog(it, "closed connection (disabled keep-alive)", it->fd);
-            std::cout << "closed client_fd = " << it->fd << " connection due not keep alive" << std::endl;
+//            PrintLog(it, "closed connection (disabled keep-alive)", it->fd);
+//            std::cout << "closed client_fd = " << it->fd << " connection due not keep alive" << std::endl;
             close(it->fd);
           }
           else
@@ -234,8 +234,8 @@ void Server::SocketWrite() {
           write.erase(it--);
         }
       }
-      if (status == -1)
-        PrintLog(it, "send returned -1 trying to x", it->fd);
+//      if (status == -1)
+//        PrintLog(it, "send returned -1 trying to x", it->fd);
     }
   }
 }
@@ -273,7 +273,7 @@ void Server::Init() {
 
 template<class Iterator>
 void Server::PrintLog(Iterator it, const std::string & msg, int client_fd) {
-  std::cout << "Server #" << it->server_fd << " " <<
-            std::setw(90) <<  msg << std::setw(10) << "| Client#" << client_fd << std::endl;
+//  std::cout << "Server #" << it->server_fd << " " <<
+//            std::setw(90) <<  msg << std::setw(10) << "| Client#" << client_fd << std::endl;
 }
 

@@ -30,23 +30,23 @@ void Response::ResponseBuilder(const std::string &path, const std::string &statu
 }
 
 void Response::HTTPVersionControl() {
-  if (request_.request_line.find("version")->second == "HTTP/1.1") {
-    this->response_line["version"] = "HTTP/1.1";
-  } else {
-    std::cout << "HTTP version error!\n";
-    exit(1);
-  }
+	std::cout << request_.request_line.find("version")->second << std::endl;
+	if (request_.request_line.find("version")->second == "HTTP/1.1") {
+		this->response_line["version"] = "HTTP/1.1";
+	} else {
+		std::cout << "HTTP version error!\n";
+		exit(1);
+	}
 }
 
 void Response::GetRequest() {
-  std::cout << this->fullPath_ << std::endl;
 	if (_SearchForDir()){
 		if (this->fullPath_[this->fullPath_.size() - 1] == '/')
 			ResponseBuilder(this->fullPath_ + "index.html", "200");
 		else
 			ResponseBuilder(this->fullPath_ + "/index.html", "200");
 	}
-	else if (_SearchForFile(ServerConf_.root + request_.request_line.find("target")->second))
+	else if (_SearchForFile(this->fullPath_))
 		ResponseBuilder(ServerConf_.root + request_.request_line.find("target")->second, "200");
 	else{
 		std::string path = ServerConf_.root;
@@ -85,8 +85,7 @@ void Response::PostRequest() {
 	this->headers["Content-Length"] = std::to_string(this->body.size());
 }
 void Response::HeadRequest() {
-	this->response_line["status_code"] = "405";
-	this->response_line["status"] = GetStatusText(this->response_line.find("status_code")->second);
+	SetStatus("405");
 //	bodyLine
 //	std::ifstream fin(path, std::ios::in|std::ios::binary|std::ios::ate);
 //	int size;
@@ -125,6 +124,22 @@ bool Response::CheckLocationMethods() {
 	SetStatus("405");
 	return 0;
 }
+void Response::CorrectPath()
+{
+	if (this->ServerConf_.root[this->ServerConf_.root.size() - 1] == '/')
+		this->fullPath_ = this->ServerConf_.root.substr(0, this->ServerConf_.root.size() - 1);
+	else
+		this->fullPath_ = this->ServerConf_.root;
+	if (this->location_.root[this->location_.root.size() - 1] == '/')
+		this->fullPath_ += this->location_.root.substr(0, this->location_.root.size() - 1);
+	else
+		this->fullPath_ += this->location_.root;
+	if (this->cleanTarget_[this->cleanTarget_.size() - 1] == '/')
+		this->fullPath_ += this->cleanTarget_.substr(0, this->cleanTarget_.size() - 1);
+	else
+		this->fullPath_ += this->cleanTarget_;
+	std::cout << this->fullPath_ << std::endl;
+}
 
 bool Response::CheckLocationCorrectness() {
 	std::string path = request_.request_line.find("target")->second;
@@ -142,10 +157,7 @@ bool Response::CheckLocationCorrectness() {
 				location = location.substr(0, location.size() - 1);
 			if (path == location) {
 				location_ = ServerConf_.locations[i];
-				if (location_.root == "/" && this->cleanTarget_ == "/")
-					this->fullPath_ = ServerConf_.root + location_.root;
-				else
-					this->fullPath_ = ServerConf_.root + location_.root + this->cleanTarget_;
+				CorrectPath();
 				return 1;
 			}
 		}
@@ -176,8 +188,15 @@ std::string Response::SetResponseLine() {
 			else if (request_.request_line.find("method")->second == "POST"){
 				PostRequest();
 			}
-			else if (request_.request_line.find("method")->second == "HEAD")
+			else if (request_.request_line.find("method")->second == "HEAD") {
 				HeadRequest();
+			}
+			else if (request_.request_line.find("method")->second == "PUT") {
+				SetStatus("201");
+
+				this->headers["Content-Type"] = "text/html; charset=utf-8";
+				this->headers["Content-Length"] = std::to_string(this->body.size());
+			}
 		}
 	}
 	return SendResponse();
@@ -346,7 +365,8 @@ bool Response::_SearchForDir() {
 bool Response::_SearchForFile(const std::string &path){
 	DIR *dr;
 	struct dirent *en;
-	dr = opendir(path.substr(0, path.rfind('/') + 1).c_str());
+	std::string str = path.substr(0, path.rfind('/')).c_str();
+	dr = opendir(path.substr(0, path.rfind('/')).c_str());
 	if (dr){
 		while ((en = readdir(dr)) != NULL){
 			if (strcmp(en->d_name, path.substr(path.rfind('/') + 1).c_str()) == 0 && !opendir(path.c_str())){

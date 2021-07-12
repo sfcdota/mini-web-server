@@ -42,6 +42,7 @@ private:
 	bool _SearchForDir();
 	void _createHTMLAutoIndex(DIR *dir);
 	std::string _getTimeModify(std::string path);
+	void		CorrectPath();
 	
 };
 

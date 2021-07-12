@@ -36,7 +36,7 @@ void parsLocation(parsConfig &con, int &i){
 	  }
 	  else if (con.vec[i] == "limit_except" && !con.location_body["limit_except"]){
 		while (++i < con.vec.size(), con.vec[i] != ";"){
-		  if (con.vec[i] == "POST" || con.vec[i] == "PUT" || con.vec[i] == "DELETE" || con.vec[i] == "GET")
+		  if (con.vec[i] == "POST" || con.vec[i] == "PUT" || con.vec[i] == "DELETE" || con.vec[i] == "GET" || con.vec[i] == "HEAD")
 			  con.location.http_methods.push_back(con.vec[i]);
 		  else
 			  errors("locaiton limit_except error!");
