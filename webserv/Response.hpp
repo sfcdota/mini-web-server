@@ -11,6 +11,7 @@ public:
 	std::string SetResponseLine();
 	explicit Response(Request & request);
 	std::string GetStatusText(std::string code);
+	void	GetContentType();
 	std::string SendResponse();
 	void	ResponseBuilder(const std::string &path, const std::string &status_code);
 	void HTTPVersionControl();
@@ -22,6 +23,8 @@ public:
 	bool	CheckLocationMethods();
 	void	freeResponse();
 	void SetStatus(std::string code);
+	void SetHeaders();
+	std::string GetTimeGMT();
 //	void	createCGI(const std::map<std::string, std::string> &request_line, const ServerConfig &con,
 //				 const std::map<std::string, std::string> &headers);
 // private:
@@ -32,6 +35,8 @@ public:
 	std::string body; //????????
 	size_t status_code;
 	location location_;
+	std::map<std::string, std::string> content_type_;
+	std::map<std::string, std::string> status_text_;
 	std::string cleanTarget_;
 	std::string fullPath_;
 	const ServerConfig &ServerConf_;
