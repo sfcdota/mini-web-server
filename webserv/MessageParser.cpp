@@ -78,18 +78,38 @@ Request MessageParser::ProcessHeaders(Request &request) {
 }
 
 void MessageParser::ParseBody(Request & request) {
-  size_t pos = request.buffer.find("\r\n\r\n");
+  size_t pos = request.buffer.find("0\r\n\r\n");
   size_t tmp;
   long length;
+  const char* debug = request.buffer.c_str();
   if (pos == std::string::npos)
     return;
-  for (size_t index = 0; (tmp = request.buffer.find("\r\n")) != pos;) {
-    length = strtol(request.buffer.c_str(), NULL, 16);
-    if (length < 0)
+  for (size_t index = 0; (tmp = request.buffer.find("\r\n", index)) < pos;) {
+    length = strtol(&request.buffer.c_str()[index], NULL, 16);
+    if (length < 0) {
+      std::cout << "LENGTH OF CHUNKED PART DATA WAS BELOW ZERO. BODY PARSING ABORTED!" << std::endl;
       request.SetFailed(400);
-    index += tmp + 2 + length;
-    request.body += request.buffer.substr(tmp + 2, index);
+      break;
+    }
+    if (length > request.buffer.length() - index) {
+      std::cout << "CHUNKED LENGTH WRONG SIZE ENCOUTERED. INPUT DATA WAS FEWER SYMBOLS" << std::endl;
+      request.SetFailed(400);
+      break;
+    }
+    std::cout << "GETTING CHUNKED DATA PART. PART SIZE = " << length;
+    request.body += request.buffer.substr(tmp + 2,  length);
+    index = tmp + 2 + length;
+    std::cout << "  chunked length = " << length  << std::endl;
+    if (request.buffer.find("\r\n", index) != index) {
+      std::cout << "NO CRLF AFTER CHUNKED DATA BLOCK. REQUEST FAILED" << std::endl;
+      request.SetFailed(400);
+      break;
+    }
+    else
+      index += 2;
+    std::cout << request.buffer.length() - index << " data remains " << std::endl;
   }
+  std::cout << "PARSE OF CHUNKED BODY SUCCESSFULLY ENDED WITH BODY LENGTH = " << request.body.length() << std::endl;
   request.formed = true;
 }
 

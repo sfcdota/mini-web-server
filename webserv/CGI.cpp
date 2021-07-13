@@ -53,7 +53,7 @@ void CGI::mapToCString(std::map<std::string, std::string> &tmpEnv) {
 void CGI::setEnv() {
 	std::map<std::string, std::string> tmpEnv;
 	tmpEnv["AUTH_TYPE="] = "basic";
-	tmpEnv["CONTENT_LENGTH="] = std::to_string(1024);//_headers.find("content-length")->second;
+	tmpEnv["CONTENT_LENGTH="] = "0";//_headers.find("content-length")->second;
 	tmpEnv["CONTENT_TYPE="] = "text/html";
 	tmpEnv["GATEWAY_INTERFACE="] = "CGI/1.1";
 	tmpEnv["PATH_INFO="] = _request_line.find("target")->second;

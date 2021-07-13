@@ -12,10 +12,10 @@
 
 Server::Server(const std::vector<ServerConfig> &config, const ssize_t INPUT_BUFFER_SIZE)
     : config(config), master_read(), working_read(), master_write(), working_write(),
-      timeout(), INPUT_BUFFER_SIZE(INPUT_BUFFER_SIZE), status(), max_fd(-1), isHeader(true) {}
+      timeout(), INPUT_BUFFER_SIZE(INPUT_BUFFER_SIZE), status(), isHeader(true) {}
 
 Server::Server() : master_read(), working_read(), master_write(), working_write(),
-                   timeout(), INPUT_BUFFER_SIZE(DEFAULT_INPUT_BUFFERSIZE), max_fd(), status(), isHeader(true) {}
+                   timeout(), INPUT_BUFFER_SIZE(DEFAULT_INPUT_BUFFERSIZE), status(), isHeader(true) {}
 
 /// Guard for libc function errors
 /// \param retval returned function value, that will go through this function if success.
@@ -102,8 +102,6 @@ void Server::SocketRead() {
 //        it->request.PrintRequestLine();
 //        std::cout << "Source request was:" << std::setw(90) << it->request.source_request << std::endl;
       }
-      if (it->request.request_line.find("METHOD")->second == "POST")
-        std::cout << "read post iteration" << std::endl;
     }
     it->last_action_time = (GetTimeInSeconds() - it->last_read);
 //    std::cout << "status = " << status << std::endl;
@@ -137,16 +135,21 @@ void Server::ProcessInputBuffer(char *buffer, Request &request) {
     request.buffer = request.buffer.substr(pos + 4);
   }
   if (!request.recieved_body) {
-//    std::cout << "buf = " + request.buffer << std::endl;
-    if ((pos = request.buffer.find("\r\n\r\n")) == std::string::npos || pos != 0 && request.buffer[pos - 1] != '0')
-      return;
-    request.chunked ? GetChunkedBody(request) : GetBody(request);
-    request.buffer = request.buffer.erase(0, pos);
+    std::cout << "size of buf = " << request.buffer.length() << std::endl;
+    if (request.chunked) {
+      if ((pos = request.buffer.find("0\r\n\r\n")) == std::string::npos)
+        return;
+      GetChunkedBody(request);
+    }
+    else {
+      if (request.buffer.length() < request.content_length)
+        return;
+      GetBody(request);
+    }
   }
 }
 
 void Server::GetHeaders(Request & request) {
-  size_t pos;
   if (validator_.ValidHeaders(request.buffer))
     parser_.ProcessHeaders(request);
   else
@@ -156,25 +159,27 @@ void Server::GetHeaders(Request & request) {
 }
 
 void Server::GetBody(Request &request) {
-  if (request.buffer.length() >= request.content_length) {
-    request.body = request.buffer.substr(0, request.content_length);
-  }
+  request.body = request.buffer.substr(0, request.content_length);
   request.recieved_body = true;
+  request.buffer.clear();
 }
 
 void Server::GetChunkedBody(Request &request) {
+  std::cout << "buffer before body parsing length = " << request.buffer.length() << std::endl;
   request.formed = true;
-  request.buffer.clear();
-    if (validator_.ValidBody(request.buffer))
-      parser_.ParseBody(request);
-    else {
-//        std::cout << "input request is invalid" << std::endl;
-      request.SetFailed(validator_.GetStatusCode());
-    }
+  if (validator_.ValidBody(request.buffer))
+    parser_.ParseBody(request);
+  else {
+    std::cout << "VALIDATOR ENCOUNTERED INVALID CHUNKED BODY. REQUEST FAILED" << std::endl;
+    request.SetFailed(validator_.GetStatusCode());
+  }
+  if (request.failed)
+    std::cout << "FAILED !!!!!!! " << std::endl;
   std::stringstream ss;
     ss << request.body.length();
   request.headers.insert(std::make_pair("Content-Length", ss.str()));
   request.recieved_body = true;
+  request.buffer.clear();
 }
 
 void Server::SocketWrite() {
@@ -241,15 +246,14 @@ void Server::Init() {
     Guard(listen(server_fd, MAX_CONNECTIONS), false);
     FD_SET(server_fd, &master_read);
     server.push_back(ServerElement(server_fd, addr, *it));
-    max_fd = server_fd;
   }
   buf = reinterpret_cast<char *>(calloc(INPUT_BUFFER_SIZE, sizeof(char)));
 }
 
 template<class Iterator>
 void Server::PrintLog(Iterator it, const std::string & msg, int client_fd) {
-//  std::cout << "Server #" << it->server_fd << " " <<
-//            std::setw(90) <<  msg << std::setw(10) << "| Client#" << client_fd << std::endl;
+  std::cout << "Server #" << it->server_fd << " " <<
+            std::setw(90) <<  msg << std::setw(10) << "| Client#" << client_fd << std::endl;
 }
 
 long Server::GetTimeInSeconds() {

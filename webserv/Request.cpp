@@ -67,7 +67,7 @@ void Request::Print() {
   std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ FORMED REQUEST @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
   PrintRequestLine();
   PrintHeaders();
-  PrintBody();
+//  PrintBody();
   std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ END OF FORMED REQUEST @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
 }
 
@@ -92,12 +92,14 @@ void Request::AdjustHeaders() {
   if (content != headers.end()) {
     if (transfer != headers.end())
       headers.erase(content);
-  } else {
-    content_length = strtol(content->second.c_str(), NULL, 0);
-    if (content_length < 0)
-      SetFailed(400);
+    else {
+      std::cout << "HEADER | " << content->first << ": " << content->second << std::endl;
+      content_length = strtol(content->second.c_str(), NULL, 0);
+      std::cout << "PARSED CONTENT LENGTH | " << content_length << std::endl;
+      if (content_length < 0)
+        SetFailed(400);
+    }
   }
-
 }
 
 void Request::SetFailed(size_t status_code) {
