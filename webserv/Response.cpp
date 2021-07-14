@@ -92,7 +92,7 @@ Response::Response(Request & request): request_(request), ServerConf_(request_.s
 void Response::ResponseBuilder(const std::string &path, const std::string &status_code) {
 	SetStatus(status_code);
 	SetBody(path);
-	if (path.empty() || !this->content_type_.find(path.substr(path.find('.')))->second.size() < 1)
+	if (path.empty() || this->content_type_.find(path.substr(path.find('.'))) == content_type_.end())
 		this->headers["Content-Type"] = "text/plane";
 	else
 		this->headers["Content-Type"] = this->content_type_.find(path.substr(path.find('.')))->second;
@@ -130,7 +130,10 @@ void Response::HeadRequest() {
 }
 
 void Response::PutRequest() {
-	int fd = open((this->ServerConf_.root + "/bin" + this->fullPath_.substr(this->fullPath_.rfind('/'))).c_str(), O_CREAT | O_RDWR | O_TRUNC , 0777);
+  std::string path = this->ServerConf_.root + this->fullPath_.substr(this->fullPath_.rfind('/'));
+  DIR *dir = opendir(this->fullPath_.c_str());
+
+  int fd = open(path.c_str(), O_CREAT | O_RDWR | O_TRUNC , 0777);
 	if (fd == -1) {
 		throw std::runtime_error("Error: cannot open create/open file");
 	}
@@ -212,8 +215,17 @@ void Response::SetStatus(std::string code) {
 std::string Response::SetResponseLine() {
 	freeResponse();
 	if (HTTPVersionControl() && CheckMethodCorrectness() && CheckLocationCorrectness() && CheckLocationMethods()) {
+
 		DIR *dir = opendir(this->fullPath_.c_str());
-		if (location_.autoindex && dir) {
+		if (!dir) {
+		  if (fullPath_.rfind('/') != -1) {
+            std::string get_dir = fullPath_.substr(0, fullPath_.rfind('/'));
+            dir = opendir(get_dir.c_str());
+          }
+		  else
+		    SetStatus("400");
+		}
+		else if (location_.autoindex) {
 			SetStatus("200");
 			_createHTMLAutoIndex(dir);
 			closedir(dir);
