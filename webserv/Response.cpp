@@ -137,16 +137,32 @@ void Response::HeadRequest() {
 }
 
 void Response::PutRequest() {
+//  size_t left_pos = 1;
+//  size_t right_pos;
+//  size_t last_pos = path.rfind('/');
+//  bool created = false;
+//  const char * directory_name;
+//  for(; left_pos < last_pos; left_pos = right_pos + 1) {
+//    right_pos = path.find('/', left_pos + 1);
+//    directory_name = path.substr(left_pos, right_pos).c_str();
+//    if (!mkdir(directory_name, 0777))
+//      created = true;
+//  }
+//  return created;
 	std::string str = this->ServerConf_.root + "/bin" + this->fullPath_.substr(this->fullPath_.rfind('/'));
 	int fd = open((str).c_str(), O_CREAT | O_RDWR | O_TRUNC , 0777);
+	std::cout << str << std::endl;
 	if (fd == -1) {
-		throw std::runtime_error("Error: cannot open create/open file");
+//		throw std::runtime_error("Error: cannot open create/open file");
+      SetStatus("404");
+      SetBody(this->ServerConf_.root + "errors/404.html");
+      SetHeader("Content-Type", ".html");
 	}
-	
-	write(fd, this->request_.body.c_str(), this->request_.body.size());
-	close(fd);
-	ResponseBuilder("", "201");
-	
+	else {
+      write(fd, this->request_.body.c_str(), this->request_.body.size());
+      close(fd);
+      ResponseBuilder("", "201");
+    }
 }
 
 bool Response::CheckMethodCorrectness() {
@@ -215,7 +231,7 @@ bool Response::CheckLocationCorrectness() {
 	return 0;
 }
 
-void Response::SetStatus(std::string code) {
+void Response::SetStatus(const std::string &code) {
 	this->response_line["status_code"] = code;
 	this->response_line["status"] = GetStatusText(code);
 }
@@ -280,7 +296,7 @@ std::string Response::SendResponse() {
 
 
 
-std::string Response::GetStatusText(std::string code) {
+std::string Response::GetStatusText(const std::string &code) {
 	std::map<std::string, std::string> status_text_;
 	status_text_["100"] = "Continue";
 	status_text_["101"] = "Switching Protocols";
@@ -333,7 +349,7 @@ std::string Response::GetStatusText(std::string code) {
 
 
 
-std::string Response::_getTimeModify(std::string path) {
+std::string Response::_getTimeModify(const std::string &path) {
 	struct stat file_info;
 	if (lstat(path.c_str(), &file_info) != 0) {
 		std::cout << "Error: lstat wtf?!" << std::endl;
@@ -436,6 +452,8 @@ void Response::SetHeaders() {
 	SetHeader("Date", GetTimeGMT());
 }
 
+
+
 bool Response::_SearchForDir() {
 	DIR *dr;
 	struct dirent *en;
@@ -497,7 +515,7 @@ void Response::SetBody(const std::string &path) {
 //	}
 }
 
-void Response::SetErrorResponse(std::string status_code) {
+void Response::SetErrorResponse(const std::string &status_code) {
 	std::vector<error> tmpVec = ServerConf_.error_pages;
 	for (int index = 0; index < tmpVec.size(); index++) {
 		if (status_code == std::to_string(tmpVec[index].error_code)) {
@@ -507,3 +525,21 @@ void Response::SetErrorResponse(std::string status_code) {
 	}
 	ResponseBuilder(ServerConf_.root + "/errors/" + this->headers["status_code"] + ".html", status_code);
 };
+
+/// assumes that path has correct target format (starts with '/')
+/// \param path
+/// \return
+bool Response::CreateDirIfNotExist(const std::string &path) {
+  size_t left_pos = 1;
+  size_t right_pos;
+  size_t last_pos = path.rfind('/');
+  bool created = false;
+  const char * directory_name;
+  for(; left_pos < last_pos; left_pos = right_pos + 1) {
+    right_pos = path.find('/', left_pos + 1);
+    directory_name = path.substr(left_pos, right_pos).c_str();
+    if (!mkdir(directory_name, 0777))
+      created = true;
+  }
+  return created;
+}

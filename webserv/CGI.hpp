@@ -12,6 +12,7 @@
 #include "unistd.h"
 #include "fcntl.h"
 #include "Response.hpp"
+#include "MessageValidator.hpp"
 // Сервер отправляет данные программе CGI с помощью переменных среды
 
 // Задача:
@@ -41,16 +42,15 @@
 
 class CGI {
 public:
-	CGI(const Request &req, const ServerConfig &con, std::string str);
+	CGI(Request &req, const ServerConfig &con, std::string &str);
 	~CGI();
 	void executeCGI();
 	void mapToCString(std::map<std::string, std::string> &tmpEnv);
-	void setEnv();
+	void setEnv(Request &req);
 //private:
 	char **_env;
 //	const Response &response_;
 	std::string str;
-	const Request &request_;
 	const ServerConfig &_con;
 };
 

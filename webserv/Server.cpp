@@ -101,6 +101,10 @@ void Server::SocketRead() {
         memset(buf, 0, INPUT_BUFFER_SIZE);
 //        it->request.PrintRequestLine();
 //        std::cout << "Source request was:" << std::setw(90) << it->request.source_request << std::endl;
+          if (it->request.force_to_break) {
+            break;
+          }
+
       }
     }
     it->last_action_time = (GetTimeInSeconds() - it->last_read);
@@ -108,7 +112,9 @@ void Server::SocketRead() {
     if (!status || it->last_action_time > 10) {
       ClearBrokenConnection(it->fd);
       read.erase(it--);
-    } else if (it->request.formed) {
+    } else if (it->request.formed || it->request.force_to_break) {
+      if (it->request.headers.find("Content-Length") == it->request.headers.end())
+        it->request.headers["Content-Length"] = "";
       it->request.Print();
       FD_CLR(it->fd, &master_read);
       FD_SET(it->fd, &master_write);
@@ -136,6 +142,11 @@ void Server::ProcessInputBuffer(char *buffer, Request &request) {
   }
   if (!request.recieved_body) {
 //    std::cout << "size of buf = " << request.buffer.length() << std::endl;
+    if (request.buffer.length() > request.server_config.client_max_body_size) {
+      request.SetFailed(413);
+      request.force_to_break = true;
+      return;
+    }
     if (request.chunked) {
       if ((pos = request.buffer.find("0\r\n\r\n")) == std::string::npos)
         return;

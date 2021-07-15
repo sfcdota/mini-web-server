@@ -22,7 +22,7 @@ Request::Request(): keep_alive(true), status_code(), failed(), chunked(), reciev
 
 Request::Request(const std::string &buffer, ServerConfig config): keep_alive(true), buffer(buffer),
   server_config(config), status_code(), failed(), chunked(), recieved_headers(), recieved_body(), formed(),
-  content_length() {}
+  content_length(), force_to_break(false) {}
 
 Request::Request(const Request &in) : status_code(), failed(), chunked(), recieved_headers(), recieved_body(), formed(), keep_alive(), content_length() { *this = in; }
 Request &Request::operator=(const Request &in) {
@@ -98,6 +98,8 @@ void Request::AdjustHeaders() {
       std::cout << "PARSED CONTENT LENGTH | " << content_length << std::endl;
       if (content_length < 0)
         SetFailed(400);
+      if (content_length > server_config.client_max_body_size)
+        SetFailed(413);
     }
   }
 }
@@ -122,4 +124,3 @@ void Request::CleanUp() {
   recieved_headers = false;
   keep_alive = true;
 }
-
