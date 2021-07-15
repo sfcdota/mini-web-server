@@ -92,11 +92,7 @@ Response::Response(Request & request): request_(request), ServerConf_(request_.s
 void Response::ResponseBuilder(const std::string &path, const std::string &status_code) {
 	SetStatus(status_code);
 	SetBody(path);
-	if (path.empty() || this->content_type_.find(path.substr(path.find('.'))) == content_type_.end())
-		this->headers["Content-Type"] = "text/plane";
-	else
-		this->headers["Content-Type"] = this->content_type_.find(path.substr(path.find('.')))->second;
-	SetHeaders();
+	SetHeader("Content-Type", path);
 }
 
 bool Response::HTTPVersionControl() {
@@ -105,7 +101,8 @@ bool Response::HTTPVersionControl() {
 		return 1;
 	}
 	SetStatus("505");
-	SetHeaders();
+	SetBody(ServerConf_.root + "/errors/505.html");
+	SetHeader("Content-Type", ".html");
 	return 0;
 }
 
@@ -113,27 +110,35 @@ void Response::GetRequest() {
 	_SearchForDir();
 }
 
-static void createCGI(const std::map<std::string, std::string> &request_line, const ServerConfig &con,
-		  const std::map<std::string, std::string> &headers) {
-	CGI cgi = CGI(request_line, con, headers);
-}
+//static void createCGI(const std::map<std::string, std::string> &request_line, const ServerConfig &con,
+//		  const std::map<std::string, std::string> &headers) {
+//	CGI cgi = CGI(request_line, con, headers);
+//}
 
 void Response::PostRequest() {
-	this->response_line["status_code"] = "405";
-	this->response_line["status"] = GetStatusText(this->response_line.find("status_code")->second);
-	this->headers["Content-Type"] = this->content_type_.find(".html")->second;
-	this->headers["Content-Length"] = std::to_string(this->body.size());
+//	std::string str = this->fullPath_;
+		std::cout << request_.request_line.find("target")->second << std::endl;
+	if (this->fullPath_.substr(this->fullPath_.rfind('/')) != "/site") {
+		CGI cgi(this->request_, this->ServerConf_, this->fullPath_);
+		SetStatus("201");
+		SetBody(ServerConf_.root + "/index.html");
+		SetHeader("Content-Type", ".html");
+	} else {
+		SetStatus("405");
+		SetBody(ServerConf_.root + "/errors/405.html");
+		SetHeader("Content-Type", ".html");
+	}
 }
 void Response::HeadRequest() {
 	SetStatus("405");
-	SetHeaders();
+//	SetHeaders();
+	SetHeader("Content-Length", std::to_string(this->body.size()));
+	SetHeader("Date", GetTimeGMT());
 }
 
 void Response::PutRequest() {
-  std::string path = this->ServerConf_.root + this->fullPath_.substr(this->fullPath_.rfind('/'));
-  DIR *dir = opendir(this->fullPath_.c_str());
-
-  int fd = open(path.c_str(), O_CREAT | O_RDWR | O_TRUNC , 0777);
+	std::string str = this->ServerConf_.root + "/bin" + this->fullPath_.substr(this->fullPath_.rfind('/'));
+	int fd = open((str).c_str(), O_CREAT | O_RDWR | O_TRUNC , 0777);
 	if (fd == -1) {
 		throw std::runtime_error("Error: cannot open create/open file");
 	}
@@ -151,7 +156,8 @@ bool Response::CheckMethodCorrectness() {
 			return 1;
 	}
 	SetStatus("405");
-	SetHeaders();
+	SetBody(ServerConf_.root + "/errors/405.html");
+	SetHeader("Content-Type", ".html");
 	return 0;
 }
 
@@ -161,7 +167,8 @@ bool Response::CheckLocationMethods() {
 			return 1;
 	}
 	SetStatus("405");
-	SetHeaders();
+	SetBody(ServerConf_.root + "/errors/405.html");
+	SetHeader("Content-Type", ".html");
 	return 0;
 }
 void Response::CorrectPath()
@@ -203,7 +210,8 @@ bool Response::CheckLocationCorrectness() {
 		path = path.substr(0, path.rfind('/') + 1);
 	}
 	SetStatus("404");
-	SetHeaders();
+	SetBody(ServerConf_.root + "/errors/404.html");
+	SetHeader("Content-Type", ".html");
 	return 0;
 }
 
@@ -213,19 +221,10 @@ void Response::SetStatus(std::string code) {
 }
 
 std::string Response::SetResponseLine() {
-	freeResponse();
+//	freeResponse();
 	if (HTTPVersionControl() && CheckMethodCorrectness() && CheckLocationCorrectness() && CheckLocationMethods()) {
-
 		DIR *dir = opendir(this->fullPath_.c_str());
-		if (!dir) {
-		  if (fullPath_.rfind('/') != -1) {
-            std::string get_dir = fullPath_.substr(0, fullPath_.rfind('/'));
-            dir = opendir(get_dir.c_str());
-          }
-		  else
-		    SetStatus("400");
-		}
-		else if (location_.autoindex) {
+		if (location_.autoindex && dir) {
 			SetStatus("200");
 			_createHTMLAutoIndex(dir);
 			closedir(dir);
@@ -240,8 +239,6 @@ std::string Response::SetResponseLine() {
 				HeadRequest();
 			}
 			else if (request_.request_line.find("method")->second == "PUT") {
-//				SetStatus("201");
-//				SetHeaders();
 				PutRequest();
 			}
 		}
@@ -260,7 +257,11 @@ void Response::freeResponse() {
 std::string Response::SendResponse() {
 	std::string response;
 	std::map<std::string, std::string>::iterator begin;
-	
+
+	SetHeader("Date", GetTimeGMT());
+	SetHeader("Server", "webserv");
+	SetHeader("Content-Length", std::to_string(this->body.size()));
+
 	response = this->response_line.find("version")->second + " ";
 	response += this->response_line.find("status_code")->second + " ";
 	response += this->response_line.find("status")->second /*+ "\r\n"*/;
@@ -386,8 +387,7 @@ void Response::_createHTMLAutoIndex(DIR *dir) {
 		}
 	}
 	this->body += autoIndexEnd;
-	this->headers["Content-Type"] = this->content_type_.find(".html")->second;
-	this->headers["Content-Length"] = std::to_string(this->body.size());
+	SetHeader("Content-Type", ".html");
 }
 
 static std::string getNumber(int num) {
@@ -417,12 +417,23 @@ std::string Response::GetTimeGMT() {
 	return ss.str();
 }
 
+
+
+void Response::SetHeader(const std::string &key, const std::string &value) {
+	if (key == "Content-Type" && (value.empty() || this->content_type_.find(value.substr(value.rfind('.'))) == this->content_type_.end()))
+		this->headers[key] = "text/plane";
+	else if (key == "Content-Type")
+		this->headers[key] = this->content_type_.find(value.substr(value.rfind('.')))->second;
+	else
+		this->headers[key] = value;
+}
+
 void Response::SetHeaders() {
 	if(this->response_line.find("method")->second == "GET")
 		if (!this->headers.find("Content-Type")->second.size())
 			this->headers["Content-Type"] = this->content_type_.find(".html")->second;
-	this->headers["Content-Length"] = std::to_string(this->body.size());
-	this->headers["Date"] = GetTimeGMT();
+	SetHeader("Content-Length", std::to_string(this->body.size()));
+	SetHeader("Date", GetTimeGMT());
 }
 
 bool Response::_SearchForDir() {

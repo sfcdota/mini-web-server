@@ -38,5 +38,6 @@ class Request {
   std::string buffer;
   ServerConfig server_config;
   std::string source_request;
+//	id _request_line;
 };
 #endif // WEBSERV_REQUEST_HPP_

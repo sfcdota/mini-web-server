@@ -50,7 +50,7 @@ class Server {
 //		const char * tmp = request.source_request.c_str();
 //		std::cout << tmp;
 //        request.PrintRequestLine();
-        request.PrintBody();
+//        request.PrintBody();
         output = response.SetResponseLine();
 		std::cout << "fullPath_: " << response.fullPath_ << std::endl;
 //		request.PrintRequestLine();

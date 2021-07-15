@@ -135,7 +135,7 @@ void Server::ProcessInputBuffer(char *buffer, Request &request) {
     request.buffer = request.buffer.substr(pos + 4);
   }
   if (!request.recieved_body) {
-    std::cout << "size of buf = " << request.buffer.length() << std::endl;
+//    std::cout << "size of buf = " << request.buffer.length() << std::endl;
     if (request.chunked) {
       if ((pos = request.buffer.find("0\r\n\r\n")) == std::string::npos)
         return;
@@ -252,8 +252,8 @@ void Server::Init() {
 
 template<class Iterator>
 void Server::PrintLog(Iterator it, const std::string & msg, int client_fd) {
-  std::cout << "Server #" << it->server_fd << " " <<
-            std::setw(90) <<  msg << std::setw(10) << "| Client#" << client_fd << std::endl;
+//  std::cout << "Server #" << it->server_fd << " " <<
+//            std::setw(90) <<  msg << std::setw(10) << "| Client#" << client_fd << std::endl;
 }
 
 long Server::GetTimeInSeconds() {

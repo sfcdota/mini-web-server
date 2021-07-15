@@ -11,6 +11,7 @@
 #include <sstream>
 #include "unistd.h"
 #include "fcntl.h"
+#include "Response.hpp"
 // Сервер отправляет данные программе CGI с помощью переменных среды
 
 // Задача:
@@ -40,16 +41,16 @@
 
 class CGI {
 public:
-	CGI(const std::map<std::string, std::string> &request_line, const ServerConfig &con,
-		const std::map<std::string, std::string> &headers);
+	CGI(const Request &req, const ServerConfig &con, std::string str);
 	~CGI();
 	void executeCGI();
 	void mapToCString(std::map<std::string, std::string> &tmpEnv);
 	void setEnv();
 //private:
 	char **_env;
-	const std::map<std::string, std::string> &_headers;
-	const std::map<std::string, std::string> &_request_line;
+//	const Response &response_;
+	std::string str;
+	const Request &request_;
 	const ServerConfig &_con;
 };
 
