@@ -92,13 +92,7 @@ Response::Response(Request & request): request_(request), ServerConf_(request_.s
 void Response::ResponseBuilder(const std::string &path, const std::string &status_code) {
 	SetStatus(status_code);
 	SetBody(path);
-//	if (path.empty() || !(this->content_type_.find(path.substr(path.find('.')))->second.size() < 1))
-//		this->headers["Content-Type"] = "text/plane";
-//	else
-//		this->headers["Content-Type"] = this->content_type_.find(path.substr(path.find('.')))->second;
-	if (path.size() > 0)
-		SetHeader("Content-Type", this->content_type_.find(path.substr(path.find('.')))->second);
-	SetHeader("Content-Type", "non_exist");
+	SetHeader("Content-Type", path);
 }
 
 bool Response::HTTPVersionControl() {
@@ -116,31 +110,42 @@ void Response::GetRequest() {
 	_SearchForDir();
 }
 
-static void createCGI(const std::map<std::string, std::string> &request_line, const ServerConfig &con,
-		  const std::map<std::string, std::string> &headers) {
-	CGI cgi = CGI(request_line, con, headers);
-}
+//static void createCGI(const std::map<std::string, std::string> &request_line, const ServerConfig &con,
+//		  const std::map<std::string, std::string> &headers) {
+//	CGI cgi = CGI(request_line, con, headers);
+//}
 
 void Response::PostRequest() {
-	this->response_line["status_code"] = "405";
-	this->response_line["status"] = GetStatusText(this->response_line.find("status_code")->second);
-	this->headers["Content-Type"] = this->content_type_.find(".html")->second;
-	this->headers["Content-Length"] = std::to_string(this->body.size());
+//	std::string str = this->fullPath_;
+		std::cout << request_.request_line.find("target")->second << std::endl;
+	if (this->fullPath_.substr(this->fullPath_.rfind('/')) != "/site") {
+		CGI cgi(this->request_, this->ServerConf_, this->fullPath_);
+		SetStatus("201");
+		SetBody(ServerConf_.root + "/index.html");
+		SetHeader("Content-Type", ".html");
+	} else {
+		SetStatus("405");
+		SetBody(ServerConf_.root + "/errors/405.html");
+		SetHeader("Content-Type", ".html");
+	}
 }
 void Response::HeadRequest() {
 	SetStatus("405");
-	SetHeaders();
+//	SetHeaders();
+	SetHeader("Content-Length", std::to_string(this->body.size()));
+	SetHeader("Date", GetTimeGMT());
 }
 
 void Response::PutRequest() {
-	int fd = open((this->ServerConf_.root + "/bin" + this->fullPath_.substr(this->fullPath_.rfind('/'))).c_str(), O_CREAT | O_RDWR | O_TRUNC , 0777);
+	std::string str = this->ServerConf_.root + "/bin" + this->fullPath_.substr(this->fullPath_.rfind('/'));
+	int fd = open((str).c_str(), O_CREAT | O_RDWR | O_TRUNC , 0777);
 	if (fd == -1) {
 		throw std::runtime_error("Error: cannot open create/open file");
 	}
 	
 	write(fd, this->request_.body.c_str(), this->request_.body.size());
 	close(fd);
-	ResponseBuilder(this->fullPath_.substr(this->fullPath_.rfind('/')), "201");
+	ResponseBuilder("", "201");
 	
 }
 
@@ -234,8 +239,6 @@ std::string Response::SetResponseLine() {
 				HeadRequest();
 			}
 			else if (request_.request_line.find("method")->second == "PUT") {
-//				SetStatus("201");
-//				SetHeaders();
 				PutRequest();
 			}
 		}
@@ -414,11 +417,13 @@ std::string Response::GetTimeGMT() {
 	return ss.str();
 }
 
+
+
 void Response::SetHeader(const std::string &key, const std::string &value) {
-	if (key == "Content-Type" && (!value.empty() || this->content_type_.find(value)->second.size() < 1))
+	if (key == "Content-Type" && (value.empty() || this->content_type_.find(value.substr(value.rfind('.'))) == this->content_type_.end()))
 		this->headers[key] = "text/plane";
 	else if (key == "Content-Type")
-		this->headers[key] = this->content_type_.find(value)->second;
+		this->headers[key] = this->content_type_.find(value.substr(value.rfind('.')))->second;
 	else
 		this->headers[key] = value;
 }
@@ -427,9 +432,7 @@ void Response::SetHeaders() {
 	if(this->response_line.find("method")->second == "GET")
 		if (!this->headers.find("Content-Type")->second.size())
 			this->headers["Content-Type"] = this->content_type_.find(".html")->second;
-//	this->headers["Content-Length"] = std::to_string(this->body.size());
 	SetHeader("Content-Length", std::to_string(this->body.size()));
-	//	this->headers["Date"] = GetTimeGMT();
 	SetHeader("Date", GetTimeGMT());
 }
 

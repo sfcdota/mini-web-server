@@ -130,7 +130,7 @@ void parsServer(parsConfig &con, int &i){
 		if (delimeter == -1)
 			errors("server listen error!");
 //		con.serv.host = con.vec[i].substr(0, delimeter);
-        con.serv.host = 0;
+        con.serv.host = 2130706433;
 		con.serv.port = to_int(con.vec[i].substr(delimeter + 1, con.vec[i].size() - 1 - delimeter));
 		if (con.serv.port == -1)
 			errors("server listen port error!");

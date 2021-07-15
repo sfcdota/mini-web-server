@@ -46,7 +46,7 @@ public:
 	const ServerConfig					&ServerConf_;
 	bool								failed;
 
-private:
+//private:
 	bool			_SearchForFile(const std::string &path);
 	bool			_SearchForDir();
 	void			_createHTMLAutoIndex(DIR *dir);
