@@ -61,14 +61,16 @@ void Server::Run() {
 }
 void Server::ConnectionAccept() {
   int client_fd;
+  sockaddr_in addr = {};
+  socklen_t slen;
   for (server_iterator it = server.begin(); it != server.end(); it++) {
     if (FD_ISSET(it->server_fd, &working_read)) {
 //      std::cout << "Listening socket " << it->server_fd << " is ready for incoming connections" << std::endl;
-      if ((client_fd = Guard(accept(it->server_fd, NULL, NULL), false)) != -1) {
+      if ((client_fd = Guard(accept(it->server_fd, (struct sockaddr *) &addr, &slen), false)) != -1) {
 //        PrintLog(it, "accepted client connection", client_fd);
         fcntl(client_fd, F_SETFL, O_NONBLOCK);
         FD_SET(client_fd, &master_read);
-        read.push_back(ReadElement(it->server_fd, client_fd, it->server_config, validator_, GetTimeInSeconds()));
+        read.push_back(ReadElement(it->server_fd, client_fd, it->server_config, addr, slen, GetTimeInSeconds()));
       }
 //      std::cout << "Ended handle of incoming connections with max_fd = " << max_fd << std::endl;
 
@@ -119,7 +121,7 @@ void Server::SocketRead() {
 //        std::cout << "Client_fd = " << it->fd << " read ended due not keep alive connection" << std::endl;
         read.erase(it--);
       }
-      it->request = Request(it->request.buffer, it->request.server_config, it->request.validator_);
+      it->request = Request(it->request.buffer, it->request.server_config);
     }
   }
 }
@@ -165,7 +167,7 @@ void Server::GetBody(Request &request) {
 }
 
 void Server::GetChunkedBody(Request &request) {
-  std::cout << "buffer before body parsing length = " << request.buffer.length() << std::endl;
+//  std::cout << "buffer before body parsing length = " << request.buffer.length() << std::endl;
   request.formed = true;
   if (validator_.ValidBody(request.buffer))
     parser_.ParseBody(request);
@@ -242,6 +244,7 @@ void Server::Init() {
     Guard(setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &options_value, sizeof(int)), false);
     // SO_REUSEPORT on ubuntu only!
 
+    //todo save server addr
     Guard(bind(server_fd, (struct sockaddr *) &addr, sizeof(sockaddr_in)), false);
     Guard(listen(server_fd, MAX_CONNECTIONS), false);
     FD_SET(server_fd, &master_read);

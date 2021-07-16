@@ -119,7 +119,7 @@ void Response::PostRequest() {
 //	std::string str = this->fullPath_;
 		std::cout << request_.request_line.find("target")->second << std::endl;
 	if (this->fullPath_.substr(this->fullPath_.rfind('/')) != "/site") {
-		CGI cgi(this->request_, this->ServerConf_, this->fullFullPath_);
+		CGI cgi(this->request_, this->ServerConf_, this->fullFullPath_, body);
 		SetStatus("201");
 		SetBody(ServerConf_.root + "/index.html");
 		SetHeader("Content-Type", ".html");

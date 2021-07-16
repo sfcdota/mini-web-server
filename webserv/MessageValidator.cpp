@@ -367,19 +367,22 @@ size_t MessageValidator::GetStatusCode() const {
 //  return true;
 //}
 
+template<class ret, class kek>
 bool MessageValidator::exp_test_call(const std::string &s, size_t &index,
-                                     bool (MessageValidator::*f)(int, int)) {
+                                     ret (kek::*f)(int, int)) {
   return (this->*f)(s[index], 0);
 }
+
+template<class ret, class kek, class T1, class T2>
 bool MessageValidator::exp_test_call(const std::string &s, size_t &index,
-                                     bool (MessageValidator::*f)(const std::string &, size_t &)) {
+                                     ret (kek::*f)(T1, T2)) {
   return (this->*f)(s, index);
 }
 
 
-template<class T1, class T2>
+template<class ret, class kek, class T1, class T2>
 bool MessageValidator::expression_test(const std::string & s, size_t & index,
-                                       bool (MessageValidator::*f)(T1, T2), size_t status_code, size_t step, size_t min, size_t max) {
+                                       ret (kek::*f)(T1, T2), size_t status_code, size_t step, size_t min, size_t max) {
   size_t counter = 0;
   for(; counter < max && exp_test_call(s, index, f); ++counter, index += step);
   if (counter < min || counter > max || (!min && !counter)) {

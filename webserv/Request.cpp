@@ -1,7 +1,7 @@
 
 #include "Request.hpp"
 
-Request::Request(MessageValidator & validator): validator_(validator) {}
+
 
 const std::map<std::string, std::string> &Request::GetRequestLine() const {
   return request_line;
@@ -18,16 +18,14 @@ void Request::SetHeaders(const std::map<std::string, std::string> &headers) {
 void Request::SetBody(const std::string &body) {
   this->body = body;
 }
+Request::Request(): keep_alive(true), status_code(), failed(), chunked(), recieved_headers(), recieved_body(), formed(), content_length() {}
 
-
-Request::Request(const std::string &buffer, ServerConfig config, MessageValidator &validator): keep_alive(true), buffer(buffer),
+Request::Request(const std::string &buffer, ServerConfig config): keep_alive(true), buffer(buffer),
   server_config(config), status_code(), failed(), chunked(), recieved_headers(), recieved_body(), formed(),
-  content_length(), validator_(validator) {}
+  content_length() {}
 
-Request::Request(const Request &in) : status_code(), failed(), chunked(), recieved_headers(), recieved_body(), formed(), keep_alive(), content_length(),
-  validator_(in.validator_)
-    { *this = in; }
-const Request &Request::operator=(const Request &in) {
+Request::Request(const Request &in) : status_code(), failed(), chunked(), recieved_headers(), recieved_body(), formed(), keep_alive(), content_length() { *this = in; }
+Request &Request::operator=(const Request &in) {
   this->content_length = in.content_length;
   this->keep_alive = in.keep_alive;
   this->request_line = in.request_line;
@@ -42,7 +40,7 @@ const Request &Request::operator=(const Request &in) {
   this->server_config = in.server_config;
   this->source_request = in.source_request;
   this->recieved_body = in.recieved_body;
-  this->validator_ = in.validator_;
+
   return *this;
 }
 void Request::PrintRequestLine() {

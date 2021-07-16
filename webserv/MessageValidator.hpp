@@ -76,26 +76,16 @@ class MessageValidator {
 
 
 
+  template<class ret, class kek>
+  bool exp_test_call(const std::string & s, size_t & index, ret (kek::*f)(int, int));
+  template<class ret, class kek, class T1, class T2>
+  bool exp_test_call(const std::string & s, size_t & index, ret (kek::*f)(T1, T2));
 
 
-  bool exp_test_call(const std::string & s, size_t & index, bool (MessageValidator::*f)(int, int));
-  bool exp_test_call(const std::string & s, size_t & index, bool (MessageValidator::*f)(const std::string &, size_t &));
 
-
-
-  template<class T1, class T2>
-  bool expression_test(const std::string & s, size_t & index, bool (MessageValidator::*f)(T1, T2),
+  template<class ret, class kek, class T1, class T2>
+  bool expression_test(const std::string & s, size_t & index, ret (kek::*f)(T1, T2),
       size_t status_code = 0, size_t step = 1, size_t min = 0, size_t max = -2);
-
-  template<class T, class Ret, int>
-  bool test_wrapper(T *class_pointer, const std::string & s, size_t & index, Ret (T::*f)(int, int), size_t status_code = 0, size_t step = 1, size_t min = 0, size_t max = -2);
-
-  template<class T, class Ret, std::string &, size_t &>
-  bool test_wrapper(T *class_pointer, const std::string & s, size_t & index, Ret (T::*f)(std::string &, size_t &), size_t status_code = 0, size_t step = 1, size_t min = 0, size_t max = -2);
-
-
-//  template<class T1, class T2>
-//  bool expression_test_abnf(const std::string & s, size_t & index, bool (MessageValidator::*f)(T1, T2), size_t status_code = 0, size_t step = 1, size_t min = 0, size_t max = -2);
 
 
 };

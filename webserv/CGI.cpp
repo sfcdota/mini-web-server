@@ -1,9 +1,9 @@
 #include "CGI.hpp"
 
-CGI::CGI(Request &req, const ServerConfig &con, std::string & str)
+CGI::CGI(Request &req, const ServerConfig &con, std::string & str, std::string & result_dst)
     : _env(NULL), _con(con), str(str), request_(req) {
   setEnv(req);
-  executeCGI();
+  executeCGI(result_dst);
 }
 
 CGI::~CGI() {
@@ -16,30 +16,26 @@ CGI::~CGI() {
   }
 }
 
-void CGI::executeCGI() {
+void CGI::executeCGI(std::string & result_dst) {
 //	int oldFdIn = dup(0);
 //	int oldFdOut = dup(1);
-  int pid;
+  pid_t pid;
+  int status;
 
-
-  int fd = open("cgiOut.txt", O_CREAT | O_WRONLY | O_TRUNC);
-  if (fd == -1) {
-    std::cout << "CGI temp file creation error" << std::endl;
-  }
   pid = fork();
   if (pid == -1) {
     throw std::runtime_error("error");
   } else if (pid == 0) {
     std::string hui = _con.root + "/cgi/cgi_tester";
     char* kek = const_cast<char *>(hui.c_str());
-    dup2(fd, STDOUT_FILENO);
+    dup2(STDIN_FILENO, STDOUT_FILENO);
     if (execve(kek, reinterpret_cast<char *const *>(&kek), _env) == -1) {
       throw std::runtime_error("Error: execve");
     }
     exit(0);
   }
-  wait(NULL);
-  close(fd);
+  waitpid(pid, &status, 0);
+  std::cin >> result_dst;
 }
 
 void CGI::mapToCString(std::map<std::string, std::string> &tmpEnv) {
@@ -53,12 +49,12 @@ void CGI::mapToCString(std::map<std::string, std::string> &tmpEnv) {
 
 std::string & CGI::translate_path(std::string & path) {
   char c;
-  for(size_t i = 0; i < path.length(); i++) {
-    if (request_.validator_.ispctencoded(path, i)) {
-      path.replace(i, 3, &(c = static_cast<const char>(strtol(&path.c_str()[i + 1], NULL, 16))));
-      i += 2;
-    }
-  }
+//  for(size_t i = 0; i < path.length(); i++) {
+//    if (request_.validator_.ispctencoded(path, i)) {
+//      path.replace(i, 3, &(c = static_cast<const char>(strtol(&path.c_str()[i + 1], NULL, 16))));
+//      i += 2;
+//    }
+//  }
   return path;
 }
 
@@ -89,7 +85,8 @@ void CGI::setEnv(Request &req) {
   std::map<std::string, std::string>::iterator end = tmpEnv.end();
   size_t pos;
 
-  tmpEnv["AUTH_TYPE="] = "Basic";
+//  if(req.headers.find("WWW-Authenticate") != req.headers.end())
+//    tmpEnv["AUTH_TYPE="] = "Basic";
   tmpEnv["CONTENT_LENGTH="] = req.headers["Content-Length"];
   it = req.headers.find("Content-Type");
   if (it != end)
@@ -101,20 +98,19 @@ void CGI::setEnv(Request &req) {
   tmpEnv["PATH_TRANSLATED="] = translate_path(str);
   tmpEnv["QUERY_STRING="] = pos + 1 > it->second.length() ? it->second.substr(pos + 1) : "";
 //  tmpEnv["REDIRECT_STATUS"] = "200";
-  tmpEnv["REMOTE_ADDR="] = "127.0.0.1";
-  tmpEnv["REMOTE_IDENT="] = "basic";
-  tmpEnv["REMOTE_USER="] = "?????";
-  tmpEnv["REQUEST_METHOD="] = req.request_line.find("method")->second;
-  tmpEnv["REQUEST_URI="] = "/directory/youpi.bla";
-  tmpEnv["SCRIPT_FILENAME"] = "cgi/cgi_tester";
+  tmpEnv["REMOTE_ADDR="] = inet_ntoa(req.addr.sin_addr) ;
+//  tmpEnv["REMOTE_IDENT="] = "basic";
+//  tmpEnv["REMOTE_USER="] = "?????";
+  tmpEnv["REQUEST_METHOD="] = req.request_line["method"];
+  tmpEnv["REQUEST_URI="] = req.request_line["target"];
   tmpEnv["SCRIPT_NAME="] = "cgi/cgi_tester";
-//	if (_con.server_names.size()) {
-//		tmpEnv["SERVER_NAME="] = _con.server_names[0];
-//	} else {
-  tmpEnv["SERVER_NAME="] = std::to_string(_con.host);
-//	}
+  tmpEnv["SCRIPT_FILENAME="] = req.server_config.root + "/cgi/cgi_tester";
+
+//todo rework with inet_ntoa
+//  tmpEnv["SERVER_NAME="] = std::to_string(_con.host);
+  tmpEnv["SERVER_NAME="] = "127.0.0.1";
   tmpEnv["SERVER_PORT="] = std::to_string(_con.port);
-  tmpEnv["SERVER_PROTOCOL="] = req.request_line.find("version")->second;
+  tmpEnv["SERVER_PROTOCOL="] = req.request_line["version"];
   tmpEnv["SERVER_SOFTWARE="] = "kekers228/v4.20";
 //	tmpEnv["HTTP_X_SECRET_HEADER_FOR_TEST="] = "1";
   mapToCString(tmpEnv);

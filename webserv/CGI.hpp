@@ -41,9 +41,9 @@
 
 class CGI {
 public:
-  CGI(Request &req, const ServerConfig &con, std::string &str);
+  CGI(Request &req, const ServerConfig &con, std::string &str, std::string & result_dst);
   ~CGI();
-	void executeCGI();
+	void executeCGI(std::string & result_dst);
 	void mapToCString(std::map<std::string, std::string> &tmpEnv);
 	void setEnv(Request &req);
     std::string & translate_path(std::string & path);

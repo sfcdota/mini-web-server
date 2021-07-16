@@ -3,13 +3,13 @@
 #define WEBSERV_REQUEST_HPP_
 #include "allowed_library_includes.hpp"
 #include "../includes/parser.hpp"
-#include "MessageValidator.hpp"
+
 class Request {
  public:
-  Request(MessageValidator & validator);
-  Request(const std::string& buffer, ServerConfig config, MessageValidator & validator);
+  Request();
+  Request(const std::string& buffer, ServerConfig config);
   Request(const Request & in);
-  const Request & operator=(const Request & in);
+  Request & operator=(const Request & in);
   const std::string &GetBody() const;
   const std::map<std::string, std::string> &GetRequestLine() const;
   void SetRequestLine(const std::map<std::string, std::string> &request_line);
@@ -38,7 +38,9 @@ class Request {
   std::string buffer;
   ServerConfig server_config;
   std::string source_request;
-  MessageValidator& validator_;
+  sockaddr_in addr;
+  socklen_t addr_len;
+
 //	id _request_line;
 };
 #endif // WEBSERV_REQUEST_HPP_
