@@ -2,44 +2,44 @@
 
 Response::Response(Request & request): request_(request), ServerConf_(request_.server_config) {
 //	Status code explanation
-	this->status_text_["100"] = "Continue";
-	this->status_text_["101"] = "Switching Protocols";
-	this->status_text_["102"] = "Processing";
-	this->status_text_["103"] = "Early Hints";
-	this->status_text_["200"] = "OK";
-	this->status_text_["201"] = "Created";
-	this->status_text_["202"] = "Accepted";
-	this->status_text_["203"] = "Non_Authoritative Information";
-	this->status_text_["204"] = "No Content";
-	this->status_text_["205"] = "Reset Content";
-	this->status_text_["300"] = "Multiple Choices";
-	this->status_text_["301"] = "Moved Permanently";
-	this->status_text_["302"] = "Found";
-	this->status_text_["303"] = "See Other";
-	this->status_text_["305"] = "Use Proxy";
-	this->status_text_["306"] = "(Unused)";
-	this->status_text_["307"] = "Temporary Redirect";
-	this->status_text_["400"] = "Bad Request";
-	this->status_text_["402"] = "Payment Required";
-	this->status_text_["403"] = "Forbidden";
-	this->status_text_["404"] = "Not Found";
-	this->status_text_["405"] = "Method Not Allowed";
-	this->status_text_["406"] = "Not Acceptable";
-	this->status_text_["408"] = "Request Timeout";
-	this->status_text_["409"] = "Conflict";
-	this->status_text_["410"] = "Gone";
-	this->status_text_["411"] = "Length Required";
-	this->status_text_["413"] = "Payload Too Large";
-	this->status_text_["414"] = "URI Too Long";
-	this->status_text_["415"] = "Unsupported Media Type";
-	this->status_text_["417"] = "Expectation Failed";
-	this->status_text_["426"] = "Upgrade Required";
-	this->status_text_["500"] = "Internal Server Error";
-	this->status_text_["501"] = "Not Implemented";
-	this->status_text_["502"] = "Bad Gateway";
-	this->status_text_["503"] = "Service Unavailable";
-	this->status_text_["504"] = "Gateway Timeout";
-	this->status_text_["505"] = "HTTP Version Not Supported";
+	this->status_text_["100"] = " Continue";
+	this->status_text_["101"] = " Switching Protocols";
+	this->status_text_["102"] = " Processing";
+	this->status_text_["103"] = " Early Hints";
+	this->status_text_["200"] = " OK";
+	this->status_text_["201"] = " Created";
+	this->status_text_["202"] = " Accepted";
+	this->status_text_["203"] = " Non_Authoritative Information";
+	this->status_text_["204"] = " No Content";
+	this->status_text_["205"] = " Reset Content";
+	this->status_text_["300"] = " Multiple Choices";
+	this->status_text_["301"] = " Moved Permanently";
+	this->status_text_["302"] = " Found";
+	this->status_text_["303"] = " See Other";
+	this->status_text_["305"] = " Use Proxy";
+	this->status_text_["306"] = " (Unused)";
+	this->status_text_["307"] = " Temporary Redirect";
+	this->status_text_["400"] = " Bad Request";
+	this->status_text_["402"] = " Payment Required";
+	this->status_text_["403"] = " Forbidden";
+	this->status_text_["404"] = " Not Found";
+	this->status_text_["405"] = " Method Not Allowed";
+	this->status_text_["406"] = " Not Acceptable";
+	this->status_text_["408"] = " Request Timeout";
+	this->status_text_["409"] = " Conflict";
+	this->status_text_["410"] = " Gone";
+	this->status_text_["411"] = " Length Required";
+	this->status_text_["413"] = " Payload Too Large";
+	this->status_text_["414"] = " URI Too Long";
+	this->status_text_["415"] = " Unsupported Media Type";
+	this->status_text_["417"] = " Expectation Failed";
+	this->status_text_["426"] = " Upgrade Required";
+	this->status_text_["500"] = " Internal Server Error";
+	this->status_text_["501"] = " Not Implemented";
+	this->status_text_["502"] = " Bad Gateway";
+	this->status_text_["503"] = " Service Unavailable";
+	this->status_text_["504"] = " Gateway Timeout";
+	this->status_text_["505"] = " HTTP Version Not Supported";
 //	Content type explanation
 //	this->content_type_[] = "application/x-executable";
 //	this->content_type_[] = "application/graphql";
@@ -119,7 +119,7 @@ void Response::PostRequest() {
 //	std::string str = this->fullPath_;
 		std::cout << request_.request_line.find("target")->second << std::endl;
 	if (this->fullPath_.substr(this->fullPath_.rfind('/')) != "/site") {
-		CGI cgi(this->request_, this->ServerConf_, this->fullPath_);
+		CGI cgi(this->request_, this->ServerConf_, this->fullFullPath_);
 		SetStatus("201");
 		SetBody(ServerConf_.root + "/index.html");
 		SetHeader("Content-Type", ".html");
@@ -189,6 +189,7 @@ void Response::CorrectPath()
 
 bool Response::CheckLocationCorrectness() {
 	std::string path = request_.request_line.find("target")->second;
+	this->fullFullPath_ = ServerConf_.root + location_.root + path;
 	path = path.substr(0, path.find('?'));
 	this->cleanTarget_ = path;
 	bool flag = true;
@@ -222,28 +223,31 @@ void Response::SetStatus(std::string code) {
 
 std::string Response::SetResponseLine() {
 //	freeResponse();
-	if (HTTPVersionControl() && CheckMethodCorrectness() && CheckLocationCorrectness() && CheckLocationMethods()) {
-		DIR *dir = opendir(this->fullPath_.c_str());
-		if (location_.autoindex && dir) {
-			SetStatus("200");
-			_createHTMLAutoIndex(dir);
-			closedir(dir);
-		} else {
-			if(request_.request_line.find("method")->second == "GET") {
-				GetRequest();
-			}
-			else if (request_.request_line.find("method")->second == "POST"){
-				PostRequest();
-			}
-			else if (request_.request_line.find("method")->second == "HEAD") {
-				HeadRequest();
-			}
-			else if (request_.request_line.find("method")->second == "PUT") {
-				PutRequest();
-			}
-		}
-	}
-	return SendResponse();
+  if (request_.failed) {
+    SetStatus(std::to_string(request_.status_code));
+    SetHeader("Content-Type", ".html");
+    SetBody(ServerConf_.root + "/errors/error_template.html");
+    body.replace(body.find("$ERROR"), 6, response_line["status_code"] + response_line["status"]);
+  }
+  else if (HTTPVersionControl() && CheckMethodCorrectness() && CheckLocationCorrectness() && CheckLocationMethods()) {
+    DIR *dir = opendir(this->fullPath_.c_str());
+    if (location_.autoindex && dir) {
+      SetStatus("200");
+      _createHTMLAutoIndex(dir);
+      closedir(dir);
+    } else {
+      if (request_.request_line.find("method")->second == "GET") {
+        GetRequest();
+      } else if (request_.request_line.find("method")->second == "POST") {
+        PostRequest();
+      } else if (request_.request_line.find("method")->second == "HEAD") {
+        HeadRequest();
+      } else if (request_.request_line.find("method")->second == "PUT") {
+        PutRequest();
+      }
+    }
+  }
+  return SendResponse();
 }
 
 
@@ -255,6 +259,7 @@ void Response::freeResponse() {
 }
 
 std::string Response::SendResponse() {
+
 	std::string response;
 	std::map<std::string, std::string>::iterator begin;
 
@@ -263,7 +268,7 @@ std::string Response::SendResponse() {
 	SetHeader("Content-Length", std::to_string(this->body.size()));
 
 	response = this->response_line.find("version")->second + " ";
-	response += this->response_line.find("status_code")->second + " ";
+	response += this->response_line.find("status_code")->second;
 	response += this->response_line.find("status")->second /*+ "\r\n"*/;
 	for (begin = this->headers.begin(); begin != this->headers.end(); begin++) {
 		if (begin == this->headers.begin())
@@ -282,44 +287,44 @@ std::string Response::SendResponse() {
 
 std::string Response::GetStatusText(std::string code) {
 	std::map<std::string, std::string> status_text_;
-	status_text_["100"] = "Continue";
-	status_text_["101"] = "Switching Protocols";
-	status_text_["102"] = "Processing";
-	status_text_["103"] = "Early Hints";
-	status_text_["200"] = "OK";
-	status_text_["201"] = "Created";
-	status_text_["202"] = "Accepted";
-	status_text_["203"] = "Non_Authoritative Information";
-	status_text_["204"] = "No Content";
-	status_text_["205"] = "Reset Content";
-	status_text_["300"] = "Multiple Choices";
-	status_text_["301"] = "Moved Permanently";
-	status_text_["302"] = "Found";
-	status_text_["303"] = "See Other";
-	status_text_["305"] = "Use Proxy";
-	status_text_["306"] = "(Unused)";
-	status_text_["307"] = "Temporary Redirect";
-	status_text_["400"] = "Bad Request";
-	status_text_["402"] = "Payment Required";
-	status_text_["403"] = "Forbidden";
-	status_text_["404"] = "Not Found";
-	status_text_["405"] = "Method Not Allowed";
-	status_text_["406"] = "Not Acceptable";
-	status_text_["408"] = "Request Timeout";
-	status_text_["409"] = "Conflict";
-	status_text_["410"] = "Gone";
-	status_text_["411"] = "Length Required";
-	status_text_["413"] = "Payload Too Large";
-	status_text_["414"] = "URI Too Long";
-	status_text_["415"] = "Unsupported Media Type";
-	status_text_["417"] = "Expectation Failed";
-	status_text_["426"] = "Upgrade Required";
-	status_text_["500"] = "Internal Server Error";
-	status_text_["501"] = "Not Implemented";
-	status_text_["502"] = "Bad Gateway";
-	status_text_["503"] = "Service Unavailable";
-	status_text_["504"] = "Gateway Timeout";
-	status_text_["505"] = "HTTP Version Not Supported";
+	status_text_["100"] = " Continue";
+	status_text_["101"] = " Switching Protocols";
+	status_text_["102"] = " Processing";
+	status_text_["103"] = " Early Hints";
+	status_text_["200"] = " OK";
+	status_text_["201"] = " Created";
+	status_text_["202"] = " Accepted";
+	status_text_["203"] = " Non_Authoritative Information";
+	status_text_["204"] = " No Content";
+	status_text_["205"] = " Reset Content";
+	status_text_["300"] = " Multiple Choices";
+	status_text_["301"] = " Moved Permanently";
+	status_text_["302"] = " Found";
+	status_text_["303"] = " See Other";
+	status_text_["305"] = " Use Proxy";
+	status_text_["306"] = " (Unused)";
+	status_text_["307"] = " Temporary Redirect";
+	status_text_["400"] = " Bad Request";
+	status_text_["402"] = " Payment Required";
+	status_text_["403"] = " Forbidden";
+	status_text_["404"] = " Not Found";
+	status_text_["405"] = " Method Not Allowed";
+	status_text_["406"] = " Not Acceptable";
+	status_text_["408"] = " Request Timeout";
+	status_text_["409"] = " Conflict";
+	status_text_["410"] = " Gone";
+	status_text_["411"] = " Length Required";
+	status_text_["413"] = " Payload Too Large";
+	status_text_["414"] = " URI Too Long";
+	status_text_["415"] = " Unsupported Media Type";
+	status_text_["417"] = " Expectation Failed";
+	status_text_["426"] = " Upgrade Required";
+	status_text_["500"] = " Internal Server Error";
+	status_text_["501"] = " Not Implemented";
+	status_text_["502"] = " Bad Gateway";
+	status_text_["503"] = " Service Unavailable";
+	status_text_["504"] = " Gateway Timeout";
+	status_text_["505"] = " HTTP Version Not Supported";
 	if (status_text_.find(code) != status_text_.end())
 		return status_text_.find(code)->second;
 }

@@ -31,10 +31,11 @@ class Server {
     Request request;
     size_t last_read;
     size_t last_action_time;
-    ReadElement(int server_fd, int fd, const ServerConfig& server_config, size_t last_read = 0):
-      server_fd(server_fd), fd(fd), last_read(last_read), last_action_time(last_read) {
+    ReadElement(int server_fd, int fd, const ServerConfig& server_config, MessageValidator& validator, size_t last_read = 0):
+      server_fd(server_fd), fd(fd), last_read(last_read), last_action_time(last_read), request(validator) {
 //      std::cout << "LOCATIONS SIZE" << server_config.locations.size() << std::endl;
       request.server_config = server_config;
+      request.validator_ = validator;
     }
   };
 

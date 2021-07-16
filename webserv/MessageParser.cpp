@@ -46,7 +46,7 @@ MessageParser::~MessageParser() {}
 
  * message-body = *OCTET
  */
-Request MessageParser::ProcessHeaders(Request &request) {
+void MessageParser::ProcessHeaders(Request &request) {
   msg = request.buffer;
   std::string token;
   size_t tmp = 0;
@@ -74,7 +74,6 @@ Request MessageParser::ProcessHeaders(Request &request) {
      request.headers.insert(std::make_pair(token, msg.substr(pointer, end_of_header_value - pointer)));
      tmp = end_of_header + 2;
    }
-  return request;
 }
 
 void MessageParser::ParseBody(Request & request) {
@@ -114,8 +113,6 @@ void MessageParser::ParseBody(Request & request) {
 }
 
 
-
-MessageParser::MessageParser(): remain(0) {}
 
 
 

@@ -41,16 +41,17 @@
 
 class CGI {
 public:
-	CGI(const Request &req, const ServerConfig &con, std::string str);
-	~CGI();
+  CGI(Request &req, const ServerConfig &con, std::string &str);
+  ~CGI();
 	void executeCGI();
 	void mapToCString(std::map<std::string, std::string> &tmpEnv);
-	void setEnv();
+	void setEnv(Request &req);
+    std::string & translate_path(std::string & path);
 //private:
 	char **_env;
 //	const Response &response_;
 	std::string str;
-	const Request &request_;
+	Request &request_;
 	const ServerConfig &_con;
 };
 

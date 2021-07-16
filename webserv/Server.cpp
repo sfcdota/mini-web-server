@@ -68,7 +68,7 @@ void Server::ConnectionAccept() {
 //        PrintLog(it, "accepted client connection", client_fd);
         fcntl(client_fd, F_SETFL, O_NONBLOCK);
         FD_SET(client_fd, &master_read);
-        read.push_back(ReadElement(it->server_fd, client_fd, it->server_config, GetTimeInSeconds()));
+        read.push_back(ReadElement(it->server_fd, client_fd, it->server_config, validator_, GetTimeInSeconds()));
       }
 //      std::cout << "Ended handle of incoming connections with max_fd = " << max_fd << std::endl;
 
@@ -119,7 +119,7 @@ void Server::SocketRead() {
 //        std::cout << "Client_fd = " << it->fd << " read ended due not keep alive connection" << std::endl;
         read.erase(it--);
       }
-      it->request = Request(it->request.buffer, it->request.server_config);
+      it->request = Request(it->request.buffer, it->request.server_config, it->request.validator_);
     }
   }
 }

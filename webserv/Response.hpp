@@ -43,6 +43,7 @@ public:
 	std::map<std::string, std::string>	status_text_;
 	std::string							cleanTarget_;
 	std::string							fullPath_;
+	std::string                         fullFullPath_;
 	const ServerConfig					&ServerConf_;
 	bool								failed;
 
