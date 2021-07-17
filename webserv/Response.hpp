@@ -13,6 +13,8 @@ public:
 	explicit		Response(Request & request);
 	std::string		GetStatusText(std::string code);
 	void			GetContentType();
+	bool			MakeDirectory();
+	bool 			OpenOrCreateFile();
 	std::string		SendResponse();
 	void			ResponseBuilder(const std::string &path, const std::string &status_code);
 	bool			HTTPVersionControl();
@@ -27,8 +29,10 @@ public:
 	void			freeResponse();
 	void			SetStatus(std::string code);
 	void			SetHeaders();
+	void			ErrorHandler(std::string status_code);
 	std::string		GetTimeGMT();
-	void			SetBody(const std::string &path);
+	bool			SetBody(const std::string &path);
+	bool			GetBody(const std::string &path);
 //	void	createCGI(const std::map<std::string, std::string> &request_line, const ServerConfig &con,
 //				 const std::map<std::string, std::string> &headers);
 // private:

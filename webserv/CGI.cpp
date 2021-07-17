@@ -35,6 +35,7 @@ void CGI::executeCGI() {
 		if (execve((_con.root + "/cgi/cgi_tester").c_str(), kek, _env) == -1) {
 			throw std::runtime_error("Error: execve");
 		}
+		exit(0);
 	}
 	wait(NULL);
 	close(fd);
@@ -77,23 +78,23 @@ void CGI::setEnv() {
 	tmpEnv["CONTENT_LENGTH="] = request_.headers.find("Content-Length")->second;//_headers.find("content-length")->second;
 	tmpEnv["CONTENT_TYPE="] = request_.headers.find("Content-Type")->second;
 	tmpEnv["GATEWAY_INTERFACE="] = "CGI/1.1";
-	tmpEnv["PATH_INFO="] = "/directory/youpi.bla";
-	tmpEnv["PATH_TRANSLATED="] = "YoupiBanane/directory/youpi.bla";
+	tmpEnv["PATH_INFO="] = "/YoupiBanane/directory/youpi.bla";
+	tmpEnv["PATH_TRANSLATED="] = "/Users/ljerrica/Desktop/webserv/werbserv/site/YoupiBanane/directory/youpi.bla";
 //			this->str;
 	std::string tmpStr = this->request_.request_line.find("target")->second;
 	tmpEnv["QUERY_STRING="] = tmpStr.erase(0, 1);
-	tmpEnv["REDIRECT_STATUS"] = "200";
+	tmpEnv["REDIRECT_STATUS="] = "200";
 	tmpEnv["REMOTE_ADDR="] = "127.0.0.1";
 	tmpEnv["REMOTE_IDENT="] = "basic";
 	tmpEnv["REMOTE_USER="] = "?????";
 	tmpEnv["REQUEST_METHOD="] = request_.request_line.find("method")->second;
 	tmpEnv["REQUEST_URI="] = "/directory/youpi.bla";
-	tmpEnv["SCRIPT_FILENAME"] = "cgi/cgi_tester";
-	tmpEnv["SCRIPT_NAME="] = "cgi/cgi_tester";
+	tmpEnv["SCRIPT_FILENAME="] = "/cgi/cgi_tester";
+	tmpEnv["SCRIPT_NAME="] = "/cgi/cgi_tester";
 //	if (_con.server_names.size()) {
 //		tmpEnv["SERVER_NAME="] = _con.server_names[0];
 //	} else {
-	tmpEnv["SERVER_NAME="] = std::to_string(_con.host);
+	tmpEnv["SERVER_NAME="] = "127.0.0.1";
 //	}
 	tmpEnv["SERVER_PORT="] = std::to_string(_con.port);
 	tmpEnv["SERVER_PROTOCOL="] = request_.request_line.find("version")->second;

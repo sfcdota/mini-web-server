@@ -91,73 +91,160 @@ Response::Response(Request & request): request_(request), ServerConf_(request_.s
 
 void Response::ResponseBuilder(const std::string &path, const std::string &status_code) {
 	SetStatus(status_code);
-	SetBody(path);
+	if (!SetBody(path))
+		return ;
 	SetHeader("Content-Type", path);
 }
 
 bool Response::HTTPVersionControl() {
 	if (request_.request_line.find("version")->second == "HTTP/1.1") {
-		this->response_line["version"] = "HTTP/1.1";
+		this->response_line["version"] = "HTTP/1.1 ";
 		return 1;
 	}
-	SetStatus("505");
-	SetBody(ServerConf_.root + "/errors/505.html");
-	SetHeader("Content-Type", ".html");
+	ErrorHandler("505");
 	return 0;
+}
+void Response::ErrorHandler(std::string status_code) {
+	SetStatus(status_code);
+	this->body = "<!DOCTYPE html>\n"
+				"<html lang=\"en\">\n"
+				"<head>\n"
+				"<meta charset=\"UTF-8\">\n"
+				"<title>webserv</title>\n"
+				"</head>\n"
+				"<body>\n"
+				"<center>\n"
+				"<h1>" +
+				this->response_line["status_code"] +
+				this->response_line["status"] +
+				"</h1>\n" +
+				"</center>\n"
+				"</body>\n"
+				"</html>\n";
+	SetHeader("Content-Type", ".html");
+}
+
+ bool Response::MakeDirectory() {
+	 int start = 0;
+	 int end = 0;
+	 std::string dir;
+	
+	 if (chdir(ServerConf_.root.c_str()) == -1){
+		 ErrorHandler("500");
+		 return 0;
+	 }
+	 while (true){
+		 if ((end = (this->location_.root + this->cleanTarget_).find('/', end + 1)) != std::string::npos) {
+			 dir = (this->location_.root + this->cleanTarget_).substr(start + 1, end - start - 1);
+			 if (chdir(dir.c_str()) == -1) {
+				 if (mkdir(dir.c_str(), 0777) == -1){
+					 ErrorHandler("500");
+					 return 0;
+				 }
+				 if (chdir(dir.c_str()) == -1){
+					 ErrorHandler("500");
+					 return 0;
+				 }
+			 }
+			 start = end;
+		 }
+		 else
+			 break ;
+	 }
+	 return 1;
+}
+
+bool Response::OpenOrCreateFile() {
+//	std::string str = this->fullPath_.substr(this->fullPath_.find('/') + 1);
+	int fd = open((this->fullPath_).c_str(), O_CREAT | O_RDWR | O_TRUNC , 0777);
+	if (fd == -1) {
+		ErrorHandler("500");
+	}
+	write(fd, this->request_.body.c_str(), this->request_.body.size());
+	close(fd);
 }
 
 void Response::GetRequest() {
 	_SearchForDir();
 }
 
-//static void createCGI(const std::map<std::string, std::string> &request_line, const ServerConfig &con,
-//		  const std::map<std::string, std::string> &headers) {
-//	CGI cgi = CGI(request_line, con, headers);
-//}
 
 void Response::PostRequest() {
-//	std::string str = this->fullPath_;
-		std::cout << request_.request_line.find("target")->second << std::endl;
-	if (this->fullPath_.substr(this->fullPath_.rfind('/')) != "/site") {
-		CGI cgi(this->request_, this->ServerConf_, this->fullPath_);
-		SetStatus("201");
-		SetBody(ServerConf_.root + "/index.html");
-		SetHeader("Content-Type", ".html");
+	if (this->request_.failed) {
+		ErrorHandler(std::to_string(this->request_.status_code));
+	}
+	else if (this->request_.headers.find("Content-Length") == this->request_.headers.end()){
+		ErrorHandler("411");
+	}
+	else if (this->request_.headers.find("Content-Length")->second == "0"){
+		ErrorHandler("405");
 	} else {
-		SetStatus("405");
-		SetBody(ServerConf_.root + "/errors/405.html");
-		SetHeader("Content-Type", ".html");
+		if (!MakeDirectory())
+			return ;
+		if (!GetBody(this->fullPath_))
+			return ;
+		if (_SearchForFile(this->fullPath_)){
+			OpenOrCreateFile();
+			SetStatus("200");
+			if (!SetBody(this->fullPath_))
+				return ;
+			SetHeader("Content-Type", this->fullPath_);
+		} else {
+			OpenOrCreateFile();
+			SetStatus("201");
+			if (!SetBody(this->fullPath_))
+				return ;
+			SetHeader("Content-Type", this->fullPath_);
+			SetHeader("Location", this->cleanTarget_);
+		}
 	}
 }
 void Response::HeadRequest() {
-	SetStatus("405");
-//	SetHeaders();
-	SetHeader("Content-Length", std::to_string(this->body.size()));
-	SetHeader("Date", GetTimeGMT());
+	ErrorHandler("405");
 }
 
+
+
 void Response::PutRequest() {
-	std::string str = this->ServerConf_.root + "/bin" + this->fullPath_.substr(this->fullPath_.rfind('/'));
-	int fd = open((str).c_str(), O_CREAT | O_RDWR | O_TRUNC , 0777);
-	if (fd == -1) {
-		throw std::runtime_error("Error: cannot open create/open file");
+	if (this->request_.headers.find("Content-Length") == this->request_.headers.end()){
+		ErrorHandler("411");
 	}
-	
-	write(fd, this->request_.body.c_str(), this->request_.body.size());
-	close(fd);
-	ResponseBuilder("", "201");
+	else if (this->request_.headers.find("Content-Length")->second == "0"){
+		ErrorHandler("405");
+	} else {
+		if (!MakeDirectory())
+			return ;
+		if (_SearchForFile(this->fullPath_)){
+			if (!GetBody(this->fullPath_))
+				return ;
+			OpenOrCreateFile();
+			SetStatus("200");
+			SetHeader("Content-Type", this->fullPath_);
+		} else {
+			OpenOrCreateFile();
+			SetStatus("201");
+			SetHeader("Content-Type", this->fullPath_);
+			SetHeader("Location", this->cleanTarget_);
+		}
+	}
+//	std::string str = this->ServerConf_.root + "/bin" + this->fullPath_.substr(this->fullPath_.rfind('/'));
+//	int fd = open((str).c_str(), O_CREAT | O_RDWR | O_TRUNC , 0777);
+//	if (fd == -1) {
+//		ErrorHandler("500");
+//	}
+//	write(fd, this->request_.body.c_str(), this->request_.body.size());
+//	close(fd);
+//	ResponseBuilder(str, "201");
 	
 }
 
 bool Response::CheckMethodCorrectness() {
 	std::string methods[] = { "GET", "POST", "HEAD", "DELETE", "PUT" };
 	for (int i = 0; i < 5; i++){
-		if (methods[i] == request_.request_line.find("method")->second)
+		if (methods[i] == this->request_.request_line.find("method")->second)
 			return 1;
 	}
-	SetStatus("405");
-	SetBody(ServerConf_.root + "/errors/405.html");
-	SetHeader("Content-Type", ".html");
+	ErrorHandler("405");
 	return 0;
 }
 
@@ -166,9 +253,7 @@ bool Response::CheckLocationMethods() {
 		if (this->location_.http_methods[i] == request_.request_line.find("method")->second)
 			return 1;
 	}
-	SetStatus("405");
-	SetBody(ServerConf_.root + "/errors/405.html");
-	SetHeader("Content-Type", ".html");
+	ErrorHandler("405");
 	return 0;
 }
 void Response::CorrectPath()
@@ -188,7 +273,7 @@ void Response::CorrectPath()
 }
 
 bool Response::CheckLocationCorrectness() {
-	std::string path = request_.request_line.find("target")->second;
+	std::string path = this->request_.request_line.find("target")->second;
 	path = path.substr(0, path.find('?'));
 	this->cleanTarget_ = path;
 	bool flag = true;
@@ -197,21 +282,19 @@ bool Response::CheckLocationCorrectness() {
 			flag = false;
 		if (path != "/" && path[path.size() - 1] == '/')
 			path = path.substr(0, path.size() - 1);
-		for (int i = 0; i < ServerConf_.locations.size(); i++) {
-			std::string location = ServerConf_.locations[i].path;
+		for (int i = 0; i < this->ServerConf_.locations.size(); i++) {
+			std::string location = this->ServerConf_.locations[i].path;
 			if (location != "/" && location[location.size() - 1] == '/')
 				location = location.substr(0, location.size() - 1);
 			if (path == location) {
-				location_ = ServerConf_.locations[i];
+				this->location_ = this->ServerConf_.locations[i];
 				CorrectPath();
 				return 1;
 			}
 		}
 		path = path.substr(0, path.rfind('/') + 1);
 	}
-	SetStatus("404");
-	SetBody(ServerConf_.root + "/errors/404.html");
-	SetHeader("Content-Type", ".html");
+	ErrorHandler("404");
 	return 0;
 }
 
@@ -241,6 +324,7 @@ std::string Response::SetResponseLine() {
 			else if (request_.request_line.find("method")->second == "PUT") {
 				PutRequest();
 			}
+			else if (this->request_.request_line.find("method")->second == "DELETE");
 		}
 	}
 	return SendResponse();
@@ -262,8 +346,8 @@ std::string Response::SendResponse() {
 	SetHeader("Server", "webserv");
 	SetHeader("Content-Length", std::to_string(this->body.size()));
 
-	response = this->response_line.find("version")->second + " ";
-	response += this->response_line.find("status_code")->second + " ";
+	response = this->response_line.find("version")->second;
+	response += this->response_line.find("status_code")->second;
 	response += this->response_line.find("status")->second /*+ "\r\n"*/;
 	for (begin = this->headers.begin(); begin != this->headers.end(); begin++) {
 		if (begin == this->headers.begin())
@@ -282,44 +366,44 @@ std::string Response::SendResponse() {
 
 std::string Response::GetStatusText(std::string code) {
 	std::map<std::string, std::string> status_text_;
-	status_text_["100"] = "Continue";
-	status_text_["101"] = "Switching Protocols";
-	status_text_["102"] = "Processing";
-	status_text_["103"] = "Early Hints";
-	status_text_["200"] = "OK";
-	status_text_["201"] = "Created";
-	status_text_["202"] = "Accepted";
-	status_text_["203"] = "Non_Authoritative Information";
-	status_text_["204"] = "No Content";
-	status_text_["205"] = "Reset Content";
-	status_text_["300"] = "Multiple Choices";
-	status_text_["301"] = "Moved Permanently";
-	status_text_["302"] = "Found";
-	status_text_["303"] = "See Other";
-	status_text_["305"] = "Use Proxy";
-	status_text_["306"] = "(Unused)";
-	status_text_["307"] = "Temporary Redirect";
-	status_text_["400"] = "Bad Request";
-	status_text_["402"] = "Payment Required";
-	status_text_["403"] = "Forbidden";
-	status_text_["404"] = "Not Found";
-	status_text_["405"] = "Method Not Allowed";
-	status_text_["406"] = "Not Acceptable";
-	status_text_["408"] = "Request Timeout";
-	status_text_["409"] = "Conflict";
-	status_text_["410"] = "Gone";
-	status_text_["411"] = "Length Required";
-	status_text_["413"] = "Payload Too Large";
-	status_text_["414"] = "URI Too Long";
-	status_text_["415"] = "Unsupported Media Type";
-	status_text_["417"] = "Expectation Failed";
-	status_text_["426"] = "Upgrade Required";
-	status_text_["500"] = "Internal Server Error";
-	status_text_["501"] = "Not Implemented";
-	status_text_["502"] = "Bad Gateway";
-	status_text_["503"] = "Service Unavailable";
-	status_text_["504"] = "Gateway Timeout";
-	status_text_["505"] = "HTTP Version Not Supported";
+	status_text_["100"] = " Continue";
+	status_text_["101"] = " Switching Protocols";
+	status_text_["102"] = " Processing";
+	status_text_["103"] = " Early Hints";
+	status_text_["200"] = " OK";
+	status_text_["201"] = " Created";
+	status_text_["202"] = " Accepted";
+	status_text_["203"] = " Non_Authoritative Information";
+	status_text_["204"] = " No Content";
+	status_text_["205"] = " Reset Content";
+	status_text_["300"] = " Multiple Choices";
+	status_text_["301"] = " Moved Permanently";
+	status_text_["302"] = " Found";
+	status_text_["303"] = " See Other";
+	status_text_["305"] = " Use Proxy";
+	status_text_["306"] = " (Unused)";
+	status_text_["307"] = " Temporary Redirect";
+	status_text_["400"] = " Bad Request";
+	status_text_["402"] = " Payment Required";
+	status_text_["403"] = " Forbidden";
+	status_text_["404"] = " Not Found";
+	status_text_["405"] = " Method Not Allowed";
+	status_text_["406"] = " Not Acceptable";
+	status_text_["408"] = " Request Timeout";
+	status_text_["409"] = " Conflict";
+	status_text_["410"] = " Gone";
+	status_text_["411"] = " Length Required";
+	status_text_["413"] = " Payload Too Large";
+	status_text_["414"] = " URI Too Long";
+	status_text_["415"] = " Unsupported Media Type";
+	status_text_["417"] = " Expectation Failed";
+	status_text_["426"] = " Upgrade Required";
+	status_text_["500"] = " Internal Server Error";
+	status_text_["501"] = " Not Implemented";
+	status_text_["502"] = " Bad Gateway";
+	status_text_["503"] = " Service Unavailable";
+	status_text_["504"] = " Gateway Timeout";
+	status_text_["505"] = " HTTP Version Not Supported";
 	if (status_text_.find(code) != status_text_.end())
 		return status_text_.find(code)->second;
 }
@@ -420,7 +504,9 @@ std::string Response::GetTimeGMT() {
 
 
 void Response::SetHeader(const std::string &key, const std::string &value) {
-	if (key == "Content-Type" && (value.empty() || this->content_type_.find(value.substr(value.rfind('.'))) == this->content_type_.end()))
+	if (key == "Content-Type" && value.rfind('.') == std::string::npos)
+		this->headers[key] = "text/plane";
+	else if (key == "Content-Type" && (value.empty() || this->content_type_.find(value.substr(value.rfind('.'))) == this->content_type_.end()))
 		this->headers[key] = "text/plane";
 	else if (key == "Content-Type")
 		this->headers[key] = this->content_type_.find(value.substr(value.rfind('.')))->second;
@@ -477,7 +563,32 @@ bool Response::_SearchForFile(const std::string &path){
 	return 0;
 }
 
-void Response::SetBody(const std::string &path) {
+bool Response::GetBody(const std::string &path) {
+	std::ifstream fin(path, std::ios::in|std::ios::binary|std::ios::ate);
+	int size;
+	if (fin.is_open()) {
+		fin.seekg(0, std::ios::end);
+		size = fin.tellg();
+		char *contents = new char[size];
+		fin.seekg (0, std::ios::beg);
+		fin.read (contents, size);
+		fin.close();
+		std::string str(contents, size);
+		delete [] contents;
+		if (this->request_.body.size() == str.size() && this->request_.body == str){
+			SetStatus("303");
+			SetHeader("Location", this->fullPath_);
+			return 0;
+		}
+	}
+	else {
+		ErrorHandler("500");
+		return 0;
+	}
+	return 1;
+}
+
+bool Response::SetBody(const std::string &path) {
 	std::ifstream fin(path, std::ios::in|std::ios::binary|std::ios::ate);
 	int size;
 	if (fin.is_open()) {
@@ -490,11 +601,13 @@ void Response::SetBody(const std::string &path) {
 		std::string str(contents, size);
 		delete [] contents;
 		this->body = str;
+//		std::getline(fin, body, '\0');
 	}
-//	else {
-//		SetStatus("500");
-//		SetHeaders();
-//	}
+	else {
+		ErrorHandler("500");
+		return 0;
+	}
+	return 1;
 }
 
 void Response::SetErrorResponse(std::string status_code) {
