@@ -4,6 +4,7 @@
 #include "allowed_library_includes.hpp"
 #include "Request.hpp"
 #include "parser.hpp"
+class CGI;
 #include "CGI.hpp"
 
 class Response {

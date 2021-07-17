@@ -5,12 +5,9 @@
 #ifndef WEBSERV_CGI_HPP_
 #define WEBSERV_CGI_HPP_
 
-#include "allowed_library_includes.hpp"
-//#include "Server.hpp"
-#include "parser.hpp"
-#include <sstream>
-#include "unistd.h"
-#include "fcntl.h"
+//#include "allowed_library_includes.hpp"
+////#include "Server.hpp"
+class Response;
 #include "Response.hpp"
 // Сервер отправляет данные программе CGI с помощью переменных среды
 
@@ -41,18 +38,14 @@
 
 class CGI {
 public:
-  CGI(Request &req, const ServerConfig &con, std::string &str, std::string & result_dst);
+  CGI() {};
   ~CGI();
-	void executeCGI(std::string & result_dst);
-	void mapToCString(std::map<std::string, std::string> &tmpEnv);
-	void setEnv(Request &req);
-    std::string & translate_path(std::string & path);
-//private:
-	char **_env;
-//	const Response &response_;
-	std::string str;
-	Request &request_;
-	const ServerConfig &_con;
+  static void executeCGI(Request & request, Response & response);
+  static char ** mapToCString(std::map<std::string, std::string> &tmpEnv);
+  static char** setEnv(Request &req, Response & response);
+  static std::string & translate_path(std::string & path);
+  static void deleteENVP(char **envp);
+
 };
 
 #endif //WEBSERV_CGI_HPP_

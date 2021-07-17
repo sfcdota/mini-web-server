@@ -1,3 +1,4 @@
+#include <sstream>
 #include "Response.hpp"
 
 Response::Response(Request & request): request_(request), ServerConf_(request_.server_config) {
@@ -119,10 +120,11 @@ void Response::PostRequest() {
 //	std::string str = this->fullPath_;
 		std::cout << request_.request_line.find("target")->second << std::endl;
 	if (this->fullPath_.substr(this->fullPath_.rfind('/')) != "/site") {
-		CGI cgi(this->request_, this->ServerConf_, this->fullFullPath_, body);
-		SetStatus("201");
-		SetBody(ServerConf_.root + "/index.html");
-		SetHeader("Content-Type", ".html");
+		CGI::executeCGI(request_, *this);
+		std::cout << "CGI RESPONSE = " << body.substr(0, 100) << "..." << std::endl;
+//		SetStatus("201");
+//		SetBody(ServerConf_.root + "/index.html");
+//		SetHeader("Content-Type", ".html");
 	} else {
 		SetStatus("405");
 		SetBody(ServerConf_.root + "/errors/405.html");

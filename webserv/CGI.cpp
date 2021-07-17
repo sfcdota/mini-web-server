@@ -1,85 +1,85 @@
 #include "CGI.hpp"
 
-CGI::CGI(Request &req, const ServerConfig &con, std::string & str, std::string & result_dst)
-    : _env(NULL), _con(con), str(str), request_(req) {
-  setEnv(req);
-  executeCGI(result_dst);
-}
 
-CGI::~CGI() {
-  if (_env) {
-    for (int i = 0; _env[i] != NULL; ++i) {
-      delete[] _env[i];
-    }
-    delete[] _env;
-    _env = NULL;
-  }
-}
+CGI::~CGI() {}
 
-void CGI::executeCGI(std::string & result_dst) {
-//	int oldFdIn = dup(0);
-//	int oldFdOut = dup(1);
+void CGI::executeCGI(Request & request, Response & response) {
+  char **envp = setEnv(request, response);
   pid_t pid;
   int status;
-
+  int fd[2], out = dup(STDOUT_FILENO), in = dup (STDIN_FILENO);
+  pipe(fd);
+  std::cout << "Forking CGI execution with target = " << request.request_line["target"] << std::endl;
   pid = fork();
   if (pid == -1) {
     throw std::runtime_error("error");
   } else if (pid == 0) {
-    std::string hui = _con.root + "/cgi/cgi_tester";
-    char* kek = const_cast<char *>(hui.c_str());
-    dup2(STDIN_FILENO, STDOUT_FILENO);
-    if (execve(kek, reinterpret_cast<char *const *>(&kek), _env) == -1) {
-      throw std::runtime_error("Error: execve");
+    dup2(fd[0], STDIN_FILENO);
+    dup2(fd[1], STDOUT_FILENO);
+    char **kek = new char*[2];
+    kek[0] = strdup((request.server_config.root + "/cgi/cgi_tester").c_str());
+    kek[1] = NULL;
+    std::cerr << "execve path = " << kek[0] << std::endl;
+    if (execve(kek[0], kek, envp) == -1) {
+//      throw std::runtime_error("Error: execve");
+        std::cerr << errno << strerror(errno) << std::endl;
     }
+    std::cerr << "END OF EXECVE CALL" << std::endl;
     exit(0);
   }
+  std::cout << "START TO SEND BODY TO THE EXECVED CGI" << std::endl;
+  const char *tmp_body = request.body.c_str();
+//  dup2(fd[1], STDOUT_FILENO);
+//  close(fd[1]);
+  dup2(fd[0], STDIN_FILENO);
+  close(fd[0]);
+  for(int i = 0; i < request.body.length(); i += PIPE_BUF)
+  write(fd[1], request.body.c_str(), request.body.length());
+      close(fd[1]);
+//  std::cout << request.body << std::endl;
+//  dup2(out, STDOUT_FILENO);
+  std::cout << "WAITING FOR EXECVE PROCESS" << std::endl;
   waitpid(pid, &status, 0);
-  std::cin >> result_dst;
+  std::getline(std::cin, response.body, '\0');
+  std::cout << "END OF GETTING CGI RESPONSE" << std::endl;
+  dup2(in, STDIN_FILENO);
+  deleteENVP(envp);
 }
 
-void CGI::mapToCString(std::map<std::string, std::string> &tmpEnv) {
-  _env = reinterpret_cast<char **>(calloc(tmpEnv.size() + 1, sizeof(char *)));
+char ** CGI::mapToCString(std::map<std::string, std::string> &tmpEnv) {
+  char **envp = reinterpret_cast<char **>(calloc(tmpEnv.size() + 1, sizeof(char *)));
+  std::cout << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ENVPS OF CGI %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << std::endl;
   std::map<std::string, std::string>::iterator it = tmpEnv.begin();
   for (int index = 0; it != tmpEnv.end(); ++it, ++index) {
-    _env[index] = strdup((it->first + it->second).c_str());
-    std::cout << _env[index] << std::endl;
+    envp[index] = strdup((it->first + it->second).c_str());
+    std::cout << envp[index] << std::endl;
   }
+  std::cout << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% END OF ENVPS OF CGI %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << std::endl;
+  return envp;
 }
+
+bool iishex(int c) {
+  return (c > 47 && c < 58) || (c > 64 && c < 71) || (c > 94 && c < 103); // not sure about c > 94 && c < 103
+}
+
+
+bool iispctencoded(const std::string & s, size_t & index) {
+  return s[index] == '%' && iishex(s[index + 1]) && iishex(s[index + 2]);
+}
+
 
 std::string & CGI::translate_path(std::string & path) {
   char c;
-//  for(size_t i = 0; i < path.length(); i++) {
-//    if (request_.validator_.ispctencoded(path, i)) {
-//      path.replace(i, 3, &(c = static_cast<const char>(strtol(&path.c_str()[i + 1], NULL, 16))));
-//      i += 2;
-//    }
-//  }
+  for(size_t i = 0; i < path.length(); i++) {
+    if (iispctencoded(path, i)) {
+      path.replace(i, 3, &(c = static_cast<const char>(strtol(&path.c_str()[i + 1], NULL, 16))));
+      i += 2;
+    }
+  }
   return path;
 }
 
-void CGI::setEnv(Request &req) {
-//	AUTH_TYPE=
-//	CONTENT_LENGTH=100000000
-//	CONTENT_TYPE=test/file
-//	GATEWAY_INTERFACE=CGI/1.1
-//	PATH_INFO=/directory/youpi.bla
-//	PATH_TRANSLATED=YoupiBanane/directory/youpi.bla
-//	QUERY_STRING=
-//	REDIRECT_STATUS=200
-//	REMOTE_ADDR=127.0.0.1
-//	REMOTE_IDENT=
-//	REMOTE_USER=
-//	REQUEST_METHOD=POST
-//	REQUEST_URI=/directory/youpi.bla?
-//			SCRIPT_FILENAME=test_linux/cgi_tester
-//			SCRIPT_NAME=test_linux/cgi_tester
-//	SERVER_NAME=youpi
-//	SERVER_PORT=8070
-//	SERVER_PROTOCOL=HTTP/1.1
-//	SERVER_SOFTWARE=Weebserv/1.0
-
-
+char ** CGI::setEnv(Request &req, Response & response) {
   std::map<std::string, std::string> tmpEnv;
   std::map<std::string, std::string>::iterator it;
   std::map<std::string, std::string>::iterator end = tmpEnv.end();
@@ -94,8 +94,9 @@ void CGI::setEnv(Request &req) {
   tmpEnv["GATEWAY_INTERFACE="] = "CGI/1.1";
   it = req.request_line.find("target");
   pos = it->second.find('?');
-  tmpEnv["PATH_INFO="] = pos == it->second.size() ? it->second : it->second.substr(0, pos);
-  tmpEnv["PATH_TRANSLATED="] = translate_path(str);
+  tmpEnv["PATH_INFO="] = response.location_.root.substr(1) + (pos == it->second.size() ? it->second : it->second.substr(0, pos));
+  std::string translated = req.server_config.root + response.location_.root + req.request_line["target"];
+  tmpEnv["PATH_TRANSLATED="] = translate_path(translated);
   tmpEnv["QUERY_STRING="] = pos + 1 > it->second.length() ? it->second.substr(pos + 1) : "";
 //  tmpEnv["REDIRECT_STATUS"] = "200";
   tmpEnv["REMOTE_ADDR="] = inet_ntoa(req.addr.sin_addr) ;
@@ -109,10 +110,19 @@ void CGI::setEnv(Request &req) {
 //todo rework with inet_ntoa
 //  tmpEnv["SERVER_NAME="] = std::to_string(_con.host);
   tmpEnv["SERVER_NAME="] = "127.0.0.1";
-  tmpEnv["SERVER_PORT="] = std::to_string(_con.port);
+  tmpEnv["SERVER_PORT="] = std::to_string(req.server_config.port);
   tmpEnv["SERVER_PROTOCOL="] = req.request_line["version"];
   tmpEnv["SERVER_SOFTWARE="] = "kekers228/v4.20";
 //	tmpEnv["HTTP_X_SECRET_HEADER_FOR_TEST="] = "1";
-  mapToCString(tmpEnv);
-  tmpEnv.clear();
+  return mapToCString(tmpEnv);
+}
+
+void CGI::deleteENVP(char **envp) {
+  if (envp) {
+    for (int i = 0; envp[i] != NULL; ++i) {
+      delete[] envp[i];
+    }
+    delete[] envp;
+    envp = NULL;
+  }
 }

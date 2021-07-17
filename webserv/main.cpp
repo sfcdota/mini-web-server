@@ -24,7 +24,7 @@ SERVER_SOFTWARE=kekers228/v4.20
 char** mapToCString() {
   chdir("/Users/cbach/CLionProjects/webserv/webserv/site/");
   std::map<std::string, std::string> tmpEnv;
-  tmpEnv["CONTENT_LENGTH="] = "5";
+  tmpEnv["CONTENT_LENGTH="] = "3";
   tmpEnv["CONTENT_TYPE="] = "test/file";
   tmpEnv["GATEWAY_INTERFACE="] = "CGI/1.1";
 //  tmpEnv["PATH_INFO="] = "directory/youpi.bla";
@@ -92,19 +92,20 @@ std::string testCGI() {
   }
   else {
     std::string pizda;
-    dup2(fd[1], STDOUT_FILENO);
-    close(fd[1]);
+//    dup2(fd[1], STDOUT_FILENO);
+//    close(fd[1]);
     dup2(fd[0], STDIN_FILENO);
     close(fd[0]);
-    std::cout << "12123121231" << std::endl;
-    dup2(stdoutt, STDOUT_FILENO);
-    std::cout << "end" << std::endl;
+    write(fd[1], "123", strlen("123"));
+    close(fd[1]);
+//    dup2(stdoutt, STDOUT_FILENO);
+//    std::cout << "end" << std::endl;
     wait(NULL);
 //    std::string tmp;
 //    while(std::cin >> tmp)
 //      pizda += tmp;
-//    dup2(stdinn, STDIN_FILENO);
 std::getline(std::cin, pizda, '\0');
+        dup2(stdinn, STDIN_FILENO);
     return pizda;
   }
 }
@@ -114,28 +115,21 @@ std::getline(std::cin, pizda, '\0');
 int main(int argc, char **argv) {
   if (argc > 1) // for tests
     exit(0);
-  std::string res = testCGI();
-  std::cout << res;
-//  std::string output = testCGI();
-//  std::cout << output << std::endl;
-//  ServerConfig config = parsConf();
-//  const ServerConfig DEFAULT_CONFIG =
-//      {0, 8080, std::string(),
-//       std::vector<std::string>(),
-//       std::vector<error>(),
-//       8096,
-//       std::vector<std::string>(),
-//       std::vector<location>(),};
-//  std::vector<ServerConfig> serverConfigs;
-////  serverConfigs.push_back(DEFAULT_CONFIG);
-//serverConfigs.push_back(config);
-//  Server server(serverConfigs, 2048);
-//  server.Run();
-//  std::string kek = "sec-ch-ua: \" Not;A Brand\";v=\"99\", \"Google Chrome\";v=\"91\", \"Chromium\";v=\"91\"";
-//
-//  std::string kek2 = "sec-ch-ua-mobile: ?0";
-//  size_t pos = 0;
-//  std::cout << MessageValidator::ValidHeader(kek2, pos) << std::endl;
+//  std::string res = testCGI();
+//  std::cout << res;
+  ServerConfig config = parsConf();
+  const ServerConfig DEFAULT_CONFIG =
+      {0, 8080, std::string(),
+       std::vector<std::string>(),
+       std::vector<error>(),
+       8096,
+       std::vector<std::string>(),
+       std::vector<location>(),};
+  std::vector<ServerConfig> serverConfigs;
+//  serverConfigs.push_back(DEFAULT_CONFIG);
+serverConfigs.push_back(config);
+  Server server(serverConfigs, 2048);
+  server.Run();
 
   return 0;
 }
