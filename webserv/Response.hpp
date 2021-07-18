@@ -8,31 +8,32 @@
 
 class Response {
 public:
-	std::string		SetResponseLine();
-	void			SetHeader(const std::string &key, const std::string &value);
-	explicit		Response(Request & request);
-	std::string		GetStatusText(std::string code);
-	void			GetContentType();
-	bool			MakeDirectory();
-	bool 			OpenOrCreateFile();
-	std::string		SendResponse();
-	void			ResponseBuilder(const std::string &path, const std::string &status_code);
-	bool			HTTPVersionControl();
-	void			GetRequest();
-	void			SetErrorResponse(std::string status_code);
-	void			PostRequest();
-	void			HeadRequest();
-	void			PutRequest();
-	bool			CheckMethodCorrectness();
-	bool			CheckLocationCorrectness();
-	bool			CheckLocationMethods();
-	void			freeResponse();
-	void			SetStatus(std::string code);
-	void			SetHeaders();
-	void			ErrorHandler(std::string status_code);
-	std::string		GetTimeGMT();
-	bool			SetBody(const std::string &path);
-	bool			GetBody(const std::string &path);
+	std::string							SetResponseLine();
+	void								SetHeader(const std::string &key, const std::string &value);
+	explicit							Response(Request & request);
+	std::string							GetStatusText(std::string code);
+	void								GetContentType();
+	bool								MakeDirectory();
+	bool 								OpenOrCreateFile();
+	std::string							SendResponse();
+	bool								ResponseBuilder(const std::string &path, const std::string &status_code);
+	bool								HTTPVersionControl();
+	void								SetErrorResponse(const std::string &status_code);
+	void								GetRequest();
+	void								PostRequest();
+	void								HeadRequest();
+	void								PutRequest();
+	void								DeleteRequest();
+	bool								CheckMethodCorrectness();
+	bool								CheckLocationCorrectness();
+	bool								CheckLocationMethods();
+	void								freeResponse();
+	void								SetStatus(const std::string &code);
+	void								SetHeaders();
+	void								ErrorHandler(const std::string &status_code);
+	std::string							GetTimeGMT();
+	bool								SetBody(const std::string &path);
+	bool								GetBody(const std::string &path);
 //	void	createCGI(const std::map<std::string, std::string> &request_line, const ServerConfig &con,
 //				 const std::map<std::string, std::string> &headers);
 // private:
@@ -51,11 +52,11 @@ public:
 	bool								failed;
 
 //private:
-	bool			_SearchForFile(const std::string &path);
-	bool			_SearchForDir();
-	void			_createHTMLAutoIndex(DIR *dir);
-	std::string		_getTimeModify(std::string path);
-	void			CorrectPath();
+	bool								_SearchForFile(const std::string &path);
+	bool								_SearchForDir();
+	void								_createHTMLAutoIndex(DIR *dir);
+	const std::string &					_getTimeModify(const std::string &path);
+	void								CorrectPath();
 
 };
 
