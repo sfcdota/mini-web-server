@@ -6,8 +6,8 @@
 
 class Request {
  public:
-  Request();
-  Request(const std::string& buffer, ServerConfig config);
+//  Request();
+  Request(const std::string buffer, const ServerConfig& config);
   Request(const Request & in);
   Request & operator=(const Request & in);
   const std::string &GetBody() const;
@@ -34,9 +34,10 @@ class Request {
   bool recieved_body;
   bool keep_alive;
   bool formed;
+  bool cgi_request;
   int64_t content_length;
   std::string buffer;
-  ServerConfig server_config;
+  const ServerConfig &server_config;
   std::string source_request;
   sockaddr_in addr;
   socklen_t addr_len;

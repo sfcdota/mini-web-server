@@ -33,9 +33,8 @@ class Server {
     size_t last_action_time;
     ReadElement(int server_fd, int fd, const ServerConfig& server_config, sockaddr_in addr, socklen_t len,
                 size_t last_read = 0):
-      server_fd(server_fd), fd(fd), last_read(last_read), last_action_time(last_read) {
+      server_fd(server_fd), fd(fd), last_read(last_read), last_action_time(last_read), request(std::string(""), server_config) {
 //      std::cout << "LOCATIONS SIZE" << server_config.locations.size() << std::endl;
-      request.server_config = server_config;
       request.addr = addr;
       request.addr_len = len;
     }
@@ -59,7 +58,8 @@ class Server {
 //		request.PrintRequestLine();
 //		request.PrintBody();
 		out_length = output.length();
-		std::cout << "output: " << output << std::endl;
+		std::cout << "output: " << output.substr(0, 100) << "... ("
+		  << output.length() << ") bytes"<< std::endl;
 		send_out_bytes = 0;
 	}
 	~WriteElement() {

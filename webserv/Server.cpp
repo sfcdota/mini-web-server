@@ -121,7 +121,7 @@ void Server::SocketRead() {
       FD_SET(it->fd, &master_write);
       write.push_back(WriteElement(it->server_fd, it->fd, it->request));
 
-      if (!it->request.keep_alive) {
+      if (!it->request.keep_alive || it->request.cgi_request) {
 //        PrintLog(it, "ended read by not keep alive behavior", it->fd);
 //        std::cout << "Client_fd = " << it->fd << " read ended due not keep alive connection" << std::endl;
         read.erase(it--);
@@ -203,10 +203,10 @@ void Server::SocketWrite() {
           send(it->fd, &it->output.c_str()[it->send_out_bytes], it->out_length - it->send_out_bytes, 0),
           true
       )) != -1) {
-        std::cout << "sending response with size = " << it->out_length << ":" << std::endl;
+        it->send_out_bytes += status;
+        std::cout << "sending response ... " << it->send_out_bytes << "/" << it->out_length << std::endl;
 //        PrintLog(it, it->output, it->fd);
 //        std::cout << std::endl;
-        it->send_out_bytes += status;
         std::stringstream ss;
         if (!it->out_length) {
           ss << "[ WARNING! Response length = 0 to request with length = " <<
@@ -216,7 +216,7 @@ void Server::SocketWrite() {
         PrintLog(it, ss.str(), it->fd);
         if (it->send_out_bytes == it->out_length) {
           FD_CLR(it->fd, &master_write);
-          if (!it->request.keep_alive) {
+          if (!it->request.keep_alive || it->request.cgi_request) {
 //            PrintLog(it, "closed connection (disabled keep-alive)", it->fd);
 //            std::cout << "closed client_fd = " << it->fd << " connection due not keep alive" << std::endl;
             close(it->fd);

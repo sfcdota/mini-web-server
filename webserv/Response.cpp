@@ -202,7 +202,7 @@ void Response::PostRequest() {
 //			SetHeader("Content-Type", this->fullPath_);
 			if (!ResponseBuilder(this->fullPath_, "201"))
 				return ;
-			SetHeader("Location", this->cleanTarget_);
+			SetHeader("Location", this->request_.request_line["target"]);
 		}
 	}
 }
@@ -235,7 +235,7 @@ void Response::PutRequest() {
 //			SetHeader("Content-Type", this->fullPath_);
 			if (!ResponseBuilder(this->fullPath_, "201"))
 				return ;
-			SetHeader("Location", this->cleanTarget_);
+//			SetHeader("Location", this->re);
 		}
 	}
 	
@@ -327,7 +327,17 @@ std::string Response::SetResponseLine() {
 			SetStatus("200");
 			_createHTMLAutoIndex(dir);
 			closedir(dir);
-		} else {
+		}
+//		else if (this->request_.request_line["target"].compare(0, request_.request_line["target"].length(),
+//                      location_.cgi_extension)
+        else if (request_.request_line["target"].rfind('.') != std::string::npos &&
+              this->request_.request_line["target"].substr(request_.request_line["target"].rfind('.'))
+                == location_.cgi_extension)
+      {
+          CGI::executeCGI(request_, *this);
+        return body;
+      }
+		else {
 			if(request_.request_line["method"] == "GET") {
 				GetRequest();
 			}
