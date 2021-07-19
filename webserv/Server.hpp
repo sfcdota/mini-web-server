@@ -52,7 +52,7 @@ class Server {
 //        request.PrintRequestLine();
 //        request.PrintBody();
         output = response.SetResponseLine();
-		std::cout << "fullPath_: " << response.fullPath_ << std::endl;
+//		std::cout << "fullPath_: " << response.fullPath_ << std::endl;
 //		request.PrintRequestLine();
 //		request.PrintBody();
 		out_length = output.length();
