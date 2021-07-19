@@ -4,6 +4,7 @@
 #include "allowed_library_includes.hpp"
 #include "Request.hpp"
 #include "parser.hpp"
+class CGI;
 #include "CGI.hpp"
 
 class Response {
@@ -45,6 +46,7 @@ public:
 	std::map<std::string, std::string>	status_text_;
 	std::string							cleanTarget_;
 	std::string							fullPath_;
+	std::string                         fullFullPath_;
 	const ServerConfig					&ServerConf_;
 	bool								failed;
     bool _SearchForFile(const std::string &path);

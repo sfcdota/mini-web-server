@@ -11,10 +11,10 @@ class Request {
   Request(const Request & in);
   Request & operator=(const Request & in);
   const std::string &GetBody() const;
-  const string_map &GetRequestLine() const;
-  void SetRequestLine(const string_map &request_line);
-  const string_map &GetHeaders() const;
-  void SetHeaders(const string_map &headers);
+  const std::map<std::string, std::string> &GetRequestLine() const;
+  void SetRequestLine(const std::map<std::string, std::string> &request_line);
+  const std::map<std::string, std::string> &GetHeaders() const;
+  void SetHeaders(const std::map<std::string, std::string> &headers);
   void SetBody(const std::string &body);
   void PrintRequestLine();
   void PrintHeaders();
@@ -24,9 +24,8 @@ class Request {
   void SetFailed(size_t status_code);
   void CleanUp();
 // private:
-  string_map request_line;
-  string_map headers;
-  string_map cgi_headers;
+  std::map<std::string, std::string> request_line;
+  std::map<std::string,std::string> headers;
   std::string body; //????????
   size_t status_code;
   bool failed;
@@ -35,15 +34,13 @@ class Request {
   bool recieved_body;
   bool keep_alive;
   bool formed;
-  bool force_to_break;
   int64_t content_length;
   std::string buffer;
   ServerConfig server_config;
   std::string source_request;
-  std::string target_absolute_path;
-  std::string target_relative_path;
-  std::string target_absolute_path_wo_query;
-  std::string target_relative_path_wo_query;
+  sockaddr_in addr;
+  socklen_t addr_len;
+
 //	id _request_line;
 };
 #endif // WEBSERV_REQUEST_HPP_

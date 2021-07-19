@@ -46,7 +46,7 @@ MessageParser::~MessageParser() {}
 
  * message-body = *OCTET
  */
-Request MessageParser::ProcessHeaders(Request &request) {
+void MessageParser::ProcessHeaders(Request &request) {
   msg = request.buffer;
   std::string token;
   size_t tmp = 0;
@@ -74,7 +74,6 @@ Request MessageParser::ProcessHeaders(Request &request) {
      request.headers.insert(std::make_pair(token, msg.substr(pointer, end_of_header_value - pointer)));
      tmp = end_of_header + 2;
    }
-  return request;
 }
 
 void MessageParser::ParseBody(Request & request) {
@@ -96,10 +95,10 @@ void MessageParser::ParseBody(Request & request) {
       request.SetFailed(400);
       break;
     }
-    std::cout << "GETTING CHUNKED DATA PART. PART SIZE = " << length;
+//    std::cout << "GETTING CHUNKED DATA PART. PART SIZE = " << length;
     request.body += request.buffer.substr(tmp + 2,  length);
     index = tmp + 2 + length;
-    std::cout << "  chunked length = " << length  << std::endl;
+//    std::cout << "  chunked length = " << length  << std::endl;
     if (request.buffer.find("\r\n", index) != index) {
       std::cout << "NO CRLF AFTER CHUNKED DATA BLOCK. REQUEST FAILED" << std::endl;
       request.SetFailed(400);
@@ -107,15 +106,13 @@ void MessageParser::ParseBody(Request & request) {
     }
     else
       index += 2;
-    std::cout << request.buffer.length() - index << " data remains " << std::endl;
+//    std::cout << request.buffer.length() - index << " data remains " << std::endl;
   }
   std::cout << "PARSE OF CHUNKED BODY SUCCESSFULLY ENDED WITH BODY LENGTH = " << request.body.length() << std::endl;
   request.formed = true;
 }
 
 
-
-MessageParser::MessageParser(): remain(0) {}
 
 
 

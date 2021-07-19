@@ -12,9 +12,9 @@ static std::string request_line_fields [3] = {"method", "target", "version"};
 
 class MessageParser {
  public:
-  MessageParser();
+  MessageParser() {};
   ~MessageParser();
-  Request ProcessHeaders(Request & request);
+  void ProcessHeaders(Request & request);
   void ParseBody(Request & request);
  private:
 
@@ -51,7 +51,6 @@ class MessageParser {
   bool ParseWwwAuthenticate(const std::string & msg, size_t &pos);
   std::string msg;
   long remain;
-  Request request_;
   std::map<std::string, bool (MessageParser::*)()> request_line_parse_mapping_;
 };
 #endif // WEBSERV_MESSAGEPARSER_HPP_
