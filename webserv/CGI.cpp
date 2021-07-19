@@ -1,5 +1,5 @@
 #include "CGI.hpp"
-
+#include <sys/wait.h>
 
 CGI::~CGI() {}
 
@@ -7,17 +7,27 @@ void CGI::executeCGI(Request & request, Response & response) {
   char **envp = setEnv(request, response);
   pid_t pid;
   int status;
-  int fd[2], out = dup(STDOUT_FILENO), in = dup (STDIN_FILENO);
-  pipe(fd);
+  std::string cgi_fin_path = "/mnt/c/Users/sfcdo/CLionProjects/webserv/webserv/site/cgi_fds/cgi_fin";
+  std::string cgi_fout_path = "/mnt/c/Users/sfcdo/CLionProjects/webserv/webserv/site/cgi_fds/cgi_fout";
+  char *k = getcwd(NULL, 0);
+  int fin = open(cgi_fin_path.c_str(), O_RDWR | O_TRUNC | O_CREAT, 0777);
+  int fout = open(cgi_fout_path.c_str(), O_RDWR | O_TRUNC | O_CREAT, 0777);
+  write(fout, request.body.c_str(), request.body.length());
+
+  lseek(fout, 0, SEEK_SET);
   std::cout << "Forking CGI execution with target = " << request.request_line["target"] << std::endl;
   pid = fork();
   if (pid == -1) {
     throw std::runtime_error("error");
   } else if (pid == 0) {
-    dup2(fd[0], STDIN_FILENO);
-    dup2(fd[1], STDOUT_FILENO);
+    dup2(fout, STDIN_FILENO);
+    dup2(fin, STDOUT_FILENO);
     char **kek = new char*[2];
-    kek[0] = strdup((request.server_config.root + "/cgi/cgi_tester").c_str());
+    std::string huipizda;
+    huipizda.reserve(request.body.length());
+    read(STDIN_FILENO, (void*)huipizda.c_str(), 100);
+    std::cerr << "ooutput = " << huipizda.c_str() << std::endl;
+    kek[0] = strdup((request.server_config.root + "/cgi/ubuntu_cgi_tester").c_str());
     kek[1] = NULL;
     std::cerr << "execve path = " << kek[0] << std::endl;
     if (execve(kek[0], kek, envp) == -1) {
@@ -27,22 +37,16 @@ void CGI::executeCGI(Request & request, Response & response) {
     std::cerr << "END OF EXECVE CALL" << std::endl;
     exit(0);
   }
-  std::cout << "START TO SEND BODY TO THE EXECVED CGI" << std::endl;
-  const char *tmp_body = request.body.c_str();
-//  dup2(fd[1], STDOUT_FILENO);
-//  close(fd[1]);
-  dup2(fd[0], STDIN_FILENO);
-  close(fd[0]);
-  for(int i = 0; i < request.body.length(); i += PIPE_BUF)
-  write(fd[1], request.body.c_str(), request.body.length());
-      close(fd[1]);
-//  std::cout << request.body << std::endl;
-//  dup2(out, STDOUT_FILENO);
   std::cout << "WAITING FOR EXECVE PROCESS" << std::endl;
   waitpid(pid, &status, 0);
-  std::getline(std::cin, response.body, '\0');
+  lseek(fin, 0, SEEK_SET);
+  struct stat file;
+  fstat(fin, &file);
+  response.body.reserve(file.st_size);
+  read(fin, reinterpret_cast<void *>(const_cast<char *>(response.body.c_str())), response.body.capacity());
+  close(fin);
+  close(fout);
   std::cout << "END OF GETTING CGI RESPONSE" << std::endl;
-  dup2(in, STDIN_FILENO);
   deleteENVP(envp);
 }
 
@@ -94,7 +98,9 @@ char ** CGI::setEnv(Request &req, Response & response) {
   tmpEnv["GATEWAY_INTERFACE="] = "CGI/1.1";
   it = req.request_line.find("target");
   pos = it->second.find('?');
-  tmpEnv["PATH_INFO="] = response.location_.root.substr(1) + (pos == it->second.size() ? it->second : it->second.substr(0, pos));
+  std::string path_info = (pos == it->second.size() ? it->second : it->second.substr(0, pos));
+  tmpEnv["PATH_INFO="] = path_info;
+  std::cerr << "PATH_INFO = " << path_info << std::endl;
   std::string translated = req.server_config.root + response.location_.root + req.request_line["target"];
   tmpEnv["PATH_TRANSLATED="] = translate_path(translated);
   tmpEnv["QUERY_STRING="] = pos + 1 > it->second.length() ? it->second.substr(pos + 1) : "";
@@ -104,8 +110,8 @@ char ** CGI::setEnv(Request &req, Response & response) {
 //  tmpEnv["REMOTE_USER="] = "?????";
   tmpEnv["REQUEST_METHOD="] = req.request_line["method"];
   tmpEnv["REQUEST_URI="] = req.request_line["target"];
-  tmpEnv["SCRIPT_NAME="] = "cgi/cgi_tester";
-  tmpEnv["SCRIPT_FILENAME="] = req.server_config.root + "/cgi/cgi_tester";
+  tmpEnv["SCRIPT_NAME="] = "cgi/ubuntu_cgi_tester";
+  tmpEnv["SCRIPT_FILENAME="] = req.server_config.root + "/cgi/ubuntu_cgi_tester";
 
 //todo rework with inet_ntoa
 //  tmpEnv["SERVER_NAME="] = std::to_string(_con.host);

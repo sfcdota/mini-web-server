@@ -1,6 +1,8 @@
 #include "allowed_library_includes.hpp"
 #include "Server.hpp"
 #include "parser.hpp"
+#include <sys/wait.h>
+
 /*
  * /directory/youpi.bla
 CONTENT_LENGTH=100000000
@@ -128,7 +130,7 @@ int main(int argc, char **argv) {
   std::vector<ServerConfig> serverConfigs;
 //  serverConfigs.push_back(DEFAULT_CONFIG);
 serverConfigs.push_back(config);
-  Server server(serverConfigs, 2048);
+  Server server(serverConfigs, 65536);
   server.Run();
 
   return 0;

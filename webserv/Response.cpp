@@ -139,8 +139,10 @@ void Response::HeadRequest() {
 }
 
 void Response::PutRequest() {
-	std::string str = this->ServerConf_.root + "/bin" + this->fullPath_.substr(this->fullPath_.rfind('/'));
-	int fd = open((str).c_str(), O_CREAT | O_RDWR | O_TRUNC , 0777);
+	std::string str = this->ServerConf_.root + this->fullPath_.substr(this->fullPath_.rfind('/'));
+
+	const char * kek = str.c_str();
+	int fd = open((str).c_str(), O_CREAT | O_WRONLY | O_TRUNC , 0777);
 	if (fd == -1) {
 		throw std::runtime_error("Error: cannot open create/open file");
 	}

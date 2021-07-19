@@ -1,5 +1,5 @@
 #include "parser.hpp"
-
+#include <cassert>
 int to_int(std::string str){
 	int n = 0;
 	for (int i = 0; i < str.size(); i++) {

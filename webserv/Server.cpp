@@ -64,7 +64,8 @@ void Server::ConnectionAccept() {
   for (server_iterator it = server.begin(); it != server.end(); it++) {
     if (FD_ISSET(it->server_fd, &working_read)) {
 //      std::cout << "Listening socket " << it->server_fd << " is ready for incoming connections" << std::endl;
-      if ((client_fd = Guard(accept(it->server_fd, (struct sockaddr *) &addr, &slen), false)) != -1) {
+//      if ((client_fd = Guard(accept(it->server_fd, (struct sockaddr *) &addr, &slen), false)) != -1) {
+      if ((client_fd = Guard(accept(it->server_fd, 0, 0), false)) != -1) {
 //        PrintLog(it, "accepted client connection", client_fd);
         fcntl(client_fd, F_SETFL, O_NONBLOCK);
         FD_SET(client_fd, &master_read);
