@@ -42,5 +42,6 @@ class Request {
   socklen_t addr_len;
 
 //	id _request_line;
+  bool force_to_break;
 };
 #endif // WEBSERV_REQUEST_HPP_

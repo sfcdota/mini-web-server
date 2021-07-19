@@ -7,7 +7,7 @@
 # include <sys/time.h>
 #include <sys/wait.h>
 #include <sstream>
-//HTTP/1.1 OK zaebis\r\n\r\n huipizda stranica html\r\n\r\n
+
 Server::Server(const std::vector<ServerConfig> &config, const ssize_t INPUT_BUFFER_SIZE)
     : config(config), master_read(), working_read(), master_write(), working_write(),
       timeout(), INPUT_BUFFER_SIZE(INPUT_BUFFER_SIZE), status(), isHeader(true) {}

@@ -57,7 +57,7 @@ public:
 	bool								_SearchForFile(const std::string &path);
 	bool								_SearchForDir();
 	void								_createHTMLAutoIndex(DIR *dir);
-	const std::string &					_getTimeModify(const std::string &path);
+	const std::string _getTimeModify(const std::string &path);
 	void								CorrectPath();
 
 };

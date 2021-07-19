@@ -22,7 +22,7 @@ Request::Request(): keep_alive(true), status_code(), failed(), chunked(), reciev
 
 Request::Request(const std::string &buffer, ServerConfig config): keep_alive(true), buffer(buffer),
   server_config(config), status_code(), failed(), chunked(), recieved_headers(), recieved_body(), formed(),
-  content_length(), force_to_break(false) {}
+  content_length() {}
 
 Request::Request(const Request &in) : status_code(), failed(), chunked(), recieved_headers(), recieved_body(), formed(), keep_alive(), content_length() { *this = in; }
 Request &Request::operator=(const Request &in) {
@@ -53,9 +53,9 @@ void Request::PrintRequestLine() {
 void Request::PrintHeaders() {
   std::cout << "$$$$$$$$$$$$$$$$ HEADERS BLOCK $$$$$$$$$$$$$$$$" << std::endl;
   for(std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); it++)
-    if (it->first == "Content-Length" || it->first == "Transfer-Encoding" || it->first == "Content-Type")
+//    if (it->first == "Content-Length" || it->first == "Transfer-Encoding" || it->first == "Content-Type")
       std::cout << it->first << ":" << it->second << std::endl;
-  std::cout << "$$$$$$$$$$$$$$$$ END OF REQUEST LINE $$$$$$$$$$$$$$$$" << std::endl;
+  std::cout << "$$$$$$$$$$$$$$$$ END OF HEADERS BLOCK $$$$$$$$$$$$$$$$" << std::endl;
 }
 
 void Request::PrintBody() {

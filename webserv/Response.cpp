@@ -1,3 +1,4 @@
+#include <sstream>
 #include "Response.hpp"
 
 Response::Response(Request & request): request_(request), ServerConf_(request_.server_config) {
@@ -425,7 +426,7 @@ std::string Response::GetStatusText(std::string code) {
 
 
 
-const std::string & Response::_getTimeModify(const std::string &path) {
+const std::string Response::_getTimeModify(const std::string &path) {
 	struct stat file_info;
 	if (lstat(path.c_str(), &file_info) != 0) {
 		std::cout << "Error: lstat wtf?!" << std::endl;
