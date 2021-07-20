@@ -28,7 +28,7 @@ struct ServerConfig {
 	std::string root;
 	std::vector<std::string> server_names;
 	std::vector<error> error_pages;
-	int client_max_body_size;
+	long long client_max_body_size;
 	std::vector<std::string> retur;
 	std::vector<location> locations;
 };

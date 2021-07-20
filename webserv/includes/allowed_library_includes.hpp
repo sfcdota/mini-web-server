@@ -29,4 +29,6 @@
 #define MAX_CONNECTIONS 128
 #define TIMOUT_SEC 1
 #define DEFAULT_INPUT_BUFFERSIZE 2048
+typedef std::map<std::string, std::string> string_map;
+typedef string_map::iterator strmapiterator;
 #endif // WEBSERV_INCLUDES_ALLOWED_LIBRARY_INCLUDES_HPP_

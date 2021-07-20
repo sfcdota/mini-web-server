@@ -33,13 +33,15 @@ class Request {
   bool recieved_body;
   bool keep_alive;
   bool formed;
+  bool cgi_request;
   int64_t content_length;
   std::string buffer;
-  ServerConfig server_config;
+  const ServerConfig &server_config;
   std::string source_request;
   sockaddr_in addr;
   socklen_t addr_len;
 
 //	id _request_line;
+  bool force_to_break;
 };
 #endif // WEBSERV_REQUEST_HPP_

@@ -18,13 +18,14 @@ void Request::SetHeaders(const std::map<std::string, std::string> &headers) {
 void Request::SetBody(const std::string &body) {
   this->body = body;
 }
-Request::Request(): keep_alive(true), status_code(), failed(), chunked(), recieved_headers(), recieved_body(), formed(), content_length() {}
+//Request::Request(): keep_alive(true), status_code(), failed(), chunked(), recieved_headers(), recieved_body(), formed(), content_length() , cgi_request(false) {}
 
-Request::Request(const std::string &buffer, ServerConfig config): keep_alive(true), buffer(buffer),
+Request::Request(const std::string buffer, const ServerConfig& config): keep_alive(true), buffer(buffer),
   server_config(config), status_code(), failed(), chunked(), recieved_headers(), recieved_body(), formed(),
-  content_length() {}
+  content_length(), cgi_request(false) {}
 
-Request::Request(const Request &in) : status_code(), failed(), chunked(), recieved_headers(), recieved_body(), formed(), keep_alive(), content_length() { *this = in; }
+Request::Request(const Request &in) : status_code(), failed(), chunked(), recieved_headers(), recieved_body(), formed(), keep_alive(), content_length(), cgi_request(false),
+  server_config(in.server_config){ *this = in; }
 Request &Request::operator=(const Request &in) {
   this->content_length = in.content_length;
   this->keep_alive = in.keep_alive;
@@ -37,7 +38,6 @@ Request &Request::operator=(const Request &in) {
   this->recieved_headers = in.recieved_headers;
   this->formed = in.formed;
   this->buffer = in.buffer;
-  this->server_config = in.server_config;
   this->source_request = in.source_request;
   this->recieved_body = in.recieved_body;
 
@@ -53,9 +53,9 @@ void Request::PrintRequestLine() {
 void Request::PrintHeaders() {
   std::cout << "$$$$$$$$$$$$$$$$ HEADERS BLOCK $$$$$$$$$$$$$$$$" << std::endl;
   for(std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); it++)
-    if (it->first == "Content-Length" || it->first == "Transfer-Encoding" || it->first == "Content-Type")
+//    if (it->first == "Content-Length" || it->first == "Transfer-Encoding" || it->first == "Content-Type")
       std::cout << it->first << ":" << it->second << std::endl;
-  std::cout << "$$$$$$$$$$$$$$$$ END OF REQUEST LINE $$$$$$$$$$$$$$$$" << std::endl;
+  std::cout << "$$$$$$$$$$$$$$$$ END OF HEADERS BLOCK $$$$$$$$$$$$$$$$" << std::endl;
 }
 
 void Request::PrintBody() {
@@ -80,6 +80,9 @@ void Request::AdjustHeaders() {
   std::map<std::string, std::string>::iterator transfer = headers.find("Transfer-Encoding");
   std::map<std::string, std::string>::iterator connection = headers.find("Connection");
 
+
+  if (request_line["target"].rfind('.') != std::string::npos && request_line["target"].substr(request_line["target"].rfind('.')) == ".bla")
+    keep_alive = false;
   if (connection != headers.end() && connection->second.find("close") != -1)
     keep_alive = false;
   if (content == transfer) {
@@ -98,8 +101,11 @@ void Request::AdjustHeaders() {
       std::cout << "PARSED CONTENT LENGTH | " << content_length << std::endl;
       if (content_length < 0)
         SetFailed(400);
+      if (content_length > server_config.client_max_body_size)
+        SetFailed(413);
     }
   }
+
 }
 
 void Request::SetFailed(size_t status_code) {
@@ -122,4 +128,3 @@ void Request::CleanUp() {
   recieved_headers = false;
   keep_alive = true;
 }
-

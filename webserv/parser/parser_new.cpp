@@ -164,7 +164,7 @@ void parsServer(parsConfig &con, int &i){
 	else if (con.vec[i] == "client_max_body_size" && !con.server_body["client_max_body_size"]){
 	  con.server_body["client_max_body_size"] = 1;
 	  if (++i < con.vec.size())
-		con.serv.client_max_body_size = to_int(con.vec[i++]);
+		con.serv.client_max_body_size = to_int(con.vec[i++]) * 1024 * 1024;
 	  if (con.serv.client_max_body_size == -1)
 		  errors("server client_max_body_size error!");
 	  if (i == con.vec.size() || con.vec[i] != ";")
