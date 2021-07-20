@@ -5,12 +5,28 @@
 #include "../includes/parser.hpp"
 #include "Abstract&Interfaces/ARequest.hpp"
 #include <iostream>
+#include "Logger.hpp"
 
-class Request: ARequest {
+enum class RequestLoggingOptions {
+  ZERO,
+  BUFFER,
+  FULL_BUFFER,
+  REQUEST_STATUS_CODE,
+  REQUEST_REQUEST_LINE,
+  REQUEST_HEADERS,
+  REQUEST_TILL_BODY,
+  REQUEST_BODY,
+  REQUEST_FULL_BODY,
+  FULL_REQUEST
+};
+
+class Request: ARequest, ILogger<RequestLoggingOptions> {
  public:
   Request(const ServerConfig& config, const sockaddr_in & addr, const std::string & buf = std::string());
   Request(const Request & in);
   Request & operator=(const Request & in);
+  ~Request();
+  const std::string PrintLog(const int & logginglevel, const RequestLoggingOptions & option) const;
   const std::map<std::string, std::string> &GetRequestLine() const;
   const std::map<std::string, std::string> &GetHeaders() const;
   const std::string &GetBody() const;
@@ -24,10 +40,8 @@ class Request: ARequest {
   const bool & IsCloseOnEnd() const;
   void SetCloseOnEnd(const bool & value);
   const sockaddr_in & GetAddr() const;
-  void PrintRequestLine() const;
-  void PrintHeaders() const;
-  void PrintBody() const;
-  void Print() const;
+  const std::string RequestLineToStr() const;
+  const std::string HeadersToStr() const;
   const std::string & GetRequestBuffer() const;
   void AppendRequestBuffer(const std::string & s);
   void SetRequsetBuffer(const std::string & s);

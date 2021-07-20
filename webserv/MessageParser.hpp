@@ -4,7 +4,6 @@
 
 #ifndef WEBSERV_MESSAGEPARSER_HPP_
 #define WEBSERV_MESSAGEPARSER_HPP_
-#include "allowed_library_includes.hpp"
 #include "HeaderUtils.hpp"
 #include "Request.hpp"
 static std::string request_line_fields [3] = {"method", "target", "version"};

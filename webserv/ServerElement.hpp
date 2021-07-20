@@ -7,9 +7,19 @@
 #include "includes/parser.hpp"
 #include <netinet/in.h>
 #include <set>
-class ServerElement {
+#include "Abstract&Interfaces/ILogger.hpp"
+
+enum class ServerElementLoggingOptions {
+  ZERO,
+  CLIENTS,
+  CONFIG
+};
+
+class ServerElement: ILogger<ServerElementLoggingOptions> {
  public:
   ServerElement(const int &fd, const sockaddr_in &addr, const ServerConfig &server_config);
+  ~ServerElement();
+  const std::string PrintLog(const int & logginglevel, const ServerElementLoggingOptions & option) const;
   void AddClient(const int &fd);
   void RemoveClient(const int &fd);
   const ServerConfig& GetConfig() const;

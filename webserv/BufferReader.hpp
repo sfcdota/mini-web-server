@@ -10,16 +10,25 @@
 #include "MessageParser.hpp"
 #include "ReadElement.hpp"
 #include <list>
-class BufferReader {
+
+enum class BufferReaderLoggingOptions {
+  ZERO,
+  BUFFER,
+  FULL_BUFFER,
+  REQUEST_STATUS_CODE
+};
+
+class BufferReader: ILogger<BufferReaderLoggingOptions> {
  public:
   BufferReader(const ssize_t & INPUT_BUFFER_SIZE);
-  unsigned GetClientMessage(std::list<ReadElement>::iterator & it);
   ~BufferReader();
+  const std::string PrintLog(const int & logginglevel, const BufferReaderLoggingOptions & option) const;
+  unsigned GetClientMessage(std::list<ReadElement>::iterator & it);
  private:
   void ProcessInputBuffer(Request & request);
-  void GetHeaders(Request & request);
-  void GetBody(Request & request);
-  void GetChunkedBody(Request & request);
+  void FillRequestHeaders(Request & request);
+  void FillRequestBody(Request & request);
+  void FillRequestChunkedBody(Request & request);
   const ssize_t BUFFER_SIZE_;
   char *read_buffer_;
   MessageValidator validator_;

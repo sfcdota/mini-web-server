@@ -15,8 +15,7 @@ class AServer {
          master_write_, working_write_;
   timeval timeout_;
   const std::vector<ServerConfig>& config_;
-  BufferReader buffer_reader_
-  ;
+  BufferReader buffer_reader_;
 };
 
 #endif //WEBSERV_ASERVER_HPP_

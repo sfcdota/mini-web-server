@@ -3,13 +3,20 @@
 
 #include "Request.hpp"
 #include "parser.hpp"
+#include "Logger.hpp"
+
 class CGI;
 #include "CGI.hpp"
 #include "Abstract&Interfaces/AResponse.hpp"
 
-class Response: AResponse {
+enum class ResponseLoggingOptions {
+  ZERO
+};
+
+class Response: AResponse, ILogger<ResponseLoggingOptions> {
 public:
-	std::string							SetResponseLine();
+    const std::string PrintLog(const int & logginglevel, const ResponseLoggingOptions & option) const;
+    std::string							SetResponseLine();
 	void								SetHeader(const std::string &key, const std::string &value);
 	explicit							Response(Request & request);
 	std::string							GetStatusText(std::string code);

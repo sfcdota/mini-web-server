@@ -12,10 +12,21 @@ class Response;
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <arpa/inet.h>
-class CGI {
+
+enum class CGILoggingOptions {
+  ZERO,
+  ENVS,
+  EXECVE_PATH,
+  EXECVE_ARGUMENT,
+  RESPONSE,
+  FULL_RESPONSE,
+};
+
+class CGI: ILogger<CGILoggingOptions> {
 public:
   CGI() {};
   ~CGI();
+  const std::string PrintLog(const int & logginglevel, const CGILoggingOptions & option) const;
   static void executeCGI(const Request & request, const Response & response);
   static char * const * mapToCString(const std::map<std::string, std::string> &tmpEnv);
   static char * const * setEnv(const Request &req, const Response & response);

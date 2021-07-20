@@ -5,10 +5,25 @@
 #ifndef WEBSERV_WRITEELEMENT_HPP_
 #define WEBSERV_WRITEELEMENT_HPP_
 #include <string>
-class WriteElement {
+#include "Logger.hpp"
+enum class WriteElementLoggingOptions {
+  ZERO,
+  SERVER,
+  CLIENT,
+  OUTPUT,
+  FULL_OUTPUT,
+  OUTPUT_SIZE,
+  SENT_BYTES,
+  CLOSE_ON_END,
+  SENDING_PROCESS,
+  CLOSING_ON_END,
+};
+
+class WriteElement: ILogger<WriteElementLoggingOptions> {
  public:
   WriteElement(const int & server_fd, const int & fd, const bool & closeOnEnd, const std::string & response_msg);
   ~WriteElement();
+  const std::string PrintLog(const int & logginglevel, const WriteElementLoggingOptions & option) const;
   const int & GetServerFd();
   const int & GetClientFd();
   const std::string & GetOutput() const;

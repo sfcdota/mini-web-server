@@ -6,16 +6,35 @@
 #define WEBSERV_READELEMENT_HPP_
 #include "includes/parser.hpp"
 #include "Request.hpp"
-#include <sys/time.h>
-struct timeval timev;
 
+enum class ReadElementLoggingOptions {
+  ZERO,
+  REQUEST_BUFFER,
+  REQUEST_FULL_BUFFER,
+  REQUEST_STATUS_CODE,
+  REQUEST_REQUEST_LINE,
+  REQUEST_HEADERS,
+  REQUEST_TILL_BODY,
+  REQUEST_BODY,
+  REQUEST_FULL_BODY,
+  FULL_REQUEST,
+  SERVER,
+  CLIENT,
+  BUFFER,
+  FULL_BUFFER,
+  LAST_READ,
+  LAST_ACTION_TIME,
+  IDLE_TIME,
+  ADDR,
+  CLIENT_IS_SET
+};
 
-class ReadElement {
+class ReadElement: ILogger<ReadElementLoggingOptions> {
  public:
   ReadElement(const int & server_fd, const int & fd, const ServerConfig & config,
-              const sockaddr_in & addr, size_t last_read = GetTimeInSeconds());
+              const sockaddr_in & addr, size_t last_read = Logger::GetTimeInSeconds());
   ~ReadElement();
-  static long GetTimeInSeconds();
+  const std::string PrintLog(const int & logginglevel, const ReadElementLoggingOptions & option) const;
   const int & GetServerFd() const;
   const int & GetClientFd() const;
   Request & GetRequest();
@@ -25,7 +44,7 @@ class ReadElement {
   void SetLastReadTime(const long & time);
   void UpdateLastActionSeconds();
   void UpdateLastReadSeconds();
-  long GetIdleSeconds();
+  long GetIdleSeconds() const;
   const std::string & GetBuffer() const;
   void SetBuffer(const std::string & s);
   void AddToBuffer(const std::string & s);

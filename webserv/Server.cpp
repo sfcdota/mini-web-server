@@ -9,6 +9,36 @@
 Server::Server(const std::vector<ServerConfig> &config, const ssize_t & INPUT_BUFFER_SIZE)
     : AServer(config, INPUT_BUFFER_SIZE) {}
 
+const std::string Server::PrintLog(const int &logginglevel, const ServerLoggingOptions &option) const {
+  if (option == ServerLoggingOptions::ZERO)
+    return std::string();
+  std::stringstream ss;
+  ss << "Request: ";
+  if (option == ServerLoggingOptions::SERVERELEMENT_COUNT)
+    ss << "server list size = " <<  server.size();
+  else if (option == ServerLoggingOptions::TIMEOUT)
+    ss << "server shut downed due to timeout for incoming clients";
+  else if (option == ServerLoggingOptions::READELEMENT_COUNT)
+    ss << "read list size = " << read.size();
+  else if (option == ServerLoggingOptions::WRITELEMENT_COUNT)
+    ss << "write list size = " << write.size();
+  else if (option == ServerLoggingOptions::EVERYELEMENT_COUNT)
+    ss << "server list size = " <<  server.size() << std::endl
+       << "read list size = " << read.size() << std::endl
+       << "write list size = " << write.size();
+  else if (option == ServerLoggingOptions::STATUS)
+    ss << "server status = " << status;
+  else if (option == ServerLoggingOptions::INITIALIZING)
+    ss << "server initializing ... ";
+  else if (option == ServerLoggingOptions::ACCEPTING)
+    ss << "server accepted connection ... ";
+  else if (option == ServerLoggingOptions::READING)
+    ss << "server trying to read from client socket ... ";
+  else if (option == ServerLoggingOptions::WRITING)
+    ss << "server trying to write to client socket ... ";
+  ss << std::endl;
+  return ss.str();
+}
 
 /// Guard for libc function errors
 /// \param retval returned function value, that will go through this function if success.
@@ -34,21 +64,21 @@ int Server::Guard(ssize_t retval, bool rw_operation) {
 }
 
 void Server::Run() {
+  logger.WriteLog(*this, ServerLoggingOptions::INITIALIZING);
   Initialize();
+  logger.WriteLog(*this, ServerLoggingOptions::SERVERELEMENT_COUNT);
   while (true) {
     memcpy(&working_read_, &master_read_, sizeof(master_read_));
     memcpy(&working_write_, &master_write_, sizeof(master_write_));
     timeout_.tv_sec = TIMOUT_SEC;
     if ((status = Guard(select(FD_SETSIZE, &working_read_, &working_write_, NULL, &timeout_), false)) == 0) {
-//      std::cout << "No incoming connections last " << timeout_.tv_sec << " seconds" << std::endl;
+      logger.WriteLog(*this, ServerLoggingOptions::TIMEOUT);
     } else {
-//      std::cout << "Server ready for connections" << std::endl;
       AcceptConnections();
-//      std::cout << std::setw(50) << "END OF ACCEPT CYCLE | read vector size = " << read.size() << " write vector size = " << write.size() << std::endl;
+      logger.WriteLog(*this, ServerLoggingOptions::READELEMENT_COUNT);
       SocketsRead();
-//      std::cout << std::setw(50) << "END OF READ CYCLE | read vector size = " << read.size() << " write vector size = " << write.size() << std::endl;
+      logger.WriteLog(*this, ServerLoggingOptions::WRITELEMENT_COUNT);
       SocketsWrite();
-//      std::cout << std::setw(50) << "END OF WRITE CYCLE | read vector size = " << read.size() << " write vector size = " << write.size() << std::endl;
     }
   }
 }
@@ -61,7 +91,7 @@ void Server::AcceptConnections() {
 //      std::cout << "Listening socket " << it->server_fd << " is ready for incoming connections" << std::endl;
 //      if ((client_fd = Guard(accept(it->server_fd, (struct sockaddr *) &addr, &slen), false)) != -1) {
       if ((client_fd = Guard(accept(it->GetServerFd(), 0, 0), false)) != -1) {
-//        PrintLog(it, "accepted client connection", client_fd);
+//        WriteLog(it, "accepted client connection", client_fd);
         fcntl(client_fd, F_SETFL, O_NONBLOCK);
         FD_SET(client_fd, &master_read_);
         read.push_back(ReadElement(it->GetServerFd(), client_fd, it->GetConfig(), addr));
@@ -85,7 +115,7 @@ std::string update_string_to_see_crlf(std::string in) {
 void Server::SocketsRead() {
   for (read_iterator it = read.begin(); it != read.end(); it++) {
     if (FD_ISSET(it->GetClientFd(), &working_read_)) {
-      PrintLog(it, "client IS_SET for read", it->GetClientFd());
+      logger.WriteLog(*it, ReadElementLoggingOptions::CLIENT_IS_SET);
       status = buffer_reader_.GetClientMessage(it);
     }
     it->UpdateLastActionSeconds();
@@ -94,14 +124,15 @@ void Server::SocketsRead() {
       ClearBrokenConnection(it->GetClientFd());
       read.erase(it--);
     } else if (it->GetRequest().IsFormed()) {
-      it->GetRequest().Print();
+      logger.WriteLog(it->GetRequest(), RequestLoggingOptions::FULL_REQUEST);
+//      it->GetRequest().Print();
       FD_CLR(it->GetClientFd(), &master_read_);
       FD_SET(it->GetClientFd(), &master_write_);
       write.push_back(WriteElement(it->GetServerFd(), it->GetClientFd(),
                         it->GetRequest().IsCloseOnEnd(),
                                    Response(it->GetRequest()).SendResponse()));
       if (it->GetRequest().IsCloseOnEnd()) {
-//        PrintLog(it, "ended read by not keep alive behavior", it->fd);
+//        WriteLog(it, "ended read by not keep alive behavior", it->fd);
 //        std::cout << "Client_fd = " << it->fd << " read ended due not keep alive connection" << std::endl;
         read.erase(it--);
       }
@@ -117,24 +148,14 @@ void Server::SocketsWrite() {
     if (FD_ISSET(it->GetClientFd(), &working_write_)) {
       if ((status = Guard(
           send(it->GetClientFd(), &it->GetOutput().c_str()[it->GetSentBytes()],
-               it->GetOutLength() - it->GetSentBytes(), 0),
-          true
-      )) != -1) {
+               it->GetOutLength() - it->GetSentBytes(), 0),true)) != -1) {
         std::cout << "sending response with size = " << it->GetOutLength() << ":" << std::endl;
-//        PrintLog(it, it->output, it->fd);
-//        std::cout << std::endl;
         it->IncreaseSentBytes(status);
-        std::stringstream ss;
-        if (!it->GetOutLength()) {
-          ss << "[ WARNING! Response length = 0 ";
-        }
-        ss << status << "/" << it->GetOutLength() << " bytes send";
-        PrintLog(it, ss.str(), it->GetClientFd());
+        logger.WriteLog(*it, WriteElementLoggingOptions::SENT_BYTES);
         if (it->GetSentBytes() == it->GetOutLength()) {
           FD_CLR(it->GetClientFd(), &master_write_);
           if (it->GetCloseOnEnd()) {
-//            PrintLog(it, "closed connection (disabled keep-alive)", it->fd);
-//            std::cout << "closed client_fd = " << it->fd << " connection due not keep alive" << std::endl;
+            logger.WriteLog(*it, WriteElementLoggingOptions::CLOSE_ON_END);
             close(it->GetClientFd());
           }
           else
@@ -143,7 +164,7 @@ void Server::SocketsWrite() {
         }
       }
 //      if (status == -1)
-//        PrintLog(it, "send returned -1 trying to x", it->fd);
+//        WriteLog(it, "send returned -1 trying to x", it->fd);
     }
   }
 }
@@ -174,17 +195,6 @@ void Server::Initialize() {
     FD_SET(server_fd, &master_read_);
     server.push_back(ServerElement(server_fd, addr, *it));
   }
-}
-
-template<class Iterator>
-void Server::PrintLog(Iterator it, const std::string & msg, int client_fd) {
-//  std::cout << "Server #" << it->server_fd << " " <<
-//            std::setw(90) <<  msg << std::setw(10) << "| Client#" << client_fd << std::endl;
-}
-
-long Server::GetTimeInSeconds() {
-  gettimeofday(&timev, NULL);
-  return timev.tv_sec;
 }
 
 void Server::ClearBrokenConnection(int fd) {

@@ -2,8 +2,9 @@
 // Created by sfcdo on 20.07.2021.
 //
 
+#include <sstream>
 #include "ReadElement.hpp"
-
+#include <arpa/inet.h>
 //:
 //server_fd(server_fd), fd(fd), last_read(last_read), last_action_time(last_read) {
 ////      std::cout << "LOCATIONS SIZE" << server_config.locations.size() << std::endl;
@@ -18,10 +19,51 @@ ReadElement::ReadElement(const int & server_fd, const int & fd, const ServerConf
 
 ReadElement::~ReadElement() {}
 
-long ReadElement::GetTimeInSeconds() {
-  gettimeofday(&timev, NULL);
-  return timev.tv_sec;
+const std::string ReadElement::PrintLog(const int &logginglevel, const ReadElementLoggingOptions &option) const {
+  if (option == ReadElementLoggingOptions::ZERO)
+    return std::string();
+  std::stringstream ss;
+  ss << "ReadElement: ";
+  if (option == ReadElementLoggingOptions::REQUEST_BUFFER)
+    ss <<  request.PrintLog(logginglevel, RequestLoggingOptions::BUFFER);
+  else if (option == ReadElementLoggingOptions::REQUEST_FULL_BUFFER)
+    ss << request.PrintLog(logginglevel, RequestLoggingOptions::FULL_BUFFER);
+  else if (option == ReadElementLoggingOptions::REQUEST_STATUS_CODE)
+    ss << request.PrintLog(logginglevel, RequestLoggingOptions::REQUEST_STATUS_CODE);
+  else if (option == ReadElementLoggingOptions::REQUEST_REQUEST_LINE)
+    ss << request.PrintLog(logginglevel, RequestLoggingOptions::REQUEST_REQUEST_LINE);
+  else if (option == ReadElementLoggingOptions::REQUEST_HEADERS)
+    ss << request.PrintLog(logginglevel, RequestLoggingOptions::REQUEST_HEADERS);
+  else if (option == ReadElementLoggingOptions::REQUEST_TILL_BODY)
+    ss << request.PrintLog(logginglevel, RequestLoggingOptions::REQUEST_TILL_BODY);
+  else if (option == ReadElementLoggingOptions::REQUEST_BODY)
+    ss << request.PrintLog(logginglevel, RequestLoggingOptions::REQUEST_BODY);
+  else if (option == ReadElementLoggingOptions::REQUEST_FULL_BODY)
+    ss << request.PrintLog(logginglevel, RequestLoggingOptions::REQUEST_FULL_BODY);
+  else if (option == ReadElementLoggingOptions::FULL_REQUEST)
+    ss << request.PrintLog(logginglevel, RequestLoggingOptions::FULL_REQUEST);
+  else if (option == ReadElementLoggingOptions::SERVER)
+    ss << "server fd = " << server_fd;
+  else if (option == ReadElementLoggingOptions::CLIENT)
+    ss << "client fd = " << fd;
+  else if (option == ReadElementLoggingOptions::BUFFER)
+    ss << "short buffer = " << GetShortString(buffer);
+  else if (option == ReadElementLoggingOptions::FULL_BUFFER)
+    ss << "full buffer = " << buffer;
+  else if (option == ReadElementLoggingOptions::LAST_READ)
+    ss << "last read time = " << last_read;
+  else if (option == ReadElementLoggingOptions::LAST_ACTION_TIME)
+    ss << "last action time = " << last_action_time;
+  else if (option == ReadElementLoggingOptions::IDLE_TIME)
+    ss << "client #" << fd << " idle seconds = " << GetIdleSeconds();
+  else if (option == ReadElementLoggingOptions::ADDR)
+    ss << "client #" << fd << " addr = " << inet_ntoa(addr.sin_addr);
+  else if (option == ReadElementLoggingOptions::CLIENT_IS_SET)
+    ss << "client #" << fd << " IS SET FOR READ";
+  ss << std::endl;
+  return ss.str();
 }
+
 
 const int &ReadElement::GetServerFd() const {
   return server_fd;
@@ -52,14 +94,14 @@ void ReadElement::SetLastReadTime(const long & time) {
 }
 
 void ReadElement::UpdateLastReadSeconds() {
-  last_read = GetTimeInSeconds();
+  last_read = Logger::GetTimeInSeconds();
 }
 
 void ReadElement::UpdateLastActionSeconds() {
-  last_action_time = GetTimeInSeconds();
+  last_action_time = Logger::GetTimeInSeconds();
 }
 
-long ReadElement::GetIdleSeconds() {
+long ReadElement::GetIdleSeconds() const {
   return last_action_time - last_read;
 }
 

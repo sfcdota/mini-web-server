@@ -1,4 +1,5 @@
 
+#include <sstream>
 #include "Request.hpp"
 
 Request::Request(const ServerConfig& config, const sockaddr_in & addr, const std::string & buf)
@@ -25,6 +26,35 @@ Request &Request::operator=(const Request &in) {
   recieved_body = in.recieved_body;
 
   return *this;
+}
+
+Request::~Request() {}
+
+const std::string Request::PrintLog(const int &logginglevel, const RequestLoggingOptions &option) const {
+  if (option == RequestLoggingOptions::ZERO)
+    return std::string();
+  std::stringstream ss;
+  ss << "Request: ";
+  if (option == RequestLoggingOptions::BUFFER)
+    ss << "request_buffer = " <<  GetShortString(buffer);
+  else if (option == RequestLoggingOptions::FULL_BUFFER)
+    ss << "full request_buffer = " << buffer;
+  else if (option == RequestLoggingOptions::REQUEST_STATUS_CODE)
+    ss << "request status code = " << status_code;
+  else if (option == RequestLoggingOptions::REQUEST_REQUEST_LINE)
+    ss << "request line = " << RequestLineToStr();
+  else if (option == RequestLoggingOptions::REQUEST_HEADERS)
+    ss << "request headers = " << HeadersToStr();
+  else if (option == RequestLoggingOptions::REQUEST_TILL_BODY)
+    ss << "request line & headers = " << RequestLineToStr() << HeadersToStr();
+  else if (option == RequestLoggingOptions::REQUEST_BODY)
+    ss << "request body = " << GetShortString(body);
+  else if (option == RequestLoggingOptions::REQUEST_FULL_BODY)
+    ss << "request body = " << body;
+  else if (option == RequestLoggingOptions::FULL_REQUEST)
+    ss << "request = " << RequestLineToStr() << HeadersToStr() << GetShortString(body);
+  ss << std::endl;
+  return ss.str();
 }
 
 const std::map<std::string, std::string> &Request::GetRequestLine() const {
@@ -110,34 +140,20 @@ void Request::AppendRequestBody(const std::string &s) {
   body += s;
 }
 
-void Request::PrintRequestLine() const {
-  std::cout << "%%%%%%%%%%%%%%%%% REQUEST LINE %%%%%%%%%%%%%%%%%" << std::endl;
+const std::string Request::RequestLineToStr() const {
+  std::stringstream ss;
   for(std::map<std::string, std::string>::const_iterator it = request_line.begin(); it != request_line.end(); it++)
-      std::cout << it->second << ' ';
-  std::cout << std::endl;
-  std::cout << "%%%%%%%%%%%%%%%%% END OF REQUEST LINE %%%%%%%%%%%%%%%%%" << std::endl;
+      ss << it->first << ": " << it->second << std::endl;
+  return ss.str();
 }
-void Request::PrintHeaders() const {
-  std::cout << "$$$$$$$$$$$$$$$$ HEADERS BLOCK $$$$$$$$$$$$$$$$" << std::endl;
+
+const std::string Request::HeadersToStr() const {
+  std::stringstream ss;
   for(std::map<std::string, std::string>::const_iterator it = headers.begin(); it != headers.end(); it++)
 //    if (it->first == "Content-Length" || it->first == "Transfer-Encoding" || it->first == "Content-Type")
-      std::cout << it->first << ":" << it->second << std::endl;
-  std::cout << "$$$$$$$$$$$$$$$$ END OF HEADERS BLOCK $$$$$$$$$$$$$$$$" << std::endl;
+      ss << it->first << ": " << it->second << std::endl;
+  return ss.str();
 }
-
-void Request::PrintBody() const {
-  std::cout << "#################### BODY ####################" <<std::endl << body
-  << "#################### END OF BODY ####################" << std::endl;
-}
-
-void Request::Print() const {
-  std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ FORMED REQUEST @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
-  PrintRequestLine();
-  PrintHeaders();
-//  PrintBody();
-  std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ END OF FORMED REQUEST @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
-}
-
 
 void Request::AdjustHeaders() {
   std::map<std::string, std::string>::iterator content = headers.find("Content-Length");
