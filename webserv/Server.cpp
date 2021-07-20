@@ -130,7 +130,7 @@ void Server::SocketsRead() {
       FD_SET(it->GetClientFd(), &master_write_);
       write.push_back(WriteElement(it->GetServerFd(), it->GetClientFd(),
                         it->GetRequest().IsCloseOnEnd(),
-                                   Response(it->GetRequest()).SendResponse()));
+                                   Response(it->GetRequest()).GetResponse()));
       if (it->GetRequest().IsCloseOnEnd()) {
 //        WriteLog(it, "ended read by not keep alive behavior", it->fd);
 //        std::cout << "Client_fd = " << it->fd << " read ended due not keep alive connection" << std::endl;

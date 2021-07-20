@@ -3,70 +3,66 @@
 
 #include "Request.hpp"
 #include "parser.hpp"
-#include "Logger.hpp"
-
 class CGI;
 #include "CGI.hpp"
 #include "Abstract&Interfaces/AResponse.hpp"
+#include <dirent.h>
+#include <sstream>
+#include <fstream>
 
 enum class ResponseLoggingOptions {
-  ZERO
+  ZERO,
 };
 
 class Response: AResponse, ILogger<ResponseLoggingOptions> {
 public:
+	Response(const Request &request);
+	virtual const std::string GetResponse();
     const std::string PrintLog(const int & logginglevel, const ResponseLoggingOptions & option) const;
-    std::string							SetResponseLine();
+    ~Response();
+private:
 	void								SetHeader(const std::string &key, const std::string &value);
-	explicit							Response(Request & request);
 	std::string							GetStatusText(std::string code);
-	void								GetContentType();
 	bool								MakeDirectory();
 	bool 								OpenOrCreateFile();
-	std::string							SendResponse();
-	bool								ResponseBuilder(const std::string &path, const std::string &status_code);
+	const std::string					SendResponse();
+	bool								SetResponse(const std::string &path, const std::string &status_code);
 	bool								HTTPVersionControl();
-	void								SetErrorResponse(const std::string &status_code);
-	void								GetRequest();
-	void								PostRequest();
-	void								HeadRequest();
-	void								PutRequest();
-	void								DeleteRequest();
+	virtual void						GetRequest();
+	virtual void						PostRequest();
+	virtual void						HeadRequest();
+	virtual void						PutRequest();
+	virtual void						DeleteRequest();
 	bool								CheckMethodCorrectness();
 	bool								CheckLocationCorrectness();
 	bool								CheckLocationMethods();
-	void								freeResponse();
+	bool								IsRequestCorrect();
 	void								SetStatus(const std::string &code);
-	void								SetHeaders();
 	void								ErrorHandler(const std::string &status_code);
 	std::string							GetTimeGMT();
 	bool								SetBody(const std::string &path);
-	bool								GetBody(const std::string &path);
-//	void	createCGI(const std::map<std::string, std::string> &request_line, const ServerConfig &con,
-//				 const std::map<std::string, std::string> &headers);
-// private:
-	Request								request_;
-	std::map<std::string, std::string>	response_line;
-	std::map<std::string,std::string>	headers;
-	std::map<std::string, std::string>	status_codes;
-	std::string							body; //????????
-	size_t								status_code;
+	bool								FillBody(const std::string &path);
+	std::string							PathBuilder(const std::string & path);
+
+
 	location							location_;
 	std::map<std::string, std::string>	content_type_;
-	std::map<std::string, std::string>	status_text_;
 	std::string							cleanTarget_;
 	std::string							fullPath_;
-	std::string                         fullFullPath_;
-	const ServerConfig					&ServerConf_;
-	bool								failed;
+	const ServerConfig&					ServerConf_;
 
-//private:
+
 	bool								_SearchForFile(const std::string &path);
 	bool								_SearchForDir();
 	void								_createHTMLAutoIndex(DIR *dir);
-	const std::string _getTimeModify(const std::string &path);
-	void								CorrectPath();
-
+	const std::string					_getTimeModify(const std::string &path);
+public:
+	const Request &						GetRequestClass() const ;
+	const std::string &					GetBody() const ;
+	const std::string &					GetFullPath() const ;
+	const location &					GetLocation() const ;
+	const std::string &					GetCleanTarget() const ;
+	const std::map<std::string, std::string> &	GetHeaders() const ;
 };
 
 
