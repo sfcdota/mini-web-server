@@ -6,8 +6,7 @@
 
 class Request {
  public:
-  Request();
-  Request(const std::string& buffer, ServerConfig config);
+  Request(ServerConfig config);
   Request(const Request & in);
   Request & operator=(const Request & in);
   const std::string &GetBody() const;

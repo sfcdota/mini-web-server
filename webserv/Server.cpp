@@ -7,13 +7,11 @@
 # include <sys/time.h>
 #include <sys/wait.h>
 #include <sstream>
-//HTTP/1.1 OK zaebis\r\n\r\n huipizda stranica html\r\n\r\n
-Server::Server(const std::vector<ServerConfig> &config, const ssize_t INPUT_BUFFER_SIZE)
-    : config(config), master_read(), working_read(), master_write(), working_write(),
-      timeout(), INPUT_BUFFER_SIZE(INPUT_BUFFER_SIZE), status(), isHeader(true) {}
 
-Server::Server() : master_read(), working_read(), master_write(), working_write(),
-                   timeout(), INPUT_BUFFER_SIZE(DEFAULT_INPUT_BUFFERSIZE), status(), isHeader(true) {}
+
+Server::Server(const std::vector<ServerConfig> &config, const ssize_t & INPUT_BUFFER_SIZE)
+    : AServer(config, INPUT_BUFFER_SIZE) {}
+
 
 /// Guard for libc function errors
 /// \param retval returned function value, that will go through this function if success.
@@ -25,9 +23,9 @@ int Server::Guard(ssize_t retval, bool rw_operation) {
       if (EWOULDBLOCK != errno && EAGAIN != errno) {
         std::cout << strerror(errno) << std::endl;
         for (read_iterator it = read.begin(); it != read.end(); it++)
-          close(it->fd);
+          close(it->GetClientFd());
         for (write_iterator it = write.begin(); it != write.end(); it++)
-          close(it->fd);
+          close(it->GetClientFd());
         exit(EXIT_FAILURE);
       }
     } else {
@@ -41,35 +39,35 @@ int Server::Guard(ssize_t retval, bool rw_operation) {
 void Server::Run() {
   Init();
   while (true) {
-    memcpy(&working_read, &master_read, sizeof(master_read));
-    memcpy(&working_write, &master_write, sizeof(master_write));
-    timeout.tv_sec = TIMOUT_SEC;
-    if ((status = Guard(select(FD_SETSIZE, &working_read, &working_write, NULL, &timeout), false)) == 0) {
-//      std::cout << "No incoming connections last " << timeout.tv_sec << " seconds" << std::endl;
+    memcpy(&working_read_, &master_read_, sizeof(master_read_));
+    memcpy(&working_write_, &master_write_, sizeof(master_write_));
+    timeout_.tv_sec = TIMOUT_SEC;
+    if ((status = Guard(select(FD_SETSIZE, &working_read_, &working_write_, NULL, &timeout_), false)) == 0) {
+//      std::cout << "No incoming connections last " << timeout_.tv_sec << " seconds" << std::endl;
     } else {
 //      std::cout << "Server ready for connections" << std::endl;
-      ConnectionAccept();
+      AcceptConnections();
 //      std::cout << std::setw(50) << "END OF ACCEPT CYCLE | read vector size = " << read.size() << " write vector size = " << write.size() << std::endl;
-      SocketRead();
+      SocketsRead();
 //      std::cout << std::setw(50) << "END OF READ CYCLE | read vector size = " << read.size() << " write vector size = " << write.size() << std::endl;
-      SocketWrite();
+      SocketsWrite();
 //      std::cout << std::setw(50) << "END OF WRITE CYCLE | read vector size = " << read.size() << " write vector size = " << write.size() << std::endl;
     }
   }
 }
-void Server::ConnectionAccept() {
+void Server::AcceptConnections() {
   int client_fd;
   sockaddr_in addr = {};
   socklen_t slen;
   for (server_iterator it = server.begin(); it != server.end(); it++) {
-    if (FD_ISSET(it->server_fd, &working_read)) {
+    if (FD_ISSET(it->GetServerFd(), &working_read_)) {
 //      std::cout << "Listening socket " << it->server_fd << " is ready for incoming connections" << std::endl;
 //      if ((client_fd = Guard(accept(it->server_fd, (struct sockaddr *) &addr, &slen), false)) != -1) {
-      if ((client_fd = Guard(accept(it->server_fd, 0, 0), false)) != -1) {
+      if ((client_fd = Guard(accept(it->GetServerFd(), 0, 0), false)) != -1) {
 //        PrintLog(it, "accepted client connection", client_fd);
         fcntl(client_fd, F_SETFL, O_NONBLOCK);
-        FD_SET(client_fd, &master_read);
-        read.push_back(ReadElement(it->server_fd, client_fd, it->server_config, addr, slen, GetTimeInSeconds()));
+        FD_SET(client_fd, &master_read_);
+        read.push_back(ReadElement(it->GetServerFd(), client_fd, it->GetConfig(), addr));
       }
 //      std::cout << "Ended handle of incoming connections with max_fd = " << max_fd << std::endl;
 
@@ -87,131 +85,63 @@ std::string update_string_to_see_crlf(std::string in) {
 }
 
 
-void Server::SocketRead() {
+void Server::SocketsRead() {
   for (read_iterator it = read.begin(); it != read.end(); it++) {
-    if (FD_ISSET(it->fd, &working_read)) {
-      PrintLog(it, "client IS_SET for read", it->fd);
-      for (; (status = recv(it->fd, buf, INPUT_BUFFER_SIZE, 0)) != -1 && status;) {
-        std::stringstream ss;
-//        ss << "recv value = " << status  << "|buf = [" << buf << "]";
-//        PrintLog(it, ss.str(), it->fd);
-        it->last_read = GetTimeInSeconds();
-//        if (it->request.request_line["method"] == "POST")
-//          std::cout << "buf:"<<buf << "$" << std::endl;
-        ProcessInputBuffer(buf, it->request);
-        memset(buf, 0, INPUT_BUFFER_SIZE);
-//        it->request.PrintRequestLine();
-//        std::cout << "Source request was:" << std::setw(90) << it->request.source_request << std::endl;
-      }
+    if (FD_ISSET(it->GetClientFd(), &working_read_)) {
+      PrintLog(it, "client IS_SET for read", it->GetClientFd());
+      status = buffer_processor_.GetClientMessage(it);
     }
-    it->last_action_time = (GetTimeInSeconds() - it->last_read);
+    it->UpdateLastActionSeconds();
 //    std::cout << "status = " << status << std::endl;
-    if (!status || it->last_action_time > 10) {
-      ClearBrokenConnection(it->fd);
+    if (!status || it->GetIdleSeconds() > 10) {
+      ClearBrokenConnection(it->GetClientFd());
       read.erase(it--);
-    } else if (it->request.formed) {
-      it->request.Print();
-      FD_CLR(it->fd, &master_read);
-      FD_SET(it->fd, &master_write);
-      write.push_back(WriteElement(it->server_fd, it->fd, it->request));
-
-      if (!it->request.keep_alive) {
+    } else if (it->GetRequest().formed) {
+      it->GetRequest().Print();
+      FD_CLR(it->GetClientFd(), &master_read_);
+      FD_SET(it->GetClientFd(), &master_write_);
+      write.push_back(WriteElement(it->GetServerFd(), it->GetClientFd(),
+                        !it->GetRequest().keep_alive,
+                        Response(it->GetRequest()).SendResponse()));
+      if (!it->GetRequest().keep_alive) {
 //        PrintLog(it, "ended read by not keep alive behavior", it->fd);
 //        std::cout << "Client_fd = " << it->fd << " read ended due not keep alive connection" << std::endl;
         read.erase(it--);
       }
-      it->request = Request(it->request.buffer, it->request.server_config);
+      it->ClearRequest();
     }
   }
 }
 
-void Server::ProcessInputBuffer(char *buffer, Request &request) {
-  request.buffer += buffer;
-  request.source_request += buffer;
-  size_t pos;
-  if (!request.recieved_headers) {
-    if((pos = request.buffer.find("\r\n\r\n", 0)) == std::string::npos)
-      return;
-    GetHeaders(request);
-    request.buffer = request.buffer.substr(pos + 4);
-  }
-  if (!request.recieved_body) {
-//    std::cout << "size of buf = " << request.buffer.length() << std::endl;
-    if (request.chunked) {
-      if ((pos = request.buffer.find("0\r\n\r\n")) == std::string::npos)
-        return;
-      GetChunkedBody(request);
-    }
-    else {
-      if (request.buffer.length() < request.content_length)
-        return;
-      GetBody(request);
-    }
-  }
-}
 
-void Server::GetHeaders(Request & request) {
-  if (validator_.ValidHeaders(request.buffer))
-    parser_.ProcessHeaders(request);
-  else
-    request.SetFailed(validator_.GetStatusCode());
-  request.recieved_headers = true;
-  request.AdjustHeaders();
-}
-
-void Server::GetBody(Request &request) {
-  request.body = request.buffer.substr(0, request.content_length);
-  request.recieved_body = true;
-  request.buffer.clear();
-}
-
-void Server::GetChunkedBody(Request &request) {
-//  std::cout << "buffer before body parsing length = " << request.buffer.length() << std::endl;
-  request.formed = true;
-  if (validator_.ValidBody(request.buffer))
-    parser_.ParseBody(request);
-  else {
-    std::cout << "VALIDATOR ENCOUNTERED INVALID CHUNKED BODY. REQUEST FAILED" << std::endl;
-    request.SetFailed(validator_.GetStatusCode());
-  }
-  if (request.failed)
-    std::cout << "FAILED !!!!!!! " << std::endl;
-  std::stringstream ss;
-    ss << request.body.length();
-  request.headers.insert(std::make_pair("Content-Length", ss.str()));
-  request.recieved_body = true;
-  request.buffer.clear();
-}
-
-void Server::SocketWrite() {
+void Server::SocketsWrite() {
+  int client_fd;
   for (write_iterator it = write.begin(); it != write.end(); it++) {
-    if (!it->request.formed)
-      return;
-    if (FD_ISSET(it->fd, &working_write)) {
+    if (FD_ISSET(it->GetClientFd(), &working_write_)) {
       if ((status = Guard(
-          send(it->fd, &it->output.c_str()[it->send_out_bytes], it->out_length - it->send_out_bytes, 0),
+          send(it->GetClientFd(), &it->GetOutput().c_str()[it->GetSentBytes()],
+               it->GetOutLength() - it->GetSentBytes(), 0),
           true
       )) != -1) {
-        std::cout << "sending response with size = " << it->out_length << ":" << std::endl;
+        std::cout << "sending response with size = " << it->GetOutLength() << ":" << std::endl;
 //        PrintLog(it, it->output, it->fd);
 //        std::cout << std::endl;
-        it->send_out_bytes += status;
+        it->IncreaseSentBytes(status);
         std::stringstream ss;
-        if (!it->out_length) {
-          ss << "[ WARNING! Response length = 0 to request with length = " <<
-             it->request.source_request.length() << "] ";
+        if (!it->GetOutLength()) {
+          ss << "[ WARNING! Response length = 0 ";
         }
-        ss << status << "/" << it->out_length << " bytes send";
-        PrintLog(it, ss.str(), it->fd);
-        if (it->send_out_bytes == it->out_length) {
-          FD_CLR(it->fd, &master_write);
-          if (!it->request.keep_alive) {
+        ss << status << "/" << it->GetOutLength() << " bytes send";
+        PrintLog(it, ss.str(), it->GetClientFd());
+        if (it->GetSentBytes() == it->GetOutLength()) {
+          FD_CLR(it->GetClientFd(), &master_write_);
+          if (it->GetCloseOnEnd()) {
 //            PrintLog(it, "closed connection (disabled keep-alive)", it->fd);
 //            std::cout << "closed client_fd = " << it->fd << " connection due not keep alive" << std::endl;
-            close(it->fd);
+            close(it->GetClientFd());
           }
           else
-              FD_SET(it->fd, &master_read);
+              FD_SET(it->GetClientFd(), &master_read_);
           write.erase(it--);
         }
       }
@@ -221,17 +151,15 @@ void Server::SocketWrite() {
   }
 }
 
-Server::~Server() {
-  free(buf);
-}
+Server::~Server() {}
 
 void Server::Init() {
   int options_value = 1;
-  FD_ZERO(&master_read);
-  FD_ZERO(&master_write);
-  FD_ZERO(&working_read);
-  FD_ZERO(&working_write);
-  for (std::vector<ServerConfig>::const_iterator it = config.begin(); it != config.end(); it++) {
+  FD_ZERO(&master_read_);
+  FD_ZERO(&master_write_);
+  FD_ZERO(&working_read_);
+  FD_ZERO(&working_write_);
+  for (std::vector<ServerConfig>::const_iterator it = config_.begin(); it != config_.end(); it++) {
     sockaddr_in addr = {};
     addr.sin_addr.s_addr = INADDR_ANY; // should be it->host
     addr.sin_family = AF_INET;
@@ -246,10 +174,9 @@ void Server::Init() {
     //todo save server addr
     Guard(bind(server_fd, (struct sockaddr *) &addr, sizeof(sockaddr_in)), false);
     Guard(listen(server_fd, MAX_CONNECTIONS), false);
-    FD_SET(server_fd, &master_read);
+    FD_SET(server_fd, &master_read_);
     server.push_back(ServerElement(server_fd, addr, *it));
   }
-  buf = reinterpret_cast<char *>(calloc(INPUT_BUFFER_SIZE, sizeof(char)));
 }
 
 template<class Iterator>
@@ -265,10 +192,12 @@ long Server::GetTimeInSeconds() {
 
 void Server::ClearBrokenConnection(int fd) {
   for(write_iterator wit = write.begin(); wit != write.end(); wit++)
-    if (wit->fd == fd) {
-      FD_CLR(wit->fd, &master_write);
+    if (wit->GetClientFd() == fd) {
+      FD_CLR(wit->GetClientFd(), &master_write_);
+      FD_CLR(wit->GetClientFd(), &working_write_);
       write.erase(wit--);
     }
-  FD_CLR(fd, &master_read);
+  FD_CLR(fd, &master_read_);
+  FD_CLR(fd, &working_read_);
   close(fd);
 }

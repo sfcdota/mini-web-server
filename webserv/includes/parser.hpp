@@ -1,7 +1,9 @@
 #ifndef WEBSERV_PARSER_HPP_
 #define WEBSERV_PARSER_HPP_
-#include "allowed_library_includes.hpp"
-
+#include <string>
+#include <vector>
+#include <map>
+#include <unistd.h>
 struct error {
 	int error_code;
 	std::string error_path;
@@ -57,13 +59,13 @@ struct parsConfig {
 int get_next_line(int fd, char **line);
 
 
-/*server config functions*/
+/*server config_ functions*/
 ServerConfig parsConf();
 void parsServer(parsConfig &con, int &i);
 void parsLocation(parsConfig &con, int &i);
 
 
-/*server config utils*/
+/*server config_ utils*/
 void init_server(parsConfig &con);
 void init_location(parsConfig &con);
 void clear_loc(parsConfig &con);

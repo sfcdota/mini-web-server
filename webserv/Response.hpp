@@ -6,8 +6,9 @@
 #include "parser.hpp"
 class CGI;
 #include "CGI.hpp"
+#include "AResponse.hpp"
 
-class Response {
+class Response: AResponse {
 public:
 	std::string		SetResponseLine();
 	void			SetHeader(const std::string &key, const std::string &value);

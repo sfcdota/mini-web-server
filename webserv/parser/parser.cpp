@@ -56,23 +56,23 @@
 //
 //  if (pars.string_arr.size() >= 2) {
 //	if (pars.string_arr[1][0] == COMMENT) {
-//	  pars.error_message = "Wrong config file:\n\t'listen' format error!\n";
+//	  pars.error_message = "Wrong config_ file:\n\t'listen' format error!\n";
 //	  return 1;
 //	} else {
 //	  if ((delimeter = pars.string_arr[1].find(":")) == -1) {
-//		pars.error_message = "Wrong config file:\n\tsome problem with url (listen) format!\n";
+//		pars.error_message = "Wrong config_ file:\n\tsome problem with url (listen) format!\n";
 //		return 1;
 //	  }
 //	  serv.host = pars.string_arr[1].substr(0, delimeter);
 //	  serv.port = to_int(pars.string_arr[1].substr(delimeter + 1,
 //												   pars.string_arr.size() - delimeter));
 //	  if (serv.port < 0) {
-//		pars.error_message = "Wrong config file:\n\tport error!\n";
+//		pars.error_message = "Wrong config_ file:\n\tport error!\n";
 //		return 1;
 //	  }
 //	}
 //	if (pars.string_arr.size() > 2 && pars.string_arr[2][0] != COMMENT) {
-//	  pars.error_message = "Wrong config file:\n\t'listen' format error!\n";
+//	  pars.error_message = "Wrong config_ file:\n\t'listen' format error!\n";
 //	  return 1;
 //	}
 //  }
@@ -84,18 +84,18 @@
 //
 //  if (pars.string_arr.size() > 2) {
 //	if (pars.string_arr[1][0] == COMMENT || pars.string_arr[2][0] == COMMENT) {
-//	  pars.error_message = "Wrong config file:\n\t'error_page' format error!\n";
+//	  pars.error_message = "Wrong config_ file:\n\t'error_page' format error!\n";
 //	  return 1;
 //	} else {
 //	  if ((er.error_code = to_int(pars.string_arr[1])) < 0) {
-//		pars.error_message = "Wrong config file:\n\twrong 'error_page' code!\n";
+//		pars.error_message = "Wrong config_ file:\n\twrong 'error_page' code!\n";
 //		return 1;
 //	  }
 //	  er.error_path = pars.string_arr[2];
 //	  serv.error_pages.push_back(er);
 //	}
 //	if (pars.string_arr.size() > 3 && pars.string_arr[3][0] != COMMENT) {
-//	  pars.error_message = "Wrong config file:\n\t'error_page' format error!\n";
+//	  pars.error_message = "Wrong config_ file:\n\t'error_page' format error!\n";
 //	  return 1;
 //	}
 //  }
@@ -105,13 +105,13 @@
 //int pars_server_name(parser &pars, server &serv) {
 //  if (pars.string_arr.size() >= 2) {
 //	if (pars.string_arr[1][0] == COMMENT) {
-//	  pars.error_message = "Wrong config file:\n\t'error_page' format error!\n";
+//	  pars.error_message = "Wrong config_ file:\n\t'error_page' format error!\n";
 //	  return 1;
 //	} else {
 //	  serv.server_names.push_back(pars.string_arr[1]);
 //	}
 //	if (pars.string_arr.size() > 2 && pars.string_arr[2][0] != COMMENT) {
-//	  pars.error_message = "Wrong config file:\n\t'server_name' format error!\n";
+//	  pars.error_message = "Wrong config_ file:\n\t'server_name' format error!\n";
 //	  return 1;
 //	}
 //  }
@@ -121,16 +121,16 @@
 //int pars_client_max_body_size(parser &pars, server &serv) {
 //  if (pars.string_arr.size() >= 2) {
 //	if (pars.string_arr[1][0] == COMMENT) {
-//	  pars.error_message = "Wrong config file:\n\t'error_page' format error!\n";
+//	  pars.error_message = "Wrong config_ file:\n\t'error_page' format error!\n";
 //	  return 1;
 //	} else {
 //	  if ((serv.client_max_body_size = to_int(pars.string_arr[1]) < 0)) {
-//		pars.error_message = "Wrong config file:\n\t'client_max_body_size' error!\n";
+//		pars.error_message = "Wrong config_ file:\n\t'client_max_body_size' error!\n";
 //		return 1;
 //	  }
 //	}
 //	if (pars.string_arr.size() > 2 && pars.string_arr[2][0] != COMMENT) {
-//	  pars.error_message = "Wrong config file:\n\t'client_max_body_size' format error!\n";
+//	  pars.error_message = "Wrong config_ file:\n\t'client_max_body_size' format error!\n";
 //	  return 1;
 //	}
 //  }
@@ -140,19 +140,19 @@
 //int check_location(parser &pars, server &serv, location &location) {
 //  if (pars.string_arr.size() >= 3) {
 //	if (pars.string_arr[1][0] == COMMENT || pars.string_arr[2][0] == COMMENT) {
-//	  pars.error_messoage = "Wrong config file:\n\t'location' format error!\n";
+//	  pars.error_messoage = "Wrong config_ file:\n\t'location' format error!\n";
 //	  return 1;
 //	} else {
 //	  location.path = pars.string_arr[1];
 //	  if (pars.string_arr[2] == "{")
 //		pars.location_status = true;
 //	  else {
-//		pars.error_message = "Wrong config file:\n\t'wrong location body!\n";
+//		pars.error_message = "Wrong config_ file:\n\t'wrong location body!\n";
 //		return 1;
 //	  }
 //	}
 //	if (pars.string_arr.size() > 3 && pars.string_arr[3][0] != COMMENT) {
-//	  pars.error_message = "Wrong config file:\n\t'location' format error!\n";
+//	  pars.error_message = "Wrong config_ file:\n\t'location' format error!\n";
 //	  return 1;
 //	}
 //  }
@@ -197,7 +197,7 @@
 //	if (pars.string_arr.size()) {
 //	  if (!pars.server_status) {
 //		if (check_server(pars, pars.server_status, "server")) {
-//		  std::cout << "Wrong config file:\n\twrong server body\n";
+//		  std::cout << "Wrong config_ file:\n\twrong server body\n";
 //		  exit(1);
 //		}
 //	  } else if (pars.location_status) {
