@@ -1,46 +1,6 @@
-#include <sstream>
 #include "Response.hpp"
 
-Response::Response(Request & request): request_(request), ServerConf_(request_.server_config) {
-//	Status code explanation
-	this->status_text_["100"] = "Continue";
-	this->status_text_["101"] = "Switching Protocols";
-	this->status_text_["102"] = "Processing";
-	this->status_text_["103"] = "Early Hints";
-	this->status_text_["200"] = "OK";
-	this->status_text_["201"] = "Created";
-	this->status_text_["202"] = "Accepted";
-	this->status_text_["203"] = "Non_Authoritative Information";
-	this->status_text_["204"] = "No Content";
-	this->status_text_["205"] = "Reset Content";
-	this->status_text_["300"] = "Multiple Choices";
-	this->status_text_["301"] = "Moved Permanently";
-	this->status_text_["302"] = "Found";
-	this->status_text_["303"] = "See Other";
-	this->status_text_["305"] = "Use Proxy";
-	this->status_text_["306"] = "(Unused)";
-	this->status_text_["307"] = "Temporary Redirect";
-	this->status_text_["400"] = "Bad Request";
-	this->status_text_["402"] = "Payment Required";
-	this->status_text_["403"] = "Forbidden";
-	this->status_text_["404"] = "Not Found";
-	this->status_text_["405"] = "Method Not Allowed";
-	this->status_text_["406"] = "Not Acceptable";
-	this->status_text_["408"] = "Request Timeout";
-	this->status_text_["409"] = "Conflict";
-	this->status_text_["410"] = "Gone";
-	this->status_text_["411"] = "Length Required";
-	this->status_text_["413"] = "Payload Too Large";
-	this->status_text_["414"] = "URI Too Long";
-	this->status_text_["415"] = "Unsupported Media Type";
-	this->status_text_["417"] = "Expectation Failed";
-	this->status_text_["426"] = "Upgrade Required";
-	this->status_text_["500"] = "Internal Server Error";
-	this->status_text_["501"] = "Not Implemented";
-	this->status_text_["502"] = "Bad Gateway";
-	this->status_text_["503"] = "Service Unavailable";
-	this->status_text_["504"] = "Gateway Timeout";
-	this->status_text_["505"] = "HTTP Version Not Supported";
+Response::Response(const Request &request): AResponse(request), ServerConf_(_request.GetServerConfig()) {
 //	Content type explanation
 //	this->content_type_[] = "application/x-executable";
 //	this->content_type_[] = "application/graphql";
@@ -89,22 +49,25 @@ Response::Response(Request & request): request_(request), ServerConf_(request_.s
 
 }
 
+Response::~Response() {}
 
-bool Response::ResponseBuilder(const std::string &path, const std::string &status_code) {
+
+bool Response::SetResponse(const std::string &path, const std::string &status_code) {
 	SetStatus(status_code);
-	if ((this->request_.request_line["method"] == "POST"|| this->request_.request_line["method"] == "GET") && !SetBody(path))
-		return 0;
+	if ((this->_request.GetRequestLine().at("method") == "POST"
+		|| this->_request.GetRequestLine().at("method") == "GET")&& !SetBody(path))
+		return false;
 	SetHeader("Content-Type", path);
-	return 1;
+	return true;
 }
 
 bool Response::HTTPVersionControl() {
-	if (request_.request_line.find("version")->second == "HTTP/1.1") {
-		this->response_line["version"] = "HTTP/1.1 ";
-		return 1;
+	this->response_line["version"] = "HTTP/1.1 ";
+	if (_request.GetRequestLine().at("version") != "HTTP/1.1") {
+		ErrorHandler("505");
+		return false;
 	}
-	ErrorHandler("505");
-	return 0;
+	return true;
 }
 void Response::ErrorHandler(const std::string &status_code) {
 	SetStatus(status_code);
@@ -133,7 +96,7 @@ void Response::ErrorHandler(const std::string &status_code) {
 	
 	 if (chdir(ServerConf_.root.c_str()) == -1){
 		 ErrorHandler("500");
-		 return 0;
+		 return false;
 	 }
 	 while (true){
 		 if ((end = (this->location_.root + this->cleanTarget_).find('/', end + 1)) != std::string::npos) {
@@ -141,11 +104,11 @@ void Response::ErrorHandler(const std::string &status_code) {
 			 if (chdir(dir.c_str()) == -1) {
 				 if (mkdir(dir.c_str(), 0777) == -1){
 					 ErrorHandler("500");
-					 return 0;
+					 return false;
 				 }
 				 if (chdir(dir.c_str()) == -1){
 					 ErrorHandler("500");
-					 return 0;
+					 return true;
 				 }
 			 }
 			 start = end;
@@ -160,11 +123,11 @@ bool Response::OpenOrCreateFile() {
 	int fd = open((this->fullPath_).c_str(), O_CREAT | O_RDWR | O_TRUNC , 0777);
 	if (fd == -1) {
 		ErrorHandler("500");
-		return 0;
+		return false;
 	}
-	write(fd, this->request_.body.c_str(), this->request_.body.size());
+	write(fd, this->_request.GetBody().c_str(), this->_request.GetBody().size());
 	close(fd);
-	return 1;
+	return true;
 }
 
 void Response::GetRequest() {
@@ -173,14 +136,17 @@ void Response::GetRequest() {
 
 
 void Response::PostRequest() {
-	if (this->request_.failed) {
-		ErrorHandler(std::to_string(this->request_.status_code));
+	if (this->_request.IsFailed()) {
+		ErrorHandler(std::to_string(this->_request.GetStatusCode()));
 	}
-	else if (this->request_.headers.find("Content-Length") == this->request_.headers.end()){
+	else if (this->_request.GetHeaders().find("Content-Length") == this->_request.GetHeaders().end()){
 		ErrorHandler("411");
 	}
-	else if (this->request_.headers["Content-Length"] == "0"){
+	else if (this->_request.GetHeaders().at("Content-Length") == "0"){
 		ErrorHandler("405");
+	}
+	else if (this->response_line["target"].substr(this->response_line["target"].rfind('/')) != "/site"){
+		CGI::executeCGI(_request, *this);
 	} else {
 		if (!MakeDirectory())
 			return ;
@@ -192,7 +158,7 @@ void Response::PostRequest() {
 //			if (!SetBody(this->fullPath_))
 //				return ;
 //			SetHeader("Content-Type", this->fullPath_);
-			if (!ResponseBuilder(this->fullPath_, "200"))
+			if (!SetResponse(this->fullPath_, "200"))
 				return ;
 		} else {
 			OpenOrCreateFile();
@@ -200,9 +166,9 @@ void Response::PostRequest() {
 //			if (!SetBody(this->fullPath_))
 //				return ;
 //			SetHeader("Content-Type", this->fullPath_);
-			if (!ResponseBuilder(this->fullPath_, "201"))
+			if (!SetResponse(this->fullPath_, "201"))
 				return ;
-			SetHeader("Location", this->request_.request_line["target"]);
+			SetHeader("Location", this->_request.GetRequestLine().at("target"));
 		}
 	}
 }
@@ -213,10 +179,10 @@ void Response::HeadRequest() {
 
 
 void Response::PutRequest() {
-	if (this->request_.headers.find("Content-Length") == this->request_.headers.end()){
+	if (this->_request.GetHeaders().find("Content-Length") == this->_request.GetHeaders().end()){
 		ErrorHandler("411");
 	}
-	else if (this->request_.headers["Content-Length"] == "0"){
+	else if (this->_request.GetHeaders().at("Content-Length") == "0"){
 		ErrorHandler("405");
 	} else {
 		if (!MakeDirectory())
@@ -227,13 +193,13 @@ void Response::PutRequest() {
 			OpenOrCreateFile();
 //			SetStatus("200");
 //			SetHeader("Content-Type", this->fullPath_);
-			if (!ResponseBuilder(this->fullPath_, "200"))
+			if (!SetResponse(this->fullPath_, "200"))
 				return ;
 		} else {
 			OpenOrCreateFile();
 //			SetStatus("201");
 //			SetHeader("Content-Type", this->fullPath_);
-			if (!ResponseBuilder(this->fullPath_, "201"))
+			if (!SetResponse(this->fullPath_, "201"))
 				return ;
 //			SetHeader("Location", this->re);
 		}
@@ -247,50 +213,56 @@ void Response::DeleteRequest() {
 			ErrorHandler("500");
 			return ;
 		}
-		ResponseBuilder(this->fullPath_, "200");
+		SetResponse(this->fullPath_, "200");
 	} else {
-		ResponseBuilder(this->fullPath_, "204");
+		SetResponse(this->fullPath_, "204");
 	}
 }
 
 bool Response::CheckMethodCorrectness() {
 	std::string methods[] = { "GET", "POST", "HEAD", "DELETE", "PUT" };
 	for (int i = 0; i < 5; i++){
-		if (methods[i] == this->request_.request_line["method"])
-			return 1;
+		if (methods[i] == this->_request.GetRequestLine().at("method"))
+			return true;
 	}
 	ErrorHandler("405");
-	return 0;
+	return false;
 }
 
 bool Response::CheckLocationMethods() {
 	for (int i = 0; i < this->location_.http_methods.size(); i++) {
-		if (this->location_.http_methods[i] == request_.request_line["method"])
-			return 1;
+		if (this->location_.http_methods[i] == _request.GetRequestLine().at("method"))
+			return true;
 	}
 	ErrorHandler("405");
-	return 0;
+	return false;
 }
-void Response::CorrectPath()
-{
-	if (this->ServerConf_.root[this->ServerConf_.root.size() - 1] == '/')
-		this->fullPath_ = this->ServerConf_.root.substr(0, this->ServerConf_.root.size() - 1);
-	else
-		this->fullPath_ = this->ServerConf_.root;
+//void Response::CorrectPath()
+//{
+//	if (this->ServerConf_.root[this->ServerConf_.root.size() - 1] == '/')
+//		this->fullPath_ = this->ServerConf_.root.substr(0, this->ServerConf_.root.size() - 1);
+//	else
+//		this->fullPath_ = this->ServerConf_.root;
+//
+//	if (this->location_.root[this->location_.root.size() - 1] == '/')
+//		this->fullPath_ += this->location_.root.substr(0, this->location_.root.size() - 1);
+//	else
+//		this->fullPath_ += this->location_.root;
+//
+//	if (this->cleanTarget_[this->cleanTarget_.size() - 1] == '/')
+//		this->fullPath_ += this->cleanTarget_.substr(0, this->cleanTarget_.size() - 1);
+//	else
+//		this->fullPath_ += this->cleanTarget_;
+//}
 
-	if (this->location_.root[this->location_.root.size() - 1] == '/')
-		this->fullPath_ += this->location_.root.substr(0, this->location_.root.size() - 1);
-	else
-		this->fullPath_ += this->location_.root;
-
-	if (this->cleanTarget_[this->cleanTarget_.size() - 1] == '/')
-		this->fullPath_ += this->cleanTarget_.substr(0, this->cleanTarget_.size() - 1);
-	else
-		this->fullPath_ += this->cleanTarget_;
+std::string Response::PathBuilder(const std::string &path) {
+	if (path[path.size() - 1] == '/')
+		return path.substr(0, path.size() - 1);
+	return path;
 }
 
 bool Response::CheckLocationCorrectness() {
-	std::string path = this->request_.request_line["target"];
+	std::string path = this->_request.GetRequestLine().at("target");
 	path = path.substr(0, path.find('?'));
 	this->cleanTarget_ = path;
 	bool flag = true;
@@ -305,14 +277,17 @@ bool Response::CheckLocationCorrectness() {
 				location = location.substr(0, location.size() - 1);
 			if (path == location) {
 				this->location_ = this->ServerConf_.locations[i];
-				CorrectPath();
-				return 1;
+//				CorrectPath();
+				this->fullPath_ = PathBuilder(ServerConf_.root)
+								+ PathBuilder(location_.root)
+								+ PathBuilder(cleanTarget_);
+				return true;
 			}
 		}
 		path = path.substr(0, path.rfind('/') + 1);
 	}
 	ErrorHandler("404");
-	return 0;
+	return false;
 }
 
 void Response::SetStatus(const std::string &code) {
@@ -320,44 +295,49 @@ void Response::SetStatus(const std::string &code) {
 	this->response_line["status"] = GetStatusText(code);
 }
 
-std::string Response::SetResponseLine() {
-	if (HTTPVersionControl() && CheckMethodCorrectness() && CheckLocationCorrectness() && CheckLocationMethods()) {
+bool Response::IsRequestCorrect() {
+	return (HTTPVersionControl()
+			&& CheckMethodCorrectness()
+			&& CheckLocationCorrectness()
+			&& CheckLocationMethods());
+}
+
+const std::string Response::GetResponse() {
+	if (IsRequestCorrect()) {
 		DIR *dir = opendir(this->fullPath_.c_str());
 		if (location_.autoindex && dir) {
 			SetStatus("200");
 			_createHTMLAutoIndex(dir);
 			closedir(dir);
 		}
-//		else if (this->request_.request_line["target"].compare(0, request_.request_line["target"].length(),
-//                      location_.cgi_extension)
-        else if (request_.request_line["target"].rfind('.') != std::string::npos &&
-              this->request_.request_line["target"].substr(request_.request_line["target"].rfind('.'))
+        else if (_request.GetRequestLine().at("target").rfind('.') != std::string::npos &&
+              this->_request.GetRequestLine().at("target").substr(_request.GetRequestLine().at("target").rfind('.'))
                 == location_.cgi_extension)
       {
-          CGI::executeCGI(request_, *this);
-        return body;
+          CGI::executeCGI(this->_request, *this);
+        return this->body;
       }
 		else {
-			if(request_.request_line["method"] == "GET") {
+			if(_request.GetRequestLine().at("method") == "GET") {
 				GetRequest();
 			}
-			else if (request_.request_line["method"] == "POST"){
+			else if (_request.GetRequestLine().at("method") == "POST"){
 				PostRequest();
 			}
-			else if (request_.request_line["method"] == "HEAD") {
+			else if (_request.GetRequestLine().at("method") == "HEAD") {
 				HeadRequest();
 			}
-			else if (request_.request_line["method"] == "PUT") {
+			else if (_request.GetRequestLine().at("method") == "PUT") {
 				PutRequest();
 			}
-			else if (this->request_.request_line["method"] == "DELETE")
+			else if (this->_request.GetRequestLine().at("method") == "DELETE")
 				DeleteRequest();
 		}
 	}
 	return SendResponse();
 }
 
-std::string Response::SendResponse() {
+const std::string Response::SendResponse() {
 	std::string response;
 	std::map<std::string, std::string>::iterator begin;
 
@@ -375,7 +355,7 @@ std::string Response::SendResponse() {
 		response += begin->second + "\r\n";
 	}
 	response += "\r\n";
-	if (request_.request_line["method"] != "HEAD") {
+	if (_request.GetRequestLine().at("method") != "HEAD") {
 		response += this->body;
 	}
 	return response;
@@ -423,8 +403,7 @@ std::string Response::GetStatusText(std::string code) {
 	status_text_["503"] = " Service Unavailable";
 	status_text_["504"] = " Gateway Timeout";
 	status_text_["505"] = " HTTP Version Not Supported";
-	if (status_text_.find(code) != status_text_.end())
-		return status_text_.find(code)->second;
+	return status_text_.find(code)->second;
 }
 
 
@@ -550,7 +529,7 @@ bool Response::_SearchForDir() {
 			while ((en = readdir(dr)) != NULL) {
 				if (strcmp(en->d_name, location_.index[i].c_str()) == 0) {
 					closedir(dr);
-					if (!ResponseBuilder(this->fullPath_ + "/" + location_.index[i], "200"))
+					if (!SetResponse(this->fullPath_ + "/" + location_.index[i], "200"))
 						return 0;
 					return 1;
 				}
@@ -559,7 +538,7 @@ bool Response::_SearchForDir() {
 		closedir(dr);
 	}
 	else if (_SearchForFile(this->fullPath_)) {
-		if (!ResponseBuilder(this->fullPath_, "200"))
+		if (!SetResponse(this->fullPath_, "200"))
 			return 0;
 		return 1;
 	}
@@ -597,7 +576,7 @@ bool Response::GetBody(const std::string &path) {
 		fin.close();
 		std::string str(contents, size);
 		delete [] contents;
-		if (this->request_.body.size() == str.size() && this->request_.body == str){
+		if (this->_request.GetBody().size() == str.size() && this->_request.GetBody() == str){
 			SetStatus("303");
 			SetHeader("Location", this->fullPath_);
 			return 0;
@@ -629,14 +608,3 @@ bool Response::SetBody(const std::string &path) {
 	}
 	return 1;
 }
-
-//void Response::SetErrorResponse(std::string status_code) {
-//	std::vector<error> tmpVec = ServerConf_.error_pages;
-//	for (int index = 0; index < tmpVec.size(); index++) {
-//		if (status_code == std::to_string(tmpVec[index].error_code)) {
-//			ResponseBuilder(ServerConf_.root + tmpVec[index].error_path, status_code);
-//			return ;
-//		}
-//	}
-//	(ServerConf_.root + "/errors/" + this->headers["status_code"] + ".html", status_code);
-//};
