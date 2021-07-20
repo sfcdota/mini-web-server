@@ -71,7 +71,7 @@ bool Response::HTTPVersionControl() {
 }
 void Response::ErrorHandler(const std::string &status_code) {
 	SetStatus(status_code);
-	this->body = "<!DOCTYPE html>\n"
+	this->body_ = "<!DOCTYPE html>\n"
 				"<html lang=\"en\">\n"
 				"<head>\n"
 				"<meta charset=\"UTF-8\">\n"
@@ -80,13 +80,37 @@ void Response::ErrorHandler(const std::string &status_code) {
 				"<body>\n"
 				"<center>\n"
 				"<h1>" +
-				this->response_line["status_code"] +
-				this->response_line["status"] +
+				  this->response_line["status_code"] +
+				  this->response_line["status"] +
 				"</h1>\n" +
 				"</center>\n"
 				"</body>\n"
 				"</html>\n";
 	SetHeader("Content-Type", ".html");
+}
+
+const std::string & Response::GetBody() {
+	return this->body_;
+}
+
+const std::string & Response::GetFullPath() {
+	return this->fullPath_;
+}
+
+const location & Response::GetLocation() {
+	return this->location_;
+}
+
+const std::string & Response::GetCleanTarget() {
+	return this->cleanTarget_;
+}
+
+const std::map<std::string, std::string> & Response::GetHeaders() {
+	return this->headers;
+}
+
+const Request & Response::GetRequestClass() {
+	return this->_request;
 }
 
  bool Response::MakeDirectory() {
@@ -130,7 +154,7 @@ bool Response::OpenOrCreateFile() {
 	return true;
 }
 
-void Response::GetRequest() {
+void Response::GetRequest()  {
 	_SearchForDir();
 }
 
@@ -150,7 +174,7 @@ void Response::PostRequest() {
 	} else {
 		if (!MakeDirectory())
 			return ;
-		if (!GetBody(this->fullPath_))
+		if (!FillBody(this->fullPath_))
 			return ;
 		if (_SearchForFile(this->fullPath_)){
 			OpenOrCreateFile();
@@ -188,7 +212,7 @@ void Response::PutRequest() {
 		if (!MakeDirectory())
 			return ;
 		if (_SearchForFile(this->fullPath_)){
-			if (!GetBody(this->fullPath_))
+			if (!FillBody(this->fullPath_))
 				return ;
 			OpenOrCreateFile();
 //			SetStatus("200");
@@ -315,22 +339,18 @@ const std::string Response::GetResponse() {
                 == location_.cgi_extension)
       {
           CGI::executeCGI(this->_request, *this);
-        return this->body;
+        return this->body_;
       }
 		else {
 			if(_request.GetRequestLine().at("method") == "GET") {
-				GetRequest();
-			}
-			else if (_request.GetRequestLine().at("method") == "POST"){
+				GetRequestClass();
+			} else if (_request.GetRequestLine().at("method") == "POST"){
 				PostRequest();
-			}
-			else if (_request.GetRequestLine().at("method") == "HEAD") {
+			} else if (_request.GetRequestLine().at("method") == "HEAD") {
 				HeadRequest();
-			}
-			else if (_request.GetRequestLine().at("method") == "PUT") {
+			} else if (_request.GetRequestLine().at("method") == "PUT") {
 				PutRequest();
-			}
-			else if (this->_request.GetRequestLine().at("method") == "DELETE")
+			} else if (this->_request.GetRequestLine().at("method") == "DELETE")
 				DeleteRequest();
 		}
 	}
@@ -343,7 +363,7 @@ const std::string Response::SendResponse() {
 
 	SetHeader("Date", GetTimeGMT());
 	SetHeader("Server", "webserv");
-	SetHeader("Content-Length", std::to_string(this->body.size()));
+	SetHeader("Content-Length", std::to_string(this->body_.size()));
 
 	response = this->response_line["version"];
 	response += this->response_line["status_code"];
@@ -356,7 +376,7 @@ const std::string Response::SendResponse() {
 	}
 	response += "\r\n";
 	if (_request.GetRequestLine().at("method") != "HEAD") {
-		response += this->body;
+		response += this->body_;
 	}
 	return response;
 }
@@ -446,7 +466,7 @@ void Response::_createHTMLAutoIndex(DIR *dir) {
 	std::string concatLink;
 	std::string fileName;
 	struct dirent *entity;
-	this->body = autoIndexBegin;
+	this->body_ = autoIndexBegin;
 	while ((entity = readdir(dir))) {
 		if (strcmp(entity->d_name, ".") != 0) {
 			if (entity->d_type != DT_DIR) {
@@ -463,12 +483,12 @@ void Response::_createHTMLAutoIndex(DIR *dir) {
 					.append("</a>")
 					.append(60 - concatLink.length() + fileName.length(), ' ')
 					.append(_getTimeModify(this->fullPath_ + "/" + fileName));
-			this->body += concatLink;
+			this->body_ += concatLink;
 			fileName.clear();
 			concatLink.clear();
 		}
 	}
-	this->body += autoIndexEnd;
+	this->body_ += autoIndexEnd;
 	SetHeader("Content-Type", ".html");
 }
 
@@ -564,7 +584,7 @@ bool Response::_SearchForFile(const std::string &path){
 	return 0;
 }
 
-bool Response::GetBody(const std::string &path) {
+bool Response::FillBody(const std::string &path) {
 	std::ifstream fin(path, std::ios::in|std::ios::binary|std::ios::ate);
 	int size;
 	if (fin.is_open()) {
@@ -600,7 +620,7 @@ bool Response::SetBody(const std::string &path) {
 		fin.close();
 		std::string str(contents, size);
 		delete [] contents;
-		this->body = str;
+		this->body_ = str;
 	}
 	else {
 		ErrorHandler("500");

@@ -36,9 +36,8 @@ private:
 	void								ErrorHandler(const std::string &status_code);
 	std::string							GetTimeGMT();
 	bool								SetBody(const std::string &path);
-	bool								GetBody(const std::string &path);
+	bool								FillBody(const std::string &path);
 	std::string							PathBuilder(const std::string & path);
-
 
 
 	location							location_;
@@ -52,7 +51,13 @@ private:
 	bool								_SearchForDir();
 	void								_createHTMLAutoIndex(DIR *dir);
 	const std::string					_getTimeModify(const std::string &path);
-	
+public:
+	const Request &						GetRequestClass();
+	const std::string &					GetBody();
+	const std::string &					GetFullPath();
+	const location &					GetLocation();
+	const std::string &					GetCleanTarget();
+	const std::map<std::string, std::string> &	GetHeaders();
 };
 
 

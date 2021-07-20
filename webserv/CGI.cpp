@@ -25,7 +25,7 @@ void CGI::executeCGI(const Request & request, const Response & response) {
     char **kek = new char*[3];
     std::string path = request.GetServerConfig().root + "/cgi/cgi_tester";
     kek[0] = strdup(path.c_str());
-    kek[1] = strdup(response.fullPath_.c_str());
+    kek[1] = strdup(response.GetFullPath().c_str());
     kek[2] = NULL;
     std::cerr << "execve path = " << kek[0] << std::endl;
     std::cerr << "execve 1st argument path = " << kek[1] << std::endl;
