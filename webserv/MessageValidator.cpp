@@ -64,10 +64,11 @@
 
 
 
-bool MessageValidator::ValidHeaders(std::string & request) {
+bool MessageValidator::ValidHeaders(const std::string & request) {
   msg_pos = 0;
   message = request;
   status_code = 200;
+  out_temp = 0;
   return ValidRequestLine(message, msg_pos) && ValidHeadersBlock(message, msg_pos);
 }
 
@@ -76,7 +77,7 @@ bool MessageValidator::ValidRequestLine(const std::string &msg, size_t &pos) {
   return ValidMethod(msg, pos) && ValidTarget(msg, pos) && ValidVersion(msg, pos);
 }
 bool MessageValidator::ValidMethod(const std::string &msg, size_t &pos) {
-  return expression_test(msg, pos, &MessageValidator::istchar, 0, 1, 1) && msg[pos] == ' ';
+  return expression_test(msg, pos, &istchar, status_code, 0, 1, 1) && msg[pos] == ' ';
 }
 bool MessageValidator::ValidTarget(const std::string &msg, size_t &pos) {
   pos++; //skip SP
@@ -84,10 +85,11 @@ bool MessageValidator::ValidTarget(const std::string &msg, size_t &pos) {
     return false;
   while (msg[pos] == '/') {
     pos++;
-    while (expression_test(msg, pos, &MessageValidator::ispchar) || expression_test(msg, pos, &MessageValidator::ispctencoded, 0, 2));
+    while (expression_test(msg, pos, &ispchar, status_code)
+           || expression_test(msg, pos, &ispctencoded, status_code, 0, 2));
   }
   if (msg[pos] == '?')
-    expression_test(msg, pos, &MessageValidator::isquery);
+    expression_test(msg, pos, &isquery, status_code);
   return msg[pos++] == ' ';
 }
 
@@ -116,7 +118,7 @@ bool MessageValidator::ValidHeadersBlock(const std::string &msg, size_t &pos) {
 
 bool MessageValidator::ValidHeader(const std::string &msg, size_t &pos) {
   while (!iscrlf(msg, pos)) { // header-field
-    if (!expression_test(msg, pos, &MessageValidator::ValidFieldName, 0, 0, 1, 1))
+    if (!expression_test(msg, pos, &ValidFieldName, status_code, 0, 0, 1, 1))
       return false;
 //    if (!ValidFieldName(msg, pos))
 //      return false;
@@ -130,46 +132,46 @@ bool MessageValidator::ValidHeader(const std::string &msg, size_t &pos) {
 
 
 bool MessageValidator::ValidFieldName(const std::string &msg, size_t &pos) {
-  temp = pos;
-  return expression_test(msg, pos, &MessageValidator::istchar, 0, 1, 1)
-    && expression_test(msg, pos, &MessageValidator::isdots, 400, 1, 1, 1);
+  out_temp = pos;
+  return expression_test(msg, pos, &istchar, status_code, 0, 1, 1)
+    && expression_test(msg, pos, &isdots, status_code, 400, 1, 1, 1);
 }
 bool MessageValidator::ValidFieldValue(const std::string &msg, size_t &pos) {
-  if (!strncmp(&msg[temp], "Accept-Charset", 14))
+  if (!strncmp(&msg[out_temp], "Accept-Charset", 14))
     return CheckAcceptCharsets(msg, pos) && ValidDefaultFieldValue(msg, pos);
-  else if (!strncmp(&msg[temp], "Accept-Language", 15))
+  else if (!strncmp(&msg[out_temp], "Accept-Language", 15))
     return CheckAcceptLanguage(msg, pos) && ValidDefaultFieldValue(msg, pos);
-  else if (!strncmp(&msg[temp], "Allow", 5))
+  else if (!strncmp(&msg[out_temp], "Allow", 5))
     return CheckAllow(msg, pos) && ValidDefaultFieldValue(msg, pos);
-  else if (!strncmp(&msg[temp], "Authorization", 13))
+  else if (!strncmp(&msg[out_temp], "Authorization", 13))
     return CheckAuthorization(msg, pos) && ValidDefaultFieldValue(msg, pos);
-  else if (!strncmp(&msg[temp], "Content-Language", 16))
+  else if (!strncmp(&msg[out_temp], "Content-Language", 16))
     return CheckContentLanguage(msg, pos) && ValidDefaultFieldValue(msg, pos);
-  else if (!strncmp(&msg[temp], "Content-Length", 14))
+  else if (!strncmp(&msg[out_temp], "Content-Length", 14))
     return CheckContentLength(msg, pos) && ValidDefaultFieldValue(msg, pos);
-  else if (!strncmp(&msg[temp], "Content-Location", 16))
+  else if (!strncmp(&msg[out_temp], "Content-Location", 16))
     return CheckContentLocation(msg, pos) && ValidDefaultFieldValue(msg, pos);
-  else if (!strncmp(&msg[temp], "Content-Type", 12))
+  else if (!strncmp(&msg[out_temp], "Content-Type", 12))
     return CheckContentType(msg, pos) && ValidDefaultFieldValue(msg, pos);
-  else if (!strncmp(&msg[temp], "Date", 4))
+  else if (!strncmp(&msg[out_temp], "Date", 4))
     return CheckDate(msg, pos) && ValidDefaultFieldValue(msg, pos);
-  else if (!strncmp(&msg[temp], "Host", 4))
+  else if (!strncmp(&msg[out_temp], "Host", 4))
     return CheckHost(msg, pos) && ValidDefaultFieldValue(msg, pos);
-  else if (!strncmp(&msg[temp], "Last-Modified", 13))
+  else if (!strncmp(&msg[out_temp], "Last-Modified", 13))
     return CheckLastModified(msg, pos) && ValidDefaultFieldValue(msg, pos);
-  else if (!strncmp(&msg[temp], "Location", 8))
+  else if (!strncmp(&msg[out_temp], "Location", 8))
     return CheckLocation(msg, pos) && ValidDefaultFieldValue(msg, pos);
-  else if (!strncmp(&msg[temp], "Referer", 7))
+  else if (!strncmp(&msg[out_temp], "Referer", 7))
     return CheckReferer(msg, pos) && ValidDefaultFieldValue(msg, pos);
-  else if (!strncmp(&msg[temp], "Retry-After", 11))
+  else if (!strncmp(&msg[out_temp], "Retry-After", 11))
     return CheckRetryAfter(msg, pos) && ValidDefaultFieldValue(msg, pos);
-  else if (!strncmp(&msg[temp], "Server", 6))
+  else if (!strncmp(&msg[out_temp], "Server", 6))
     return CheckServer(msg, pos) && ValidDefaultFieldValue(msg, pos);
-  else if (!strncmp(&msg[temp], "Transfer-Encoding", 17))
+  else if (!strncmp(&msg[out_temp], "Transfer-Encoding", 17))
     return CheckTransferEncoding(msg, pos) && ValidDefaultFieldValue(msg, pos);
-  else if (!strncmp(&msg[temp], "User-Agent", 10))
+  else if (!strncmp(&msg[out_temp], "User-Agent", 10))
     return CheckUserAgent(msg, pos) && ValidDefaultFieldValue(msg, pos);
-  else if (!strncmp(&msg[temp], "WWW-Authenticate", 16))
+  else if (!strncmp(&msg[out_temp], "WWW-Authenticate", 16))
     return CheckWwwAuthenticate(msg, pos) && ValidDefaultFieldValue(msg, pos);
   else
     return ValidDefaultFieldValue(msg, pos);
@@ -192,78 +194,6 @@ bool MessageValidator::ValidDefaultFieldValue(const std::string &msg, size_t &po
       for (; isows(msg[pos]); pos++); // 1*( SP / HTAB)
     }
   }
-  return true;
-}
-
-
-
-
-/// Accept-Charset = 1#( ( charset / "*" ) [ weight ] )
-/// Accept-Charset = *( «,» OWS ) ( ( charset / «*» ) [ weight ] ) *( OWS «,» [ OWS ( ( charset / «*» ) [ weight ] ) ] )
-/// charset = token
-/// weight = OWS «;» OWS «q=» qvalue
-/// qvalue = ( «0» [ «.» *3DIGIT ] ) / ( «1» [ «.» *3″0″ ] )
-/// \param header_map
-/// \return
-bool MessageValidator::CheckAcceptCharsets(const std::string &msg, size_t &pos) {
-//  return expression_test_abnf(msg, pos, expression_test(msg, pos, &MessageValidator::ValidDefaultFieldValue));
-return true;
-}
-
-
-/// Accept-Language = *( «,» OWS ) ( language-range [ weight ] ) *( OWS «,» [ OWS ( language-range [ weight ] ) ] )
-/// language-range   = (1*8ALPHA *("-" 1*8alphanum)) / "*"                        | at least 1 and at most 8 ALPHA
-/// \param header_map
-/// \return
-bool MessageValidator::CheckAcceptLanguage(const std::string &msg, size_t &pos) {
-  return true;
-}
-bool MessageValidator::CheckAllow(const std::string &msg, size_t &pos) {
-  return true;
-}
-bool MessageValidator::CheckAuthorization(const std::string &msg, size_t &pos) {
-  return true;
-}
-bool MessageValidator::CheckContentLanguage(const std::string &msg, size_t &pos) {
-  return true;
-}
-bool MessageValidator::CheckContentLength(const std::string &msg, size_t &pos) {
-  return true;
-}
-bool MessageValidator::CheckContentLocation(const std::string &msg, size_t &pos) {
-  return true;
-}
-bool MessageValidator::CheckContentType(const std::string &msg, size_t &pos) {
-  return true;
-}
-bool MessageValidator::CheckDate(const std::string &msg, size_t &pos) {
-  return true;
-}
-bool MessageValidator::CheckHost(const std::string &msg, size_t &pos) {
-  return true;
-}
-bool MessageValidator::CheckLastModified(const std::string &msg, size_t &pos) {
-  return true;
-}
-bool MessageValidator::CheckLocation(const std::string &msg, size_t &pos) {
-  return true;
-}
-bool MessageValidator::CheckReferer(const std::string &msg, size_t &pos) {
-  return true;
-}
-bool MessageValidator::CheckRetryAfter(const std::string &msg, size_t &pos) {
-  return true;
-}
-bool MessageValidator::CheckServer(const std::string &msg, size_t &pos) {
-  return true;
-}
-bool MessageValidator::CheckTransferEncoding(const std::string &msg, size_t &pos) {
-  return true;
-}
-bool MessageValidator::CheckUserAgent(const std::string &msg, size_t &pos) {
-  return true;
-}
-bool MessageValidator::CheckWwwAuthenticate(const std::string &msg, size_t &pos) {
   return true;
 }
 
@@ -305,13 +235,11 @@ bool MessageValidator::ValidFieldContent(const std::string &msg, size_t &pos) {
   return true;
 }
 
-MessageValidator::MessageValidator(): status_code(0) {
-
-}
+MessageValidator::MessageValidator() { status_code = 0; }
 MessageValidator::~MessageValidator() {
 
 }
-bool MessageValidator::ValidResponse(std::string &response) { //NEED TO FIX WITH RESPONSE CLASS
+bool MessageValidator::ValidResponse(const std::string &response) { //NEED TO FIX WITH RESPONSE CLASS
   msg_pos = 0;
   message = response;
   return ValidStatusLine(message, msg_pos) && ValidHeadersBlock(message, msg_pos) && ValidBody(message);
@@ -339,34 +267,6 @@ size_t MessageValidator::GetStatusCode() const {
   return status_code;
 }
 
-
-//template<class T, class Ret, class Arg1, class Arg2>
-//bool MessageValidator::expression_test(const std::string & s, size_t & index,
-//      Ret (T::*f)(Arg1), size_t status_code, size_t step, size_t min, size_t max,
-//      typename enable_if<DetectInt<Arg1>::value, int>::type* = 0) {
-//  size_t counter = 0;
-//  for(; counter < max && f(s[index]); ++counter, index += step);
-//  if (counter < min || counter > max || (!min && !counter)) {
-//    if (status_code)
-//      this->status_code = status_code;
-//    return false;
-//  }
-//  return true;
-//}
-//
-//template<class T, class Ret, class Arg1, class Arg2>
-//bool MessageValidator::expression_test(const std::string & s, size_t & index,
-//      bool (T::*f)(const std::string &, size_t &), size_t status_code, size_t step, size_t min, size_t max) {
-//  size_t counter = 0;
-//  for(; counter < max && (this->*f)(s, index); ++counter, index += step);
-//  if (counter < min || counter > max || (!min && !counter)) {
-//    if (status_code)
-//      this->status_code = status_code;
-//    return false;
-//  }
-//  return true;
-//}
-
 template<class ret, class kek>
 bool MessageValidator::exp_test_call(const std::string &s, size_t &index,
                                      ret (kek::*f)(int, int)) {
@@ -378,6 +278,19 @@ bool MessageValidator::exp_test_call(const std::string &s, size_t &index,
                                      ret (kek::*f)(T1, T2)) {
   return (this->*f)(s, index);
 }
+
+template<class ret>
+bool MessageValidator::exp_test_call(const std::string &s, size_t &index,
+                                     ret (*f)(int, int)) {
+  return f(s[index], 0);
+}
+
+template<class ret, class T1, class T2>
+bool MessageValidator::exp_test_call(const std::string &s, size_t &index,
+                                     ret (*f)(T1, T2)) {
+  return f(s, index);
+}
+
 
 
 template<class ret, class kek, class T1, class T2>
@@ -393,38 +306,274 @@ bool MessageValidator::expression_test(const std::string & s, size_t & index,
   return true;
 }
 
-//bool MessageValidator::expression_test(const std::string & s, size_t & index,
-//      bool (MessageValidator::*f)(const std::string &, size_t &), size_t status_code, size_t step, size_t min, size_t max) {
-//  size_t counter = 0;
-//  for(; counter < max && (this->*f)(s, index); ++counter, index += step);
-//  if (counter < min || counter > max || (!min && !counter)) {
-//    if (status_code)
-//      this->status_code = status_code;
-//    return false;
-//  }
-//  return true;
-//}
-//
-//
-//template<class T>
-//bool MessageValidator::expression_test(const T & T1, const T & T2, size_t & index, size_t status_code, size_t step, size_t min, size_t max) {
-//  if (T1 == T2)
-//    return ((index += 1));
-//  if (status_code)
-//    this->status_code = status_code;
-//  return false;
-//}
+
+template<class ret, class T1, class T2>
+bool MessageValidator::expression_test(const std::string & s, size_t & index,
+                                       ret (*f)(T1, T2), size_t & out_status_code_ref, size_t status_code, size_t step, size_t min, size_t max) {
+  size_t counter = 0;
+  for(; counter < max && exp_test_call(s, index, f); ++counter, index += step);
+  if (counter < min || counter > max || (!min && !counter)) {
+    if (status_code)
+      out_status_code_ref = status_code;
+    return false;
+  }
+  return true;
+}
 
 
-//template<class T, class Ret, int>
-//bool MessageValidator::test_wrapper(T *class_pointer, Arg & arg, Ret (T::*f)(Arg), size_t status_code, size_t step, size_t min, size_t max) {
-//  expression_test(this, arg, index, f, status_code, step, min, max);
-//};
-//
-//template<class T, class Ret, std::string &, size_t &>
-//bool MessageValidator::test_wrapper(T *class_pointer, Arg1 & arg1, Arg2 & arg2, Ret (T::*f)(Arg1, Arg2), size_t status_code, size_t step, size_t min, size_t max) {
-//  expression_test(this, arg1, arg2, f, status_code, step, min, max);
-//}
+/// Accept-Charset = 1#( ( charset / "*" ) [ weight ] )
+/// Accept-Charset = *( «,» OWS ) ( ( charset / «*» ) [ weight ] ) *( OWS «,» [ OWS ( ( charset / «*» ) [ weight ] ) ] )
+/// charset = token
+/// weight = OWS «;» OWS «q=» qvalue
+/// qvalue = ( «0» [ «.» *3DIGIT ] ) / ( «1» [ «.» *3″0″ ] )
+/// \param header_map
+/// \return
+bool MessageValidator::CheckAcceptCharsets(const std::string &msg, size_t &pos) {
+//  return expression_test_abnf(msg, pos, expression_test(msg, pos, &MessageValidator::ValidDefaultFieldValue));
+  return true;
+}
+
+
+/// Accept-Language = *( «,» OWS ) ( language-range [ weight ] ) *( OWS «,» [ OWS ( language-range [ weight ] ) ] )
+/// language-range   = (1*8ALPHA *("-" 1*8alphanum)) / "*"                        | at least 1 and at most 8 ALPHA
+/// \param header_map
+/// \return
+bool MessageValidator::CheckAcceptLanguage(const std::string &msg, size_t &pos) {
+  return true;
+}
+
+/// Allow = #method
+/// #method => [ ( "," / method ) *( OWS "," [ OWS method ] ) ]
+/// \param header_map
+/// \return
+bool MessageValidator::CheckAllow(const std::string &msg, size_t &pos) {
+  return true;
+}
+
+/// Authorization = credentials
+/// credentials = auth-scheme [ 1*SP ( token68 / [ ( «,» / auth-param ) *( OWS «,» [ OWS auth-param ] ) ] ) ]
+/// auth-scheme = token
+/// token68 = 1*( ALPHA / DIGIT / «-» / «.» / «_» / «~» / «+» / «/» ) *»=»
+/// auth-param = token BWS «=» BWS ( token / quoted-string )
+/// BWS = OWS
+/// \param header_map
+/// \return
+bool MessageValidator::CheckAuthorization(const std::string &msg, size_t &pos) {
+  return true;
+}
+
+/// Content-Language = 1#language-tag
+/// language-tag = langtag
+/// langtag = language[«-» script][«-» region]*(«-» variant)*(«-» extension)[«-» privateuse]
+/// https://efim360.ru/rfc-5646-tegi-dlya-identifikatsii-yazykov/
+/// \param header_map
+/// \return
+bool MessageValidator::CheckContentLanguage(const std::string &msg, size_t &pos) {
+  return true;
+}
+
+/// Content-Length = 1*DIGIT
+/// \param header_map
+/// \return
+bool MessageValidator::CheckContentLength(const std::string &msg, size_t &pos) {
+  return true;
+}
+
+/// Content-Location = absolute-URI / partial-URI
+/// absolute-URI = scheme ":" hier-part [ "?" query ]
+/// scheme = ALPHA *( ALPHA / DIGIT / «+» / «-» / «.» )
+/// hier-part = "//" authority path-abempty (авторитетный путь)/ path-absolute (абсолютный путь)
+///       / path-rootless (путь без корней)/ path-empty (пустой путь)
+/// authority = [ userinfo «@» ] host [ «:» port ]
+/// userinfo = *( unreserved / pct-encoded / sub-delims / «:» )
+/// host = IP-literal / IPv4address / reg-name
+
+/*
+IPv6address =                6( h16 ":" ) ls32
+/                       "::" 5( h16 ":" ) ls32
+/               [ h16 ] "::" 4( h16 ":" ) ls32
+/ [ *1( h16 ":" ) h16 ] "::" 3( h16 ":" ) ls32
+/ [ *2( h16 ":" ) h16 ] "::" 2( h16 ":" ) ls32
+/ [ *3( h16 ":" ) h16 ] "::" h16 ":" ls32
+/ [ *4( h16 ":" ) h16 ] "::" ls32
+/ [ *5( h16 ":" ) h16 ] "::" h16
+/ [ *6( h16 ":" ) h16 ] "::"
+
+ls32 = ( h16 ":" h16 ) / IPv4address; (наименее значимый 32-битный адрес)
+
+h16 = 1*4HEXDIG; (16 бит адреса представлены в шестнадцатеричном формате)
+
+IPv4address = dec-octet "." dec-octet "." dec-octet "." dec-octet
+
+dec-octet = DIGIT ; 0-9
+/ %x31-39 DIGIT ; 10-99
+/ "1" 2DIGIT ; 100-199
+/ "2" %x30-34 DIGIT ; 200-249
+/ "25" %x30-35 ; 250-255
+
+ */
+
+
+/// reg-name = *( unreserved / pct-encoded / sub-delims )
+/// IP-literal = «[» ( IPv6address / IPvFuture ) «]»
+/// IPvFuture = «v» 1*HEXDIG «.» 1*( unreserved / sub-delims / «:» )
+/// path-abempty  = *( "/" segment )
+/// path-absolute = "/" [ segment-nz *( "/" segment ) ]
+/// path-rootless = segment-nz *( "/" segment )
+/// segment       = *pchar
+/// segment-nz    = 1*pchar
+/// path-empty    = 0<pchar>
+/// query = *( pchar / "/" / "?" )
+/// \param header_map
+/// \return
+bool MessageValidator::CheckContentLocation(const std::string &msg, size_t &pos) {
+  return true;
+}
+
+/// Content-Type = media-type
+/// media-type = type "/" subtype *( OWS ";" OWS parameter )
+/// type = token
+/// subtype = token
+/// parameter = token "=" ( token / quoted-string )
+/// \param header_map
+/// \return
+bool MessageValidator::CheckContentType(const std::string &msg, size_t &pos) {
+  return true;
+}
+
+/// Date = HTTP-date
+/// HTTP-date = IMF-fixdate / obs-date
+/// IMF-fixdate = day-name «,» SP date1 SP time-of-day SP GMT
+/*
+
+day-name = %x4D.6F.6E ; Mon
+/ %x54.75.65 ; Tue
+/ %x57.65.64 ; Wed
+/ %x54.68.75 ; Thu
+/ %x46.72.69 ; Fri
+/ %x53.61.74 ; Sat
+/ %x53.75.6E ; Sun
+
+ */
+/// date1 = day SP month SP year
+/// day = 2DIGIT
+/*
+
+month = %x4A.61.6E ; Jan
+/ %x46.65.62 ; Feb
+/ %x4D.61.72 ; Mar
+/ %x41.70.72 ; Apr
+/ %x4D.61.79 ; May
+/ %x4A.75.6E ; Jun
+/ %x4A.75.6C ; Jul
+/ %x41.75.67 ; Aug
+/ %x53.65.70 ; Sep
+/ %x4F.63.74 ; Oct
+/ %x4E.6F.76 ; Nov
+/ %x44.65.63 ; Dec
+
+ */
+/// year = 4DIGIT
+/// time-of-day = hour «:» minute «:» second
+/// hour = 2DIGIT
+/// minute = 2DIGIT
+/// second = 2DIGIT
+/// GMT = %x47.4D.54 ; GMT
+/// \param header_map
+/// \return
+bool MessageValidator::CheckDate(const std::string &msg, size_t &pos) {
+  return true;
+}
+
+/// Host = uri-host [ «:» port ]
+/// host = IP-literal / IPv4address / reg-name
+/// port = *DIGIT                 | pri etom po scheme http default = 80, po https = 443
+/// \param header_map
+/// \return
+bool MessageValidator::CheckHost(const std::string &msg, size_t &pos) {
+  return true;
+}
+
+/// Last-Modified = HTTP-date
+/// \param header_map
+/// \return
+bool MessageValidator::CheckLastModified(const std::string &msg, size_t &pos) {
+  return true;
+}
+
+/// Location = URI-reference
+/// URI-reference = URI / relative-ref
+/// URI            = scheme ":" hier-part [ "?" query ] [ "#" fragment ]
+/// relative-ref   = relative-part [ "?" query ] [ "#" fragment ]
+
+/*
+
+relative-part  = "//" authority path-abempty
+               / path-absolute
+               / path-noscheme
+               / path-empty
+
+ */
+/// fragment      = *( pchar / "/" / "?" )
+/// \param header_map
+/// \return
+bool MessageValidator::CheckLocation(const std::string &msg, size_t &pos) {
+  return true;
+}
+
+/// Referer = absolute-URI / partial-URI
+/// \param header_map
+/// \return
+bool MessageValidator::CheckReferer(const std::string &msg, size_t &pos) {
+  return true;
+}
+
+/// Retry-After = HTTP-date / delay-seconds
+/// delay-seconds = 1*DIGIT
+/// \param header_map
+/// \return
+bool MessageValidator::CheckRetryAfter(const std::string &msg, size_t &pos) {
+  return true;
+}
+
+/// Server = product *( RWS ( product / comment ) )
+/// product = token [ «/» product-version ]
+/// product-version = token
+/// comment = "(" *( ctext / quoted-pair / comment ) ")"
+/// \param header_map
+/// \return
+bool MessageValidator::CheckServer(const std::string &msg, size_t &pos) {
+  return true;
+}
+
+/// Transfer-Encoding = 1#transfer-coding
+/// Transfer-Encoding = *( «,» OWS ) transfer-coding *( OWS «,» [ OWS transfer-coding ] )
+/// transfer-coding = «chunked» / «compress» / «deflate» / «gzip» / transfer-extension
+/// transfer-extension = token *( OWS «;» OWS transfer-parameter )
+/// transfer-parameter = token BWS «=» BWS ( token / quoted-string )
+/// \param header_map
+/// \return
+bool MessageValidator::CheckTransferEncoding(const std::string &msg, size_t &pos) {
+  return true;
+}
+
+/// User-Agent = product *( RWS ( product / comment ) )
+/// \param header_map
+/// \return
+bool MessageValidator::CheckUserAgent(const std::string &msg, size_t &pos) {
+  return true;
+}
+
+/// WWW-Authenticate = 1#challenge
+/// challenge = auth-scheme [ 1*SP ( token68 / [ ( «,» / auth-param ) *( OWS «,» [ OWS auth-param ] ) ] ) ]
+/// auth-scheme = token
+/// auth-param = token BWS «=» BWS ( token / quoted-string )
+/// \param header_map
+/// \return
+bool MessageValidator::CheckWwwAuthenticate(const std::string &msg, size_t &pos) {
+  return true;
+}
+
 
 
 static const char *vchardelimiters = "\"(),/:;<=>?@[\\]{}";

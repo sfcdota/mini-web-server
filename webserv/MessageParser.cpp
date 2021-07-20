@@ -47,17 +47,18 @@ MessageParser::~MessageParser() {}
  * message-body = *OCTET
  */
 void MessageParser::ProcessHeaders(Request &request) {
-  msg = request.buffer;
+  msg = request.GetRequestBuffer();
   std::string token;
   size_t tmp = 0;
   size_t pointer;
   size_t end_of_header_value;
   size_t end_of_header;
   std::string value;
+  std::map<std::string, std::string> headers;
   size_t tmp_end = msg.find("\r\n");
   for (int i = 0; i < 3 ; i++) {
     pointer = msg.find(' ', tmp);
-    request.request_line.insert(std::make_pair(request_line_fields[i], msg.substr(tmp, pointer < tmp_end ? pointer - tmp : tmp_end - tmp)));
+    headers.insert(std::make_pair(request_line_fields[i], msg.substr(tmp, pointer < tmp_end ? pointer - tmp : tmp_end - tmp)));
     tmp = pointer + 1;
   }
   tmp = tmp_end + 2;
@@ -71,35 +72,37 @@ void MessageParser::ProcessHeaders(Request &request) {
      end_of_header_value = end_of_header;
      while (isows(msg[end_of_header_value]))
        end_of_header_value--;
-     request.headers.insert(std::make_pair(token, msg.substr(pointer, end_of_header_value - pointer)));
+     headers.insert(std::make_pair(token, msg.substr(pointer, end_of_header_value - pointer)));
      tmp = end_of_header + 2;
    }
+   request.SetHeaders(headers);
 }
 
 void MessageParser::ParseBody(Request & request) {
-  size_t pos = request.buffer.find("0\r\n\r\n");
+  const std::string & buffer = request.GetRequestBuffer();
+  size_t pos = buffer.find("0\r\n\r\n");
   size_t tmp;
   long length;
-  const char* debug = request.buffer.c_str();
+  const char* debug = buffer.c_str();
   if (pos == std::string::npos)
     return;
-  for (size_t index = 0; (tmp = request.buffer.find("\r\n", index)) < pos;) {
-    length = strtol(&request.buffer.c_str()[index], NULL, 16);
+  for (size_t index = 0; (tmp = buffer.find("\r\n", index)) < pos;) {
+    length = strtol(&buffer.c_str()[index], NULL, 16);
     if (length < 0) {
       std::cout << "LENGTH OF CHUNKED PART DATA WAS BELOW ZERO. BODY PARSING ABORTED!" << std::endl;
       request.SetFailed(400);
       break;
     }
-    if (length > request.buffer.length() - index) {
+    if (length > buffer.length() - index) {
       std::cout << "CHUNKED LENGTH WRONG SIZE ENCOUTERED. INPUT DATA WAS FEWER SYMBOLS" << std::endl;
       request.SetFailed(400);
       break;
     }
 //    std::cout << "GETTING CHUNKED DATA PART. PART SIZE = " << length;
-    request.body += request.buffer.substr(tmp + 2,  length);
+    request.AppendRequestBody(buffer.substr(tmp + 2,  length));
     index = tmp + 2 + length;
 //    std::cout << "  chunked length = " << length  << std::endl;
-    if (request.buffer.find("\r\n", index) != index) {
+    if (buffer.find("\r\n", index) != index) {
       std::cout << "NO CRLF AFTER CHUNKED DATA BLOCK. REQUEST FAILED" << std::endl;
       request.SetFailed(400);
       break;
@@ -108,8 +111,8 @@ void MessageParser::ParseBody(Request & request) {
       index += 2;
 //    std::cout << request.buffer.length() - index << " data remains " << std::endl;
   }
-  std::cout << "PARSE OF CHUNKED BODY SUCCESSFULLY ENDED WITH BODY LENGTH = " << request.body.length() << std::endl;
-  request.formed = true;
+  std::cout << "PARSE OF CHUNKED BODY SUCCESSFULLY ENDED WITH BODY LENGTH = " << request.GetBody().length() << std::endl;
+  request.SetFormed(true);
 }
 
 

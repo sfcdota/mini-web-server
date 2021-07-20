@@ -3,14 +3,14 @@
 //
 
 #include <sstream>
-#include "BufferProcessor.hpp"
+#include "BufferReader.hpp"
 
-BufferProcessor::BufferProcessor(const ssize_t &INPUT_BUFFER_SIZE)
+BufferReader::BufferReader(const ssize_t &INPUT_BUFFER_SIZE)
     : BUFFER_SIZE_(INPUT_BUFFER_SIZE){
   read_buffer_ = reinterpret_cast<char *>(calloc(INPUT_BUFFER_SIZE, sizeof(char)));
 }
 
-unsigned BufferProcessor::GetClientMessage(std::list<ReadElement, std::allocator<ReadElement> >::iterator &it) {
+unsigned BufferReader::GetClientMessage(std::list<ReadElement, std::allocator<ReadElement> >::iterator &it) {
   unsigned status = 0;
   for (; (status = recv(it->GetClientFd(), read_buffer_, BUFFER_SIZE_, 0)) != -1 && status;) {
 //    std::stringstream ss;
@@ -27,62 +27,61 @@ unsigned BufferProcessor::GetClientMessage(std::list<ReadElement, std::allocator
   return status;
 }
 
-void BufferProcessor::ProcessInputBuffer(Request &request) {
-  request.buffer += read_buffer_;
-  request.source_request += read_buffer_;
+void BufferReader::ProcessInputBuffer(Request &request) {
+  request.AppendRequestBuffer(read_buffer_);
+  request.AppendSourceRequest(read_buffer_);
   size_t pos;
-  if (!request.recieved_headers) {
-    if((pos = request.buffer.find("\r\n\r\n", 0)) == std::string::npos)
+  if (!request.IsRecievedHeaders()) {
+    if((pos = request.GetRequestBuffer().find("\r\n\r\n", 0)) == std::string::npos)
       return;
     GetHeaders(request);
-    request.buffer = request.buffer.substr(pos + 4);
+    request.SetRequsetBuffer(request.GetRequestBuffer().substr(pos + 4));
   }
-  if (!request.recieved_body) {
+  else if (!request.IsFormed()) {
 //    std::cout << "size of read_buffer_ = " << request.buffer.length() << std::endl;
-    if (request.chunked) {
-      if ((pos = request.buffer.find("0\r\n\r\n")) == std::string::npos)
+    if (request.IsChunked()) {
+      if ((pos = request.GetRequestBuffer().find("0\r\n\r\n")) == std::string::npos)
         return;
       GetChunkedBody(request);
     }
     else {
-      if (request.buffer.length() < request.content_length)
+      if (request.GetRequestBuffer().length() < request.GetExpectedContentLength())
         return;
       GetBody(request);
     }
   }
 }
 
-void BufferProcessor::GetHeaders(Request &request) {
-  if (validator_.ValidHeaders(request.buffer))
+void BufferReader::GetHeaders(Request &request) {
+  if (validator_.ValidHeaders(request.GetRequestBuffer()))
     parser_.ProcessHeaders(request);
   else
     request.SetFailed(validator_.GetStatusCode());
-  request.recieved_headers = true;
+  request.SetRecievedHeaders(true);
   request.AdjustHeaders();
 }
-void BufferProcessor::GetBody(Request &request) {
-  request.body = request.buffer.substr(0, request.content_length);
-  request.recieved_body = true;
-  request.buffer.clear();
+void BufferReader::GetBody(Request &request) {
+  request.SetBody(request.GetRequestBuffer().substr(0, request.GetExpectedContentLength()));
+  request.SetFormed(true);
+  request.SetRequsetBuffer(std::string());
 }
-void BufferProcessor::GetChunkedBody(Request &request) {
+void BufferReader::GetChunkedBody(Request &request) {
 //  std::cout << "buffer before body parsing length = " << request.buffer.length() << std::endl;
-  request.formed = true;
-  if (validator_.ValidBody(request.buffer))
+  if (MessageValidator::ValidBody(request.GetRequestBuffer()))
     parser_.ParseBody(request);
   else {
     std::cout << "VALIDATOR ENCOUNTERED INVALID CHUNKED BODY. REQUEST FAILED" << std::endl;
     request.SetFailed(validator_.GetStatusCode());
   }
-  if (request.failed)
+  if (request.IsFailed())
     std::cout << "FAILED !!!!!!! " << std::endl;
   std::stringstream ss;
-  ss << request.body.length();
-  request.headers.insert(std::make_pair("Content-Length", ss.str()));
-  request.recieved_body = true;
-  request.buffer.clear();
+  ss << request.GetBody().length();
+  request.AddHeader(std::make_pair("Content-Length", ss.str()));
+  request.SetFormed(true);
+  request.SetRequsetBuffer(std::string());
 }
 
-BufferProcessor::~BufferProcessor() {
+BufferReader::~BufferReader() {
   free(read_buffer_);
 }

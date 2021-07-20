@@ -4,15 +4,25 @@
 
 #ifndef WEBSERV_SERVER_HPP_
 #define WEBSERV_SERVER_HPP_
+#include <sys/socket.h>
+#include <sys/time.h>
+#include <sys/wait.h>
+#include <sstream>
 #include "Response.hpp"
 #include "MessageParser.hpp"
 #include "MessageValidator.hpp"
 #include "ServerElement.hpp"
 #include "ReadElement.hpp"
 #include "WriteElement.hpp"
-#include "AServer.hpp"
-#include "IServer.hpp"
-#include "BufferProcessor.hpp"
+#include "Abstract&Interfaces/AServer.hpp"
+#include "Abstract&Interfaces/IServer.hpp"
+#include "BufferReader.hpp"
+
+#define TIMOUT_SEC 1
+#define MAX_CONNECTIONS 1024
+#define DEFAULT_INPUT_BUFFERSIZE 65536
+
+
 class Server: AServer, IServer {
  public:
   Server(const std::vector<ServerConfig>& config, const ssize_t & INPUT_BUFFER_SIZE);
@@ -23,7 +33,7 @@ class Server: AServer, IServer {
   std::list<ReadElement> read;
   std::list<WriteElement> write;
   unsigned status;
-  void Init();
+  void Initialize();
   int Guard(ssize_t retval, bool rw_operation);
   void AcceptConnections();
   void SocketsRead();

@@ -14,7 +14,7 @@
 
 ReadElement::ReadElement(const int & server_fd, const int & fd, const ServerConfig & config,
                          const sockaddr_in & addr, size_t last_read)
-    : server_fd(server_fd), fd(fd), addr(addr), last_read(last_read), request(config) {}
+    : server_fd(server_fd), fd(fd), addr(addr), last_read(last_read), request(config, addr) {}
 
 ReadElement::~ReadElement() {}
 
@@ -79,5 +79,6 @@ const sockaddr_in &ReadElement::GetAddr() const {
 }
 
 void ReadElement::ClearRequest() {
-  request = Request(request.server_config);
+//  request(request.GetServerConfig(), addr);
+  request = Request(request.GetServerConfig(), addr);
 }

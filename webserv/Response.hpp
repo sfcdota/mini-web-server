@@ -1,12 +1,11 @@
 #ifndef WEBSERV_RESPONSE_HPP_
 #define WEBSERV_RESPONSE_HPP_
 
-#include "allowed_library_includes.hpp"
 #include "Request.hpp"
 #include "parser.hpp"
 class CGI;
 #include "CGI.hpp"
-#include "AResponse.hpp"
+#include "Abstract&Interfaces/AResponse.hpp"
 
 class Response: AResponse {
 public:

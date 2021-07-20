@@ -4,7 +4,7 @@
 
 #ifndef WEBSERV_ARESPONSE_HPP_
 #define WEBSERV_ARESPONSE_HPP_
-#include "Request.hpp"
+#include "../Request.hpp"
 class AResponse {
  protected:
   explicit AResponse(const Request & request);

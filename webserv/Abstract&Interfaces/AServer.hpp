@@ -5,8 +5,8 @@
 #ifndef WEBSERV_ASERVER_HPP_
 #define WEBSERV_ASERVER_HPP_
 #include <vector>
-#include "includes/parser.hpp"
-#include "BufferProcessor.hpp"
+#include "parser.hpp"
+#include "../BufferReader.hpp"
 class AServer {
  protected:
   AServer(const std::vector<ServerConfig>& config, const ssize_t & INPUT_BUFFER_SIZE);
@@ -15,7 +15,8 @@ class AServer {
          master_write_, working_write_;
   timeval timeout_;
   const std::vector<ServerConfig>& config_;
-  BufferProcessor buffer_processor_;
+  BufferReader buffer_reader_
+  ;
 };
 
 #endif //WEBSERV_ASERVER_HPP_

@@ -3,10 +3,7 @@
 //
 
 #include "Server.hpp"
-#include "Response.hpp"
-# include <sys/time.h>
-#include <sys/wait.h>
-#include <sstream>
+
 
 
 Server::Server(const std::vector<ServerConfig> &config, const ssize_t & INPUT_BUFFER_SIZE)
@@ -37,7 +34,7 @@ int Server::Guard(ssize_t retval, bool rw_operation) {
 }
 
 void Server::Run() {
-  Init();
+  Initialize();
   while (true) {
     memcpy(&working_read_, &master_read_, sizeof(master_read_));
     memcpy(&working_write_, &master_write_, sizeof(master_write_));
@@ -89,21 +86,21 @@ void Server::SocketsRead() {
   for (read_iterator it = read.begin(); it != read.end(); it++) {
     if (FD_ISSET(it->GetClientFd(), &working_read_)) {
       PrintLog(it, "client IS_SET for read", it->GetClientFd());
-      status = buffer_processor_.GetClientMessage(it);
+      status = buffer_reader_.GetClientMessage(it);
     }
     it->UpdateLastActionSeconds();
 //    std::cout << "status = " << status << std::endl;
     if (!status || it->GetIdleSeconds() > 10) {
       ClearBrokenConnection(it->GetClientFd());
       read.erase(it--);
-    } else if (it->GetRequest().formed) {
+    } else if (it->GetRequest().IsFormed()) {
       it->GetRequest().Print();
       FD_CLR(it->GetClientFd(), &master_read_);
       FD_SET(it->GetClientFd(), &master_write_);
       write.push_back(WriteElement(it->GetServerFd(), it->GetClientFd(),
-                        !it->GetRequest().keep_alive,
-                        Response(it->GetRequest()).SendResponse()));
-      if (!it->GetRequest().keep_alive) {
+                        it->GetRequest().IsCloseOnEnd(),
+                                   Response(it->GetRequest()).SendResponse()));
+      if (it->GetRequest().IsCloseOnEnd()) {
 //        PrintLog(it, "ended read by not keep alive behavior", it->fd);
 //        std::cout << "Client_fd = " << it->fd << " read ended due not keep alive connection" << std::endl;
         read.erase(it--);
@@ -153,7 +150,7 @@ void Server::SocketsWrite() {
 
 Server::~Server() {}
 
-void Server::Init() {
+void Server::Initialize() {
   int options_value = 1;
   FD_ZERO(&master_read_);
   FD_ZERO(&master_write_);

@@ -12,68 +12,65 @@ class MessageValidator {
  public:
   MessageValidator();
   ~MessageValidator();
-  bool ValidHeaders(std::string & request);
-  bool ValidResponse(std::string & response);
+  bool ValidHeaders(const std::string & request);
+  bool ValidResponse(const std::string & response);
+  size_t GetStatusCode() const;
+// private:
+  static bool ValidRequestLine(const std::string &msg, size_t &pos);
+  static bool ValidStatusLine(const std::string &msg, size_t &pos);
+  static bool ValidMethod(const std::string &msg, size_t &pos);
+  static bool ValidTarget(const std::string &msg, size_t &pos);
+  static bool ValidVersion(const std::string &msg, size_t &pos);
+  static bool ValidHeadersBlock(const std::string &msg, size_t &pos);
+  static bool ValidHeader(const std::string &msg, size_t &pos);
+  static bool ValidFieldName(const std::string &msg, size_t &pos);
+  static bool ValidFieldValue(const std::string &msg, size_t &pos);
+  static bool ValidQuotedString(const std::string &msg, size_t &pos);
+  static bool ValidComment(const std::string &msg, size_t &pos);
+  static bool ValidFieldContent(const std::string &msg, size_t &pos);
+  static bool ValidBody(const std::string &msg);
+  static bool ValidDefaultFieldValue(const std::string & msg, size_t &pos);
+  static bool CheckAcceptCharsets(const std::string & msg, size_t &pos);
+  static bool CheckAcceptLanguage(const std::string & msg, size_t &pos);
+  static bool CheckAllow(const std::string & msg, size_t &pos);
+  static bool CheckAuthorization(const std::string & msg, size_t &pos);
+  static bool CheckContentLanguage(const std::string & msg, size_t &pos);
+  static bool CheckContentLength(const std::string & msg, size_t &pos);
+  static bool CheckContentLocation(const std::string & msg, size_t &pos);
+  static bool CheckContentType(const std::string & msg, size_t &pos);
+  static bool CheckDate(const std::string & msg, size_t &pos);
+  static bool CheckHost(const std::string & msg, size_t &pos);
+  static bool CheckLastModified(const std::string & msg, size_t &pos);
+  static bool CheckLocation(const std::string & msg, size_t &pos);
+  static bool CheckReferer(const std::string & msg, size_t &pos);
+  static bool CheckRetryAfter(const std::string & msg, size_t &pos);
+  static bool CheckServer(const std::string & msg, size_t &pos);
+  static bool CheckTransferEncoding(const std::string & msg, size_t &pos);
+  static bool CheckUserAgent(const std::string & msg, size_t &pos);
+  static bool CheckWwwAuthenticate(const std::string & msg, size_t &pos);
+
+  static bool isdots(int c, int = 0);
+  static bool istchar(int c, int = 0);
+  static bool ishex(int c, int = 0);
+  static bool ispchar(int c, int = 0);
+  static bool isquery(int c, int = 0);
+  static bool isows(int c, int = 0);
+  static bool isobstext(int c, int = 0);
+  static bool isvchar(int c, int = 0);
+  static bool isobsfold(const std::string & s, size_t & index);
+  static bool iscrlf(const std::string & s, size_t index);
+  static bool ispctencoded(const std::string & s, size_t & index);
+  static bool isqdtext(int c, int = 0);
+  static bool isctext(int c, int = 0);
+  static bool isreasonphrase(int c, int = 0);
+  static bool isquotedpair(const std::string &s, size_t & index);
+  static bool isstatuscode(const std::string &s, size_t & index);
+
  private:
   std::string message;
   size_t msg_pos;
-  size_t status_code;
- public:
-  size_t GetStatusCode() const;
-// private:
-  bool ValidRequestLine(const std::string &msg, size_t &pos);
-  bool ValidStatusLine(const std::string &msg, size_t &pos);
-  bool ValidMethod(const std::string &msg, size_t &pos);
-  bool ValidTarget(const std::string &msg, size_t &pos);
-  bool ValidVersion(const std::string &msg, size_t &pos);
-  bool ValidHeadersBlock(const std::string &msg, size_t &pos);
-  bool ValidHeader(const std::string &msg, size_t &pos);
-  bool ValidFieldName(const std::string &msg, size_t &pos);
-  bool ValidFieldValue(const std::string &msg, size_t &pos);
-  bool ValidQuotedString(const std::string &msg, size_t &pos);
-  bool ValidComment(const std::string &msg, size_t &pos);
-  bool ValidFieldContent(const std::string &msg, size_t &pos);
-  bool ValidBody(const std::string &msg);
-  bool ValidDefaultFieldValue(const std::string & msg, size_t &pos);
-  bool CheckAcceptCharsets(const std::string & msg, size_t &pos);
-  bool CheckAcceptLanguage(const std::string & msg, size_t &pos);
-  bool CheckAllow(const std::string & msg, size_t &pos);
-  bool CheckAuthorization(const std::string & msg, size_t &pos);
-  bool CheckContentLanguage(const std::string & msg, size_t &pos);
-  bool CheckContentLength(const std::string & msg, size_t &pos);
-  bool CheckContentLocation(const std::string & msg, size_t &pos);
-  bool CheckContentType(const std::string & msg, size_t &pos);
-  bool CheckDate(const std::string & msg, size_t &pos);
-  bool CheckHost(const std::string & msg, size_t &pos);
-  bool CheckLastModified(const std::string & msg, size_t &pos);
-  bool CheckLocation(const std::string & msg, size_t &pos);
-  bool CheckReferer(const std::string & msg, size_t &pos);
-  bool CheckRetryAfter(const std::string & msg, size_t &pos);
-  bool CheckServer(const std::string & msg, size_t &pos);
-  bool CheckTransferEncoding(const std::string & msg, size_t &pos);
-  bool CheckUserAgent(const std::string & msg, size_t &pos);
-  bool CheckWwwAuthenticate(const std::string & msg, size_t &pos);
-
-  bool isdots(int c, int = 0);
-  bool istchar(int c, int = 0);
-  bool ishex(int c, int = 0);
-  bool ispchar(int c, int = 0);
-  bool isquery(int c, int = 0);
-  bool isows(int c, int = 0);
-  bool isobstext(int c, int = 0);
-  bool isvchar(int c, int = 0);
-  bool isobsfold(const std::string & s, size_t & index);
-  bool iscrlf(const std::string & s, size_t index);
-  bool ispctencoded(const std::string & s, size_t & index);
-  bool isqdtext(int c, int = 0);
-  bool isctext(int c, int = 0);
-  bool isreasonphrase(int c, int = 0);
-  bool isquotedpair(const std::string &s, size_t & index);
-  bool isstatuscode(const std::string &s, size_t & index);
-
- private:
-  size_t temp;
-
+  static size_t status_code;
+  static size_t out_temp;
 
 
   template<class ret, class kek>
@@ -81,12 +78,18 @@ class MessageValidator {
   template<class ret, class kek, class T1, class T2>
   bool exp_test_call(const std::string & s, size_t & index, ret (kek::*f)(T1, T2));
 
-
+  template<class ret>
+  static bool exp_test_call(const std::string & s, size_t & index, ret (*f)(int, int));
+  template<class ret, class T1, class T2>
+  static bool exp_test_call(const std::string & s, size_t & index, ret (*f)(T1, T2));
 
   template<class ret, class kek, class T1, class T2>
   bool expression_test(const std::string & s, size_t & index, ret (kek::*f)(T1, T2),
       size_t status_code = 0, size_t step = 1, size_t min = 0, size_t max = -2);
 
+  template<class ret, class T1, class T2>
+  static bool expression_test(const std::string & s, size_t & index, ret (*f)(T1, T2), size_t & out_status_code_ref,
+                       size_t status_code = 0, size_t step = 1, size_t min = 0, size_t max = -2);
 
 };
 #endif //WEBSERV_MESSAGEVALIDATOR_HPP_

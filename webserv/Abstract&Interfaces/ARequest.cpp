@@ -4,6 +4,6 @@
 
 #include "ARequest.hpp"
 ARequest::ARequest(const ServerConfig &config)
-    : server_config(config) {}
+    : server_config(config), closeOnEnd(false) {}
 
 ARequest::~ARequest() {}

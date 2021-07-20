@@ -2,18 +2,19 @@
 // Created by sfcdo on 20.07.2021.
 //
 
-#ifndef WEBSERV_BUFFERPROCESSOR_HPP_
-#define WEBSERV_BUFFERPROCESSOR_HPP_
+#ifndef WEBSERV_BUFFERREADER_HPP_
+#define WEBSERV_BUFFERREADER_HPP_
 #include <cstdio>
 #include "Request.hpp"
 #include "MessageValidator.hpp"
 #include "MessageParser.hpp"
 #include "ReadElement.hpp"
-class BufferProcessor {
+#include <list>
+class BufferReader {
  public:
-  BufferProcessor(const ssize_t & INPUT_BUFFER_SIZE);
+  BufferReader(const ssize_t & INPUT_BUFFER_SIZE);
   unsigned GetClientMessage(std::list<ReadElement>::iterator & it);
-  ~BufferProcessor();
+  ~BufferReader();
  private:
   void ProcessInputBuffer(Request & request);
   void GetHeaders(Request & request);
@@ -24,4 +25,4 @@ class BufferProcessor {
   MessageValidator validator_;
   MessageParser parser_;
 };
-#endif //WEBSERV_BUFFERPROCESSOR_HPP_
+#endif //WEBSERV_BUFFERREADER_HPP_
