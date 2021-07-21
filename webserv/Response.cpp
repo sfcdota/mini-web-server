@@ -74,6 +74,9 @@ bool Response::HTTPVersionControl() {
 	return true;
 }
 void Response::ErrorHandler(const std::string &status_code) {
+  if (status_code == "500") {
+    bool t = true;
+  }
 	SetStatus(status_code);
 	this->body_ = "<!DOCTYPE html>\n"
 				"<html lang=\"en\">\n"

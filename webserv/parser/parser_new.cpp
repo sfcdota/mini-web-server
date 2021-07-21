@@ -204,7 +204,6 @@ ServerConfig	parsConfs(parsConfig &con){
 	while ((con.pars.res = get_next_line(con.pars.fd, &line)) > -1) {
 		word_spliter(line, con.vec);
 		for (int i = 0; i < con.vec.size(); i++) {
-//			std::cout << con.vec[0] << std::endl;
 			if (con.vec[i] == "server")
 				con.pars.server_status = 1;
 			else if (con.vec[i] == "{" && con.pars.server_status == 1)
@@ -214,8 +213,6 @@ ServerConfig	parsConfs(parsConfig &con){
 			else
 				errors("server body error!");
 		}
-		if (con.pars.server_status == 3 || !con.pars.res)
-			std::cout << con.vec[0] << std::endl;
 		con.vec.clear();
 		if (con.pars.server_status == 3 || !con.pars.res)
 			break;
@@ -236,9 +233,9 @@ ServerConfig	parsConf() {
   return serv[0];
 }
 
-int main (){
-	ServerConfig s;
-	s = parsConf();
-
-	return 0;
-}
+//int main (){
+//	ServerConfig s;
+//	s = parsConf();
+//
+//	return 0;
+//}
