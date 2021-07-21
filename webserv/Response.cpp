@@ -121,14 +121,20 @@ const Request & Response::GetRequestClass() const {
 	 int start = 0;
 	 int end = 0;
 	 std::string dir;
+	 std::string path;
+	 if (this->location_.root.size() == 1)
+	 	path = this->cleanTarget_;
+	 else
+	 	path = this->location_.root + this->cleanTarget_;
 	
 	 if (chdir(ServerConf_.root.c_str()) == -1){
 		 ErrorHandler("500");
 		 return false;
 	 }
 	 while (true){
-		 if ((end = (this->location_.root + this->cleanTarget_).find('/', end + 1)) != std::string::npos) {
-			 dir = (this->location_.root + this->cleanTarget_).substr(start + 1, end - start - 1);
+		 if ((end = (path).find('/', end + 1)) != std::string::npos) {
+			 dir = (path).substr(start + 1, end - start - 1);
+			 if (!dir.size())
 			 if (chdir(dir.c_str()) == -1) {
 				 if (mkdir(dir.c_str(), 0777) == -1){
 					 ErrorHandler("500");
@@ -170,12 +176,13 @@ void Response::PostRequest() {
 	else if (this->_request.GetHeaders().find("Content-Length") == this->_request.GetHeaders().end()){
 		ErrorHandler("411");
 	}
-	else if (this->_request.GetHeaders().at("Content-Length") == "0"){
-		ErrorHandler("405");
-	}
-	else if (this->response_line["target"].substr(this->response_line["target"].rfind('/')) != "/site"){
-		CGI::executeCGI(_request, *this);
-	} else {
+//	else if (this->_request.GetHeaders().at("Content-Length") == "0"){
+//		ErrorHandler("405");
+//	}
+//	else if (this->response_line["target"].substr(this->response_line["target"].rfind('/')) != "/site"){
+//		CGI::executeCGI(_request, *this);
+//	}
+	else {
 		if (!MakeDirectory())
 			return ;
 		if (!FillBody(this->fullPath_))
