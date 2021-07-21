@@ -599,7 +599,7 @@ bool Response::FillBody(const std::string &path) {
 		fin.close();
 		std::string str(contents, size);
 		delete [] contents;
-		if (this->_request.GetBody().size() == str.size() && this->_request.GetBody() == str){
+		if (this->_request.GetRequestLine().at("method") == "POST" && _request.GetBody().size() == str.size() && this->_request.GetBody() == str){
 			SetStatus("303");
 			SetHeader("Location", this->fullPath_);
 			return 0;

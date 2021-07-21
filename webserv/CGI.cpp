@@ -13,8 +13,8 @@ const std::string CGI::executeCGI(const Request & request, const Response & resp
   char * const * envp = setEnv(request, response);
   pid_t pid;
   int status;
-  std::string cgi_fin_path = "/Users/cbach/CLionProjects/webserv/webserv/site/cgi/cgi_fin";
-  std::string cgi_fout_path = "/Users/cbach/CLionProjects/webserv/webserv/site/cgi/cgi_fout";
+  std::string cgi_fin_path = request.GetServerConfig().root + "/cgi/cgi_fin";
+  std::string cgi_fout_path = request.GetServerConfig().root + "/cgi/cgi_fout";
 
   int fin = open(cgi_fin_path.c_str(), O_RDWR | O_TRUNC | O_CREAT, 0777);
   int fout = open(cgi_fout_path.c_str(), O_RDWR | O_TRUNC | O_CREAT, 0777);
