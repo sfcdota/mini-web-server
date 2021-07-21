@@ -25,5 +25,8 @@ include_directories(webserv/includes /usr/local/include /usr/include)
 
 add_executable(webserv
 #        ${gnl} ${libft}
-        ${main} ${conf} ${abstract}
+#        ${main} ${conf} ${abstract}
+        webserv/parser/get_next_line.cpp
+        webserv/parser/parser_new.cpp
+        webserv/parser/utils.cpp
         )
