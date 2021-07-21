@@ -34,11 +34,11 @@ enum class ServerLoggingOptions {
   WRITING,
 };
 
-class Server: AServer, IServer, ILogger<ServerLoggingOptions> {
+class Server: public AServer, IServer, ILogger<ServerLoggingOptions> {
  public:
   Server(const std::vector<ServerConfig>& config, const ssize_t & INPUT_BUFFER_SIZE);
   ~Server();
-  const std::string PrintLog(const int & logginglevel, const ServerLoggingOptions & option) const;
+  const std::string PrintLog(const ServerLoggingOptions &option) const;
   void Run();
  private:
   std::list<ServerElement> server;

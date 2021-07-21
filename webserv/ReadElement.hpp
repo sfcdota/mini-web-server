@@ -29,12 +29,12 @@ enum class ReadElementLoggingOptions {
   CLIENT_IS_SET
 };
 
-class ReadElement: ILogger<ReadElementLoggingOptions> {
+class ReadElement: public ILogger<ReadElementLoggingOptions> {
  public:
   ReadElement(const int & server_fd, const int & fd, const ServerConfig & config,
               const sockaddr_in & addr, size_t last_read = Logger::GetTimeInSeconds());
   ~ReadElement();
-  const std::string PrintLog(const int & logginglevel, const ReadElementLoggingOptions & option) const;
+  const std::string PrintLog(const ReadElementLoggingOptions &option) const;
   const int & GetServerFd() const;
   const int & GetClientFd() const;
   Request & GetRequest();

@@ -14,11 +14,11 @@ enum class ResponseLoggingOptions {
   ZERO,
 };
 
-class Response: AResponse, ILogger<ResponseLoggingOptions> {
+class Response: public AResponse, ILogger<ResponseLoggingOptions> {
 public:
 	Response(const Request &request);
 	virtual const std::string GetResponse();
-    const std::string PrintLog(const int & logginglevel, const ResponseLoggingOptions & option) const;
+    const std::string PrintLog(const ResponseLoggingOptions &option) const;
     ~Response();
 private:
 	void								SetHeader(const std::string &key, const std::string &value);

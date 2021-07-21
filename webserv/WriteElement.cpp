@@ -11,7 +11,7 @@ WriteElement::WriteElement(const int & server_fd, const int & fd, const bool & c
 
 WriteElement::~WriteElement() {}
 
-const std::string WriteElement::PrintLog(const int &logginglevel, const WriteElementLoggingOptions &option) const {
+const std::string WriteElement::PrintLog(const WriteElementLoggingOptions &option) const {
   if (option == WriteElementLoggingOptions::ZERO)
     return std::string();
   std::stringstream ss;

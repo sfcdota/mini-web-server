@@ -22,11 +22,11 @@ enum class CGILoggingOptions {
   FULL_RESPONSE,
 };
 
-class CGI: ILogger<CGILoggingOptions> {
+class CGI: public ILogger<CGILoggingOptions> {
 public:
   CGI() {};
   ~CGI();
-  const std::string PrintLog(const int & logginglevel, const CGILoggingOptions & option) const;
+  const std::string PrintLog(const CGILoggingOptions &option) const;
   static void executeCGI(const Request & request, const Response & response);
   static char * const * mapToCString(const std::map<std::string, std::string> &tmpEnv);
   static char * const * setEnv(const Request &req, const Response & response);

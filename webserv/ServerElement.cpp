@@ -11,7 +11,7 @@ ServerElement::~ServerElement() {
 
 }
 
-const std::string ServerElement::PrintLog(const int &logginglevel, const ServerElementLoggingOptions &option) const {
+const std::string ServerElement::PrintLog(const ServerElementLoggingOptions &option) const {
   if (option == ServerElementLoggingOptions::ZERO)
     return std::string();
   std::stringstream ss;

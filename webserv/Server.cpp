@@ -9,7 +9,7 @@
 Server::Server(const std::vector<ServerConfig> &config, const ssize_t & INPUT_BUFFER_SIZE)
     : AServer(config, INPUT_BUFFER_SIZE) {}
 
-const std::string Server::PrintLog(const int &logginglevel, const ServerLoggingOptions &option) const {
+const std::string Server::PrintLog(const ServerLoggingOptions &option) const {
   if (option == ServerLoggingOptions::ZERO)
     return std::string();
   std::stringstream ss;
@@ -17,7 +17,7 @@ const std::string Server::PrintLog(const int &logginglevel, const ServerLoggingO
   if (option == ServerLoggingOptions::SERVERELEMENT_COUNT)
     ss << "server list size = " <<  server.size();
   else if (option == ServerLoggingOptions::TIMEOUT)
-    ss << "server shut downed due to timeout for incoming clients";
+    ss << "server waiting for incoming clients";
   else if (option == ServerLoggingOptions::READELEMENT_COUNT)
     ss << "read list size = " << read.size();
   else if (option == ServerLoggingOptions::WRITELEMENT_COUNT)

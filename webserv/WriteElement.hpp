@@ -19,11 +19,11 @@ enum class WriteElementLoggingOptions {
   CLOSING_ON_END,
 };
 
-class WriteElement: ILogger<WriteElementLoggingOptions> {
+class WriteElement: public ILogger<WriteElementLoggingOptions> {
  public:
   WriteElement(const int & server_fd, const int & fd, const bool & closeOnEnd, const std::string & response_msg);
   ~WriteElement();
-  const std::string PrintLog(const int & logginglevel, const WriteElementLoggingOptions & option) const;
+  const std::string PrintLog(const WriteElementLoggingOptions &option) const;
   const int & GetServerFd();
   const int & GetClientFd();
   const std::string & GetOutput() const;

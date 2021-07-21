@@ -4,6 +4,8 @@
 
 #include "MessageValidator.hpp"
 
+size_t MessageValidator::status_code = 200;
+size_t MessageValidator::out_temp = 0;
 
 /* Scheme of HTTP message in terms of rfc-7230 & subject restrictions
  * HTTP-message = start-line *( header-field CRLF ) CRLF [ message-body ]

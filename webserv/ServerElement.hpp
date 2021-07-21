@@ -15,11 +15,11 @@ enum class ServerElementLoggingOptions {
   CONFIG
 };
 
-class ServerElement: ILogger<ServerElementLoggingOptions> {
+class ServerElement: public ILogger<ServerElementLoggingOptions> {
  public:
   ServerElement(const int &fd, const sockaddr_in &addr, const ServerConfig &server_config);
   ~ServerElement();
-  const std::string PrintLog(const int & logginglevel, const ServerElementLoggingOptions & option) const;
+  const std::string PrintLog(const ServerElementLoggingOptions &option) const;
   void AddClient(const int &fd);
   void RemoveClient(const int &fd);
   const ServerConfig& GetConfig() const;

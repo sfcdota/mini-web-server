@@ -1,9 +1,15 @@
 #include "CGI.hpp"
 
+std::string CGI::cgi_response = std::string();
+
 CGI::~CGI() {}
 
+const std::string CGI::PrintLog(const CGILoggingOptions &option) const {
+  return std::string();
+}
+
 void CGI::executeCGI(const Request & request, const Response & response) {
-  cgi_response.clear();
+  CGI::cgi_response.clear();
   char * const * envp = setEnv(request, response);
   pid_t pid;
   int status;
@@ -25,7 +31,7 @@ void CGI::executeCGI(const Request & request, const Response & response) {
     char **kek = new char*[3];
     std::string path = request.GetServerConfig().root + "/cgi/cgi_tester";
     kek[0] = strdup(path.c_str());
-    kek[1] = strdup(response.fullPath_.c_str());
+    kek[1] = strdup(response.GetFullPath().c_str());
     kek[2] = NULL;
     std::cerr << "execve path = " << kek[0] << std::endl;
     std::cerr << "execve 1st argument path = " << kek[1] << std::endl;
@@ -42,16 +48,16 @@ void CGI::executeCGI(const Request & request, const Response & response) {
   struct stat file;
   fstat(fin, &file);
   lseek(fin, 0, SEEK_SET);
-  cgi_response.resize(file.st_size);
+  CGI::cgi_response.resize(file.st_size);
   char *pizda = reinterpret_cast<char *>(malloc(100000));
-  read(fin, const_cast<char *>(cgi_response.c_str()), cgi_response.capacity());
+  read(fin, const_cast<char *>(CGI::cgi_response.c_str()), CGI::cgi_response.capacity());
   close(fin);
   close(fout);
   std::cout << "END OF GETTING CGI RESPONSE" << std::endl;
-  cgi_response.replace(0, 7, request.GetRequestLine().at("version"));
-  cgi_response += "\r\n\r\n";
+  CGI::cgi_response.replace(0, 7, request.GetRequestLine().at("version"));
+  CGI::cgi_response += "\r\n\r\n";
 //  response.body.replace(response.body.size() - 1, 1, 1, EOF);
-  std::cout << "CGI RETURNED: " << cgi_response.substr(0, 100) << "... (" << cgi_response.size() << " bytes)" << std::endl;
+  std::cout << "CGI RETURNED: " << CGI::cgi_response.substr(0, 100) << "... (" << CGI::cgi_response.size() << " bytes)" << std::endl;
   deleteENVP(envp);
 }
 
@@ -98,7 +104,7 @@ char * const * CGI::setEnv(const Request &req, const Response & response) {
   std::string path_info =   (pos == it->second.size() ? it->second : it->second.substr(0, pos));
   tmpEnv["PATH_INFO="] = path_info;
   std::cerr << "PATH_INFO = " << path_info << std::endl;
-  std::string translated = req.GetServerConfig().root + response.location_.root + req.GetRequestLine().at("target");
+  std::string translated = req.GetServerConfig().root + response.GetLocation().root + req.GetRequestLine().at("target");
   tmpEnv["PATH_TRANSLATED="] = translate_path(translated);
   tmpEnv["QUERY_STRING="] = pos + 1 > it->second.length() ? it->second.substr(pos + 1) : "";
 //  tmpEnv["REDIRECT_STATUS"] = "200";

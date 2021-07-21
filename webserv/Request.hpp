@@ -2,9 +2,9 @@
 #ifndef WEBSERV_REQUEST_HPP_
 #define WEBSERV_REQUEST_HPP_
 #include <netinet/in.h>
+#include <sstream>
 #include "../includes/parser.hpp"
 #include "Abstract&Interfaces/ARequest.hpp"
-#include <iostream>
 #include "Logger.hpp"
 
 enum class RequestLoggingOptions {
@@ -20,13 +20,13 @@ enum class RequestLoggingOptions {
   FULL_REQUEST
 };
 
-class Request: ARequest, ILogger<RequestLoggingOptions> {
+class Request: public ARequest, public ILogger<RequestLoggingOptions> {
  public:
   Request(const ServerConfig& config, const sockaddr_in & addr, const std::string & buf = std::string());
   Request(const Request & in);
   Request & operator=(const Request & in);
   ~Request();
-  const std::string PrintLog(const int & logginglevel, const RequestLoggingOptions & option) const;
+  const std::string PrintLog(const RequestLoggingOptions &option) const;
   const std::map<std::string, std::string> &GetRequestLine() const;
   const std::map<std::string, std::string> &GetHeaders() const;
   const std::string &GetBody() const;

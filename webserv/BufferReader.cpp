@@ -10,7 +10,7 @@ BufferReader::BufferReader(const ssize_t &INPUT_BUFFER_SIZE)
   read_buffer_ = reinterpret_cast<char *>(calloc(INPUT_BUFFER_SIZE, sizeof(char)));
 }
 
-const std::string BufferReader::PrintLog(const int &logginglevel, const BufferReaderLoggingOptions &option) const {
+const std::string BufferReader::PrintLog(const BufferReaderLoggingOptions &option) const {
 //  switch (option) {
 //    case BufferReaderLoggingOptions::ZERO:break;
 //    case BufferReaderLoggingOptions::BUFFER_SIZE:break;

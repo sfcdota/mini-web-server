@@ -5,9 +5,10 @@
 #ifndef WEBSERV_AREQUEST_HPP_
 #define WEBSERV_AREQUEST_HPP_
 #include "parser.hpp"
+
 class ARequest {
  public:
-  explicit ARequest(const ServerConfig & config);
+  ARequest(const ServerConfig & config);
   virtual const std::map<std::string, std::string> &GetRequestLine() const = 0;
   virtual const std::map<std::string, std::string> &GetHeaders() const = 0;
   virtual const std::string & GetBody() const = 0;
@@ -20,12 +21,13 @@ class ARequest {
   virtual const bool & IsCloseOnEnd() const = 0;
   virtual void SetCloseOnEnd(const bool & value) = 0;
   virtual ~ARequest();
- protected:
-  std::map<std::string, std::string> request_line,
-                                     headers;
-  std::string body;
-  const ServerConfig & server_config;
-  size_t status_code;
-  bool closeOnEnd;
+	
+protected:
+	std::map<std::string, std::string> request_line;
+	std::map<std::string, std::string> headers;
+	std::string body;
+    const ServerConfig & server_config;
+    size_t status_code;
+    bool closeOnEnd;
 };
 #endif //WEBSERV_AREQUEST_HPP_

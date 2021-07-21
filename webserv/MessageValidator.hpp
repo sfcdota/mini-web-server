@@ -5,8 +5,6 @@
 #ifndef WEBSERV_MESSAGEVALIDATOR_HPP_
 #define WEBSERV_MESSAGEVALIDATOR_HPP_
 #include <string>
-#include "sfinae.hpp"
-//#include "HeaderUtils.hpp"
 
 class MessageValidator {
  public:

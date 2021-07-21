@@ -70,7 +70,7 @@ void MessageParser::ProcessHeaders(Request &request) {
      pointer = msg.find_first_not_of(" \t", pointer);
      end_of_header = msg.find("\r\n", tmp);
      end_of_header_value = end_of_header;
-     while (isows(msg[end_of_header_value]))
+     while (MessageValidator::isows(msg[end_of_header_value]))
        end_of_header_value--;
      headers.insert(std::make_pair(token, msg.substr(pointer, end_of_header_value - pointer)));
      tmp = end_of_header + 2;

@@ -22,7 +22,7 @@ class BufferReader: ILogger<BufferReaderLoggingOptions> {
  public:
   BufferReader(const ssize_t & INPUT_BUFFER_SIZE);
   ~BufferReader();
-  const std::string PrintLog(const int & logginglevel, const BufferReaderLoggingOptions & option) const;
+  const std::string PrintLog(const BufferReaderLoggingOptions &option) const;
   unsigned GetClientMessage(std::list<ReadElement>::iterator & it);
  private:
   void ProcessInputBuffer(Request & request);

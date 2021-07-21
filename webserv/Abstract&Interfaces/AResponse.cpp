@@ -4,6 +4,6 @@
 
 #include "AResponse.hpp"
 AResponse::AResponse(const Request &request)
-  : request(request) {}
+  : _request(request), _serverConf(request.GetServerConfig()) {}
 
 AResponse::~AResponse() {}

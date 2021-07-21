@@ -15,9 +15,13 @@ set(CMAKE_CXX_COMPILER "clang++")
 
 file(GLOB main "webserv/*.cpp")
 file(GLOB conf "webserv/parser/*.cpp")
-file(GLOB abstract "webserv/parser/*.cpp")
+file(GLOB abstract "webserv/Abstract&Interfaces/*.cpp")
 
-include_directories(webserv/includes /usr/local/include /usr/include)
+include_directories(webserv/includes
+                    /usr/local/include
+                    /usr/include
+                    webserv/
+                    webserv/Abstract&Interfaces)
 
 #Utils headers
 #include_directories(libft/)
@@ -25,5 +29,5 @@ include_directories(webserv/includes /usr/local/include /usr/include)
 
 add_executable(webserv
 #        ${gnl} ${libft}
-        ${main} ${conf} ${abstract}
+        ${conf} ${abstract} ${main}
         )

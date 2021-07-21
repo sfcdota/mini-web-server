@@ -19,29 +19,29 @@ ReadElement::ReadElement(const int & server_fd, const int & fd, const ServerConf
 
 ReadElement::~ReadElement() {}
 
-const std::string ReadElement::PrintLog(const int &logginglevel, const ReadElementLoggingOptions &option) const {
+const std::string ReadElement::PrintLog(const ReadElementLoggingOptions &option) const {
   if (option == ReadElementLoggingOptions::ZERO)
     return std::string();
   std::stringstream ss;
   ss << "ReadElement: ";
   if (option == ReadElementLoggingOptions::REQUEST_BUFFER)
-    ss <<  request.PrintLog(logginglevel, RequestLoggingOptions::BUFFER);
+    ss << request.PrintLog(RequestLoggingOptions::BUFFER);
   else if (option == ReadElementLoggingOptions::REQUEST_FULL_BUFFER)
-    ss << request.PrintLog(logginglevel, RequestLoggingOptions::FULL_BUFFER);
+    ss << request.PrintLog(RequestLoggingOptions::FULL_BUFFER);
   else if (option == ReadElementLoggingOptions::REQUEST_STATUS_CODE)
-    ss << request.PrintLog(logginglevel, RequestLoggingOptions::REQUEST_STATUS_CODE);
+    ss << request.PrintLog(RequestLoggingOptions::REQUEST_STATUS_CODE);
   else if (option == ReadElementLoggingOptions::REQUEST_REQUEST_LINE)
-    ss << request.PrintLog(logginglevel, RequestLoggingOptions::REQUEST_REQUEST_LINE);
+    ss << request.PrintLog(RequestLoggingOptions::REQUEST_REQUEST_LINE);
   else if (option == ReadElementLoggingOptions::REQUEST_HEADERS)
-    ss << request.PrintLog(logginglevel, RequestLoggingOptions::REQUEST_HEADERS);
+    ss << request.PrintLog(RequestLoggingOptions::REQUEST_HEADERS);
   else if (option == ReadElementLoggingOptions::REQUEST_TILL_BODY)
-    ss << request.PrintLog(logginglevel, RequestLoggingOptions::REQUEST_TILL_BODY);
+    ss << request.PrintLog(RequestLoggingOptions::REQUEST_TILL_BODY);
   else if (option == ReadElementLoggingOptions::REQUEST_BODY)
-    ss << request.PrintLog(logginglevel, RequestLoggingOptions::REQUEST_BODY);
+    ss << request.PrintLog(RequestLoggingOptions::REQUEST_BODY);
   else if (option == ReadElementLoggingOptions::REQUEST_FULL_BODY)
-    ss << request.PrintLog(logginglevel, RequestLoggingOptions::REQUEST_FULL_BODY);
+    ss << request.PrintLog(RequestLoggingOptions::REQUEST_FULL_BODY);
   else if (option == ReadElementLoggingOptions::FULL_REQUEST)
-    ss << request.PrintLog(logginglevel, RequestLoggingOptions::FULL_REQUEST);
+    ss << request.PrintLog(RequestLoggingOptions::FULL_REQUEST);
   else if (option == ReadElementLoggingOptions::SERVER)
     ss << "server fd = " << server_fd;
   else if (option == ReadElementLoggingOptions::CLIENT)

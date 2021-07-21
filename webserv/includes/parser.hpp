@@ -4,6 +4,8 @@
 #include <vector>
 #include <map>
 #include <unistd.h>
+#include <fcntl.h>
+#include <iostream>
 struct error {
 	int error_code;
 	std::string error_path;

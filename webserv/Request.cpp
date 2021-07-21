@@ -1,5 +1,3 @@
-
-#include <sstream>
 #include "Request.hpp"
 
 Request::Request(const ServerConfig& config, const sockaddr_in & addr, const std::string & buf)
@@ -30,7 +28,7 @@ Request &Request::operator=(const Request &in) {
 
 Request::~Request() {}
 
-const std::string Request::PrintLog(const int &logginglevel, const RequestLoggingOptions &option) const {
+const std::string Request::PrintLog(const RequestLoggingOptions &option) const {
   if (option == RequestLoggingOptions::ZERO)
     return std::string();
   std::stringstream ss;
