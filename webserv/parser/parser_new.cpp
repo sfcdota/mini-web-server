@@ -1,5 +1,5 @@
 #include "parser.hpp"
-
+#include <fcntl.h>
 void parsLocation(parsConfig &con, int &i){
   std::string tmp;
 	for (; i < con.vec.size(); i++){
@@ -191,42 +191,54 @@ void parsServer(parsConfig &con, int &i){
 		i++;
 	}
 	else if (con.vec[i] == "}")
-	    con.pars.server_status = false;
+	    con.pars.server_status = 3;
 	else
 		errors("server body error!");
   }
 }
 
-ServerConfig	parsConf() {
-	parsConfig con;
+ServerConfig	parsConfs(parsConfig &con){
 	char *line;
-
-	con.pars.fd = open("../webserv/configs/server.conf", O_RDONLY);
-
 	init_location(con);
 	init_server(con);
 	while ((con.pars.res = get_next_line(con.pars.fd, &line)) > -1) {
 		word_spliter(line, con.vec);
-		for (int i = 0; i < con.vec.size(); i++)
-		  if (con.vec[i] == "server")
+		for (int i = 0; i < con.vec.size(); i++) {
+//			std::cout << con.vec[0] << std::endl;
+			if (con.vec[i] == "server")
 				con.pars.server_status = 1;
-		  else if (con.vec[i] == "{" && con.pars.server_status == 1)
-			  con.pars.server_status = 2;
-		  else if (con.pars.server_status == 2)
-			  parsServer(con, i);
-		  else
-			  errors("server body error");
+			else if (con.vec[i] == "{" && con.pars.server_status == 1)
+				con.pars.server_status = 2;
+			else if (con.pars.server_status == 2)
+				parsServer(con, i);
+			else
+				errors("server body error!");
+		}
+		if (con.pars.server_status == 3 || !con.pars.res)
+			std::cout << con.vec[0] << std::endl;
 		con.vec.clear();
-		if (!con.pars.res)
-		  break;
-  }
-
-  return con.serv;
+		if (con.pars.server_status == 3 || !con.pars.res)
+			break;
+	}
+	return con.serv;
 }
 
-//int main (){
-//	ServerConfig s;
-//	s = parsConf();
-//
-//	return 0;
-//}
+ServerConfig	parsConf() {
+	parsConfig con;
+	std::vector<ServerConfig> serv;
+
+	con.pars.fd = open("../webserv/configs/server.conf", O_RDONLY);
+	con.pars.res = 1;
+	while (con.pars.res)
+		serv.push_back(parsConfs(con));
+	if (serv.size() < 1)
+		errors("Config error!");
+  return serv[0];
+}
+
+int main (){
+	ServerConfig s;
+	s = parsConf();
+
+	return 0;
+}
