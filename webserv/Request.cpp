@@ -9,6 +9,11 @@ Request::Request(const Request &in): ARequest(in.server_config), addr(in.addr), 
     { *this = in; }
 
 Request &Request::operator=(const Request &in) {
+//  if (!request_line.empty() && request_line.at("target") == "/directory/youpi.bla") {
+//    bool hui =true;
+//  }
+//  if(!request_line.empty())
+  ARequest::operator=(in);
   failed = in.failed;
   chunked = in.chunked;
   recieved_headers = in.recieved_headers;

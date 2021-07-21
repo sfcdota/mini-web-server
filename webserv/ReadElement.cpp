@@ -15,9 +15,13 @@
 
 ReadElement::ReadElement(const int & server_fd, const int & fd, const ServerConfig & config,
                          const sockaddr_in & addr, size_t last_read)
-    : server_fd(server_fd), fd(fd), addr(addr), last_read(last_read), request(config, addr) {}
+    : server_fd(server_fd), fd(fd), addr(addr), last_read(last_read), request(config, addr) {
 
-ReadElement::~ReadElement() {}
+}
+
+ReadElement::~ReadElement() {
+//  delete request;
+}
 
 const std::string ReadElement::PrintLog(const ReadElementLoggingOptions &option) const {
   if (option == ReadElementLoggingOptions::ZERO)
@@ -123,5 +127,8 @@ const sockaddr_in &ReadElement::GetAddr() const {
 void ReadElement::ClearRequest() {
 //  request(request.GetServerConfig(), addr);
 //  request.Clear();
-  request = Request(request.GetServerConfig(), addr);
+  const ServerConfig& hui = request.GetServerConfig();
+//  delete request;
+  request =  Request(hui, addr, buffer);
+
 }

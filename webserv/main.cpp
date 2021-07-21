@@ -111,7 +111,7 @@ std::getline(std::cin, pizda, '\0');
   }
 }
 
-
+//siege -b http::/127.0.0.1:8080/
 
 int main(int argc, char **argv) {
   if (argc > 1) // for tests
@@ -129,7 +129,7 @@ int main(int argc, char **argv) {
   std::vector<ServerConfig> serverConfigs;
 //  serverConfigs.push_back(DEFAULT_CONFIG);
 serverConfigs.push_back(config);
-  Server server(serverConfigs, 65536);
+  Server server(serverConfigs, 65536 * 32);
   server.Run();
 
   return 0;

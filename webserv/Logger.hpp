@@ -13,6 +13,7 @@
 static struct timeval timev;
 
 enum class output {
+  ZERO,
   STDOUT,
   FILE_ONLY,
   STDOUT_AND_FILE
@@ -28,6 +29,7 @@ class Logger {
   void WriteLog(const ILogger<V> & server_unit, const V & loggingLevel) {
     const std::string& log_str = server_unit.PrintLog(loggingLevel);
     switch (mode) {
+      case output::ZERO: break;
       case output::STDOUT: { std::cout << log_str; break; }
       case output::FILE_ONLY: { out << log_str; break; }
       case output::STDOUT_AND_FILE: { std::cout << log_str;

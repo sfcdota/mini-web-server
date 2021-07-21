@@ -6,7 +6,7 @@
 #include "../includes/parser.hpp"
 #include "Abstract&Interfaces/ARequest.hpp"
 #include "Logger.hpp"
-
+#include "IRequest.hpp"
 enum class RequestLoggingOptions {
   ZERO,
   BUFFER,
@@ -20,7 +20,7 @@ enum class RequestLoggingOptions {
   FULL_REQUEST
 };
 
-class Request: public ARequest, public ILogger<RequestLoggingOptions> {
+class Request: public ARequest, IRequest, public ILogger<RequestLoggingOptions> {
  public:
   Request(const ServerConfig& config, const sockaddr_in & addr, const std::string & buf = std::string());
   Request(const Request & in);
@@ -72,5 +72,6 @@ class Request: public ARequest, public ILogger<RequestLoggingOptions> {
   std::string source_request;
   const sockaddr_in addr;
   bool force_to_break;
+
 };
 #endif // WEBSERV_REQUEST_HPP_

@@ -332,11 +332,13 @@ bool Response::IsRequestCorrect() {
 
 const std::string Response::GetResponse() {
 	if (IsRequestCorrect()) {
-		DIR *dir = opendir(this->fullPath_.c_str());
-		if (location_.autoindex && dir) {
-			SetStatus("200");
-			_createHTMLAutoIndex(dir);
-			closedir(dir);
+		if (location_.autoindex) {
+          DIR *dir = opendir(this->fullPath_.c_str());
+          if (dir) {
+            SetStatus("200");
+            _createHTMLAutoIndex(dir);
+            closedir(dir);
+          }
 		}
         else if (_request.GetRequestLine().at("target").rfind('.') != std::string::npos &&
               this->_request.GetRequestLine().at("target").substr(_request.GetRequestLine().at("target").rfind('.'))
@@ -576,12 +578,15 @@ bool Response::_SearchForFile(const std::string &path){
 	std::string str = path.substr(0, path.rfind('/')).c_str();
 	dr = opendir(path.substr(0, path.rfind('/')).c_str());
 	if (dr){
-		while ((en = readdir(dr)) != NULL){
-			if (strcmp(en->d_name, path.substr(path.rfind('/') + 1).c_str()) == 0 && !opendir(path.c_str())){
-				closedir(dr);
-				return 1;
-			}
-		}
+		while ((en = readdir(dr)) != NULL) {
+          DIR *hui = opendir(path.c_str());
+          if (strcmp(en->d_name, path.substr(path.rfind('/') + 1).c_str()) == 0 && !hui) {
+            closedir(dr);
+            return 1;
+          }
+          if (hui)
+            closedir(hui);
+        }
 		closedir(dr);
 	}
 	return 0;
@@ -602,9 +607,11 @@ bool Response::FillBody(const std::string &path) {
 		if (this->_request.GetRequestLine().at("method") == "POST" && _request.GetBody().size() == str.size() && this->_request.GetBody() == str){
 			SetStatus("303");
 			SetHeader("Location", this->fullPath_);
+			fin.close();
 			return 0;
 		}
-	} else {
+      fin.close();
+    } else {
 		ErrorHandler("500");
 		return 0;
 	}

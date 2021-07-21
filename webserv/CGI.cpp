@@ -28,6 +28,8 @@ const std::string CGI::executeCGI(const Request & request, const Response & resp
     chdir(request.GetServerConfig().root.c_str());
     dup2(fout, STDIN_FILENO);
     dup2(fin, STDOUT_FILENO);
+    close(fin);
+    close(fout);
     char **kek = new char*[3];
     std::string path = request.GetServerConfig().root + "/cgi/cgi_tester";
     kek[0] = strdup(path.c_str());
@@ -55,10 +57,17 @@ const std::string CGI::executeCGI(const Request & request, const Response & resp
   close(fout);
   std::cout << "END OF GETTING CGI RESPONSE" << std::endl;
   CGI::cgi_response.replace(0, 7, request.GetRequestLine().at("version"));
-  CGI::cgi_response += "\r\n\r\n";
+//  CGI::cgi_response += "\r\n\r\n";
 //  response.body.replace(response.body.size() - 1, 1, 1, EOF);
   std::cout << "CGI RETURNED: " << CGI::cgi_response.substr(0, 100) << "... (" << CGI::cgi_response.size() << " bytes)" << std::endl;
   deleteENVP(envp);
+
+  size_t body = cgi_response.find("\r\n\r\n") + 4;
+  if (cgi_response.size() > body) {
+    std::stringstream ss;
+    ss << "Content-Length: " << cgi_response.size() - body << "\r\n";
+    cgi_response.insert(body - 2, ss.str());
+  }
   return cgi_response;
 }
 

@@ -17,7 +17,7 @@
 #include "BufferReader.hpp"
 #include "Logger.hpp"
 #define TIMOUT_SEC 15
-#define MAX_CONNECTIONS 1024
+#define MAX_CONNECTIONS 65536
 #define DEFAULT_INPUT_BUFFERSIZE 65536
 
 enum class ServerLoggingOptions {
@@ -46,7 +46,7 @@ class Server: public AServer, IServer, ILogger<ServerLoggingOptions> {
   std::list<WriteElement> write;
   unsigned status;
   void Initialize();
-  int Guard(ssize_t retval, bool rw_operation);
+  int Guard(ssize_t retval);
   void AcceptConnections();
   void SocketsRead();
   void SocketsWrite();

@@ -21,18 +21,18 @@ const std::string WriteElement::PrintLog(const WriteElementLoggingOptions &optio
   else if (option == WriteElementLoggingOptions::CLIENT)
     ss << "client = " << fd;
   else if (option == WriteElementLoggingOptions::OUTPUT)
-    ss << "output = " << GetShortString(output);
+    ss << "output = " << GetShortString(&output.c_str()[sent_out_bytes]);
   else if (option == WriteElementLoggingOptions::FULL_OUTPUT)
-    ss << "output = " << output;
+    ss << "output = " << &output.c_str()[sent_out_bytes];
   else if (option == WriteElementLoggingOptions::OUTPUT_SIZE)
     ss << "output size = " << output.size();
   else if (option == WriteElementLoggingOptions::SENT_BYTES)
-    ss << "sent bytes = [" << output.size() << "/" << sent_out_bytes << "]";
+    ss << "sent bytes = [" << sent_out_bytes << "/" << output.size() << "]";
   else if (option == WriteElementLoggingOptions::CLOSE_ON_END)
     ss << "close on end = " << (closeOnEnd ? "true" : "false");
   else if (option == WriteElementLoggingOptions::SENDING_PROCESS)
     ss << "iteration on sending response with size = " << output.size() << "...";
-  else if (option == WriteElementLoggingOptions::SENDING_PROCESS)
+  else if (option == WriteElementLoggingOptions::CLOSING_ON_END)
     ss << "closing connection with client #" << fd << "| close on end = " << (closeOnEnd ? "true" : "false");
   ss << std::endl;
   return ss.str();

@@ -41,16 +41,9 @@ const std::string BufferReader::PrintLog(const BufferReaderLoggingOptions &optio
 unsigned BufferReader::GetClientMessage(std::list<ReadElement, std::allocator<ReadElement> >::iterator &it) {
   unsigned status = 0;
   for (; (status = recv(it->GetClientFd(), read_buffer_, BUFFER_SIZE_, 0)) != -1 && status;) {
-//    std::stringstream ss;
-//        ss << "recv value = " << status  << "|read_buffer_ = [" << read_buffer_ << "]";
-//        WriteLog(it, ss.str(), it->fd);
     it->UpdateLastReadSeconds();
-//        if (it->request.request_line["method"] == "POST")
-//          std::cout << "read_buffer_:"<<read_buffer_ << "$" << std::endl;
     ProcessInputBuffer(it->GetRequest());
     memset(read_buffer_, 0, BUFFER_SIZE_);
-//        it->request.RequestLineToStr();
-//        std::cout << "Source request was:" << std::setw(90) << it->request.source_request << std::endl;
   }
   return status;
 }
@@ -65,8 +58,7 @@ void BufferReader::ProcessInputBuffer(Request &request) {
     FillRequestHeaders(request);
     request.SetRequsetBuffer(request.GetRequestBuffer().substr(pos + 4));
   }
-  else if (!request.IsFormed()) {
-//    std::cout << "size of read_buffer_ = " << request.buffer.length() << std::endl;
+  if (request.IsRecievedHeaders() && !request.IsFormed()) {
     if (request.IsChunked()) {
       if ((pos = request.GetRequestBuffer().find("0\r\n\r\n")) == std::string::npos)
         return;
