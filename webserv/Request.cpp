@@ -9,20 +9,16 @@ Request::Request(const Request &in): ARequest(in.server_config), addr(in.addr), 
     { *this = in; }
 
 Request &Request::operator=(const Request &in) {
-  content_length = in.content_length;
-  closeOnEnd = in.closeOnEnd;
-  request_line = in.request_line;
-  headers = in.headers;
-  body = in.body;
-  status_code = in.status_code;
   failed = in.failed;
   chunked = in.chunked;
   recieved_headers = in.recieved_headers;
+  recieved_body = in.recieved_body;
   formed = in.formed;
+  cgi_request = in.cgi_request;
+  content_length = in.content_length;
   buffer = in.buffer;
   source_request = in.source_request;
-  recieved_body = in.recieved_body;
-
+  force_to_break = in.force_to_break;
   return *this;
 }
 
@@ -212,6 +208,11 @@ void Request::AppendSourceRequest(const std::string &s) {
 }
 const std::string &Request::GetSourceRequest() const {
   return source_request;
+}
+
+void Request::Clear() {
+  request_line.clear();
+  headers.clear();
 }
 
 //void Request::CleanUp() {

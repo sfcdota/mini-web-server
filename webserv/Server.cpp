@@ -128,7 +128,7 @@ void Server::SocketsRead() {
 //      it->GetRequest().Print();
       FD_CLR(it->GetClientFd(), &master_read_);
       FD_SET(it->GetClientFd(), &master_write_);
-      write.push_back(WriteElement(it->GetServerFd(), it->GetClientFd(),
+        write.push_back(WriteElement(it->GetServerFd(), it->GetClientFd(),
                         it->GetRequest().IsCloseOnEnd(),
                                    Response(it->GetRequest()).GetResponse()));
       if (it->GetRequest().IsCloseOnEnd()) {
@@ -149,7 +149,7 @@ void Server::SocketsWrite() {
       if ((status = Guard(
           send(it->GetClientFd(), &it->GetOutput().c_str()[it->GetSentBytes()],
                it->GetOutLength() - it->GetSentBytes(), 0),true)) != -1) {
-        std::cout << "sending response with size = " << it->GetOutLength() << ":" << std::endl;
+        logger.WriteLog(*it, WriteElementLoggingOptions::OUTPUT);
         it->IncreaseSentBytes(status);
         logger.WriteLog(*it, WriteElementLoggingOptions::SENT_BYTES);
         if (it->GetSentBytes() == it->GetOutLength()) {

@@ -9,6 +9,9 @@
 class ARequest {
  public:
   ARequest(const ServerConfig & config);
+  ARequest(const ARequest & in);
+  ARequest & operator=(const ARequest & in);
+  virtual ~ARequest();
   virtual const std::map<std::string, std::string> &GetRequestLine() const = 0;
   virtual const std::map<std::string, std::string> &GetHeaders() const = 0;
   virtual const std::string & GetBody() const = 0;
@@ -20,8 +23,7 @@ class ARequest {
   virtual void SetStatusCode(const size_t & code) = 0;
   virtual const bool & IsCloseOnEnd() const = 0;
   virtual void SetCloseOnEnd(const bool & value) = 0;
-  virtual ~ARequest();
-	
+
 protected:
 	std::map<std::string, std::string> request_line;
 	std::map<std::string, std::string> headers;

@@ -8,7 +8,7 @@ const std::string CGI::PrintLog(const CGILoggingOptions &option) const {
   return std::string();
 }
 
-void CGI::executeCGI(const Request & request, const Response & response) {
+const std::string CGI::executeCGI(const Request & request, const Response & response) {
   CGI::cgi_response.clear();
   char * const * envp = setEnv(request, response);
   pid_t pid;
@@ -59,6 +59,7 @@ void CGI::executeCGI(const Request & request, const Response & response) {
 //  response.body.replace(response.body.size() - 1, 1, 1, EOF);
   std::cout << "CGI RETURNED: " << CGI::cgi_response.substr(0, 100) << "... (" << CGI::cgi_response.size() << " bytes)" << std::endl;
   deleteENVP(envp);
+  return cgi_response;
 }
 
 char * const * CGI::mapToCString(const std::map<std::string, std::string> &tmpEnv) {

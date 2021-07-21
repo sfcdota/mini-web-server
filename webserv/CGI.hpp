@@ -27,7 +27,7 @@ public:
   CGI() {};
   ~CGI();
   const std::string PrintLog(const CGILoggingOptions &option) const;
-  static void executeCGI(const Request & request, const Response & response);
+  static const std::string executeCGI(const Request & request, const Response & response);
   static char * const * mapToCString(const std::map<std::string, std::string> &tmpEnv);
   static char * const * setEnv(const Request &req, const Response & response);
   static std::string & translate_path(std::string & path);

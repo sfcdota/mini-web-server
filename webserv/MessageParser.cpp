@@ -54,11 +54,12 @@ void MessageParser::ProcessHeaders(Request &request) {
   size_t end_of_header_value;
   size_t end_of_header;
   std::string value;
+  std::map<std::string, std::string> request_line;
   std::map<std::string, std::string> headers;
   size_t tmp_end = msg.find("\r\n");
   for (int i = 0; i < 3 ; i++) {
     pointer = msg.find(' ', tmp);
-    headers.insert(std::make_pair(request_line_fields[i], msg.substr(tmp, pointer < tmp_end ? pointer - tmp : tmp_end - tmp)));
+    request_line.insert(std::make_pair(request_line_fields[i], msg.substr(tmp, pointer < tmp_end ? pointer - tmp : tmp_end - tmp)));
     tmp = pointer + 1;
   }
   tmp = tmp_end + 2;
@@ -75,6 +76,7 @@ void MessageParser::ProcessHeaders(Request &request) {
      headers.insert(std::make_pair(token, msg.substr(pointer, end_of_header_value - pointer)));
      tmp = end_of_header + 2;
    }
+   request.SetRequestLine(request_line);
    request.SetHeaders(headers);
 }
 

@@ -25,7 +25,7 @@ class Request: public ARequest, public ILogger<RequestLoggingOptions> {
   Request(const ServerConfig& config, const sockaddr_in & addr, const std::string & buf = std::string());
   Request(const Request & in);
   Request & operator=(const Request & in);
-  ~Request();
+  virtual ~Request();
   const std::string PrintLog(const RequestLoggingOptions &option) const;
   const std::map<std::string, std::string> &GetRequestLine() const;
   const std::map<std::string, std::string> &GetHeaders() const;
@@ -58,6 +58,7 @@ class Request: public ARequest, public ILogger<RequestLoggingOptions> {
   ///todo for debug only
   void AppendSourceRequest(const std::string & s);
   const std::string & GetSourceRequest() const;
+  void Clear();
 
  private:
   bool failed;

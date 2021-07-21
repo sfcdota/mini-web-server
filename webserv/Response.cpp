@@ -342,12 +342,11 @@ const std::string Response::GetResponse() {
               this->_request.GetRequestLine().at("target").substr(_request.GetRequestLine().at("target").rfind('.'))
                 == location_.cgi_extension)
       {
-          CGI::executeCGI(this->_request, *this);
-        return this->body_;
+          return CGI::executeCGI(this->_request, *this);
       }
 		else {
 			if(_request.GetRequestLine().at("method") == "GET") {
-				GetRequestClass();
+				GetRequest();
 			} else if (_request.GetRequestLine().at("method") == "POST"){
 				PostRequest();
 			} else if (_request.GetRequestLine().at("method") == "HEAD") {

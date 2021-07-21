@@ -122,5 +122,6 @@ const sockaddr_in &ReadElement::GetAddr() const {
 
 void ReadElement::ClearRequest() {
 //  request(request.GetServerConfig(), addr);
+//  request.Clear();
   request = Request(request.GetServerConfig(), addr);
 }

@@ -16,7 +16,7 @@
 #include "Abstract&Interfaces/IServer.hpp"
 #include "BufferReader.hpp"
 #include "Logger.hpp"
-#define TIMOUT_SEC 1
+#define TIMOUT_SEC 15
 #define MAX_CONNECTIONS 1024
 #define DEFAULT_INPUT_BUFFERSIZE 65536
 
