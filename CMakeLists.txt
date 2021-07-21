@@ -29,4 +29,4 @@ add_executable(webserv
         webserv/parser/get_next_line.cpp
         webserv/parser/parser_new.cpp
         webserv/parser/utils.cpp
-        )
+        webserv/parser/ServerParser.cpp webserv/parser/ServerParser.hpp)
