@@ -132,6 +132,7 @@ char * const * CGI::setEnv(const Request &req, const Response & response) {
   tmpEnv["SERVER_PORT="] = std::to_string(req.GetServerConfig().port);
   tmpEnv["SERVER_PROTOCOL="] = req.GetRequestLine().at("version");
   tmpEnv["SERVER_SOFTWARE="] = "kekers228/v4.20";
+  if (req.GetHeaders().find("X-Secret-Header-For-Test") != req.GetHeaders().end())
 	tmpEnv["HTTP_X_SECRET_HEADER_FOR_TEST="] = "1";
   return mapToCString(tmpEnv);
 }

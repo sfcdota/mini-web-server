@@ -109,6 +109,7 @@ void Server::SocketsRead() {
 //      logger.WriteLog(*it, ReadElementLoggingOptions::CLIENT_IS_SET);
       status = buffer_reader_.GetClientMessage(it);
     }
+//    logger.WriteLog(*this, ServerLoggingOptions::STATUS);
     it->UpdateLastActionSeconds();
     if (!status || it->GetIdleSeconds() > 120) {
       ClearBrokenConnection(it->GetClientFd());
@@ -117,10 +118,6 @@ void Server::SocketsRead() {
       logger.WriteLog(it->GetRequest(), RequestLoggingOptions::FULL_REQUEST);
       FD_CLR(it->GetClientFd(), &master_read_);
       FD_SET(it->GetClientFd(), &master_write_);
-//      if (it->GetRequest().GetRequestLine().at("method") == "POST") {
-//        bool k = 0;
-//      }
-
       write.push_back(WriteElement(it->GetServerFd(), it->GetClientFd(),
                         it->GetRequest().IsCloseOnEnd(),
                                    Response(it->GetRequest()).GetResponse()));
