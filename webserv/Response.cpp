@@ -75,6 +75,7 @@ bool Response::HTTPVersionControl() {
 }
 void Response::ErrorHandler(const std::string &status_code) {
   if (status_code == "500") {
+    std::cout << "AHTUNG!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
     bool t = true;
   }
 	SetStatus(status_code);
@@ -137,7 +138,7 @@ const Request & Response::GetRequestClass() const {
 	 while (true){
 		 if ((end = (path).find('/', end + 1)) != std::string::npos) {
 			 dir = (path).substr(start + 1, end - start - 1);
-			 if (!dir.size())
+//			 if (!dir.size())
 			 if (chdir(dir.c_str()) == -1) {
 				 if (mkdir(dir.c_str(), 0777) == -1){
 					 ErrorHandler("500");
@@ -621,10 +622,7 @@ bool Response::FillBody(const std::string &path) {
 			return 0;
 		}
       fin.close();
-    } else {
-		ErrorHandler("500");
-		return 0;
-	}
+    }
 	return 1;
 }
 
