@@ -55,6 +55,7 @@ class Request: public ARequest, IRequest, public ILogger<RequestLoggingOptions> 
   const bool & IsRecievedHeaders() const;
   void SetRecievedHeaders(const bool & value);
   const int64_t & GetExpectedContentLength() const;
+  void SetExpectedContentLength(const int64_t & len);
   ///todo for debug only
   void AppendSourceRequest(const std::string & s);
   const std::string & GetSourceRequest() const;

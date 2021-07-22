@@ -158,19 +158,25 @@ const Request & Response::GetRequestClass() const {
 }
 
 bool Response::OpenOrCreateFile() {
-	int fd = open((this->fullPath_).c_str(), O_CREAT | O_RDWR | O_TRUNC , 0777);
+    int fd;
+    if (_request.GetRequestLine().at("method") ==  "PUT")
+	  fd = open((this->fullPath_).c_str(), O_CREAT | O_RDWR | O_TRUNC , 0777);
+    else
+      fd = open((this->fullPath_).c_str(), O_CREAT | O_RDWR | O_APPEND, 0777);
 	if (fd == -1) {
 		ErrorHandler("500");
 		return false;
 	}
 	write(fd, this->_request.GetBody().c_str(), this->_request.GetBody().size());
 	close(fd);
+    SetBody(fullPath_);
 	return true;
 }
 
 void Response::GetRequest()  {
 	_SearchForDir();
 }
+
 
 
 void Response::PostRequest() {
@@ -191,7 +197,20 @@ void Response::PostRequest() {
 			return ;
 		if (!FillBody(this->fullPath_))
 			return ;
-		if (_SearchForFile(this->fullPath_)){
+		if (_SearchForFile(this->fullPath_)) {
+//		    struct stat file;
+//            int test = open(this->fullPath_.c_str(), O_RDONLY, 0777);
+//            if (test == -1) {
+//              ErrorHandler("500");
+//              return ;
+//            }
+//            fstat(test, &file);
+//            if (file.st_size > 0 && _request.GetExpectedContentLength() != 0) {
+//              ErrorHandler("201");
+//              close(test);
+//              return ;
+//            }
+//            close(test);
 			OpenOrCreateFile();
 //			SetStatus("200");
 //			if (!SetBody(this->fullPath_))
@@ -432,7 +451,8 @@ std::string Response::GetStatusText(std::string code) {
 	status_text_["414"] = " URI Too Long";
 	status_text_["415"] = " Unsupported Media Type";
 	status_text_["417"] = " Expectation Failed";
-	status_text_["426"] = " Upgrade Required";
+    status_text_["422"] = " Unprocessible Entity";
+    status_text_["426"] = " Upgrade Required";
 	status_text_["500"] = " Internal Server Error";
 	status_text_["501"] = " Not Implemented";
 	status_text_["502"] = " Bad Gateway";
@@ -615,12 +635,12 @@ bool Response::FillBody(const std::string &path) {
 		fin.close();
 		std::string str(contents, size);
 		delete [] contents;
-		if (this->_request.GetRequestLine().at("method") == "POST" && _request.GetBody().size() == str.size() && this->_request.GetBody() == str){
-			SetStatus("303");
-			SetHeader("Location", this->fullPath_);
-			fin.close();
-			return 0;
-		}
+//		if (this->_request.GetRequestLine().at("method") == "POST" && _request.GetBody().size() == str.size() && this->_request.GetBody() == str){
+//			SetStatus("303");
+//			SetHeader("Location", this->fullPath_);
+//			fin.close();
+//			return 0;
+//		}
       fin.close();
     }
 	return 1;

@@ -31,7 +31,7 @@ const std::string CGI::executeCGI(const Request & request, const Response & resp
     close(fin);
     close(fout);
     char **kek = new char*[3];
-    std::string path = request.GetServerConfig().root + "/cgi/cgi_tester";
+    std::string path = request.GetServerConfig().root + response.GetLocation().cgi_path;
     kek[0] = strdup(path.c_str());
     kek[1] = strdup(response.GetFullPath().c_str());
     kek[2] = NULL;

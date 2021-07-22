@@ -135,6 +135,10 @@ const int64_t &Request::GetExpectedContentLength() const {
   return content_length;
 }
 
+void Request::SetExpectedContentLength(const int64_t &len) {
+  content_length = len;
+}
+
 void Request::AppendRequestBody(const std::string &s) {
   body += s;
 }

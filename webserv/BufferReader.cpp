@@ -95,6 +95,7 @@ void BufferReader::FillRequestChunkedBody(Request &request) {
   }
   if (request.IsFailed())
     std::cout << "FAILED !!!!!!! " << std::endl;
+  request.SetExpectedContentLength(request.GetBody().length());
   std::stringstream ss;
   ss << request.GetBody().length();
   request.AddHeader(std::make_pair("Content-Length", ss.str()));

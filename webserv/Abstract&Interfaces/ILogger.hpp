@@ -7,7 +7,7 @@
 #include <string>
 
 static std::string GetShortString(const std::string & s) {
-  return s.substr(0, 100) + (s.size() > 100 ? "..." : "");
+  return s.substr(0, 300) + (s.size() > 300 ? "..." : "");
 }
 
 
