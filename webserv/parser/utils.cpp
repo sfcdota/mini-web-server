@@ -40,6 +40,7 @@ void init_location(parsConfig &con){
 	con.location_body["cgi_path"] = 0;
 	con.location_body["upload_path"] = 0;
 	con.location_body["return"] = 0;
+	con.location_body["max_body"] = 0;
 	con.pars.location_status = 0;
 }
 

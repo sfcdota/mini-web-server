@@ -10,6 +10,8 @@ class ServerParser {
 
 public:
 	static void ParsLocation(parsConfig &con, int &i);
+	static void CheckerServer(parsConfig &con);
+	static void CheckerLocation(parsConfig &con);
 	static void ParsServer(parsConfig &con, int &i);
 	static ServerConfig	ParsConfs(parsConfig &con);
 	static std::vector<ServerConfig> Run();

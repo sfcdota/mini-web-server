@@ -26,7 +26,6 @@ ServerConfig ServerParser::ParsConfs(parsConfig &con) {
 	while ((con.pars.res = get_next_line(con.pars.fd, &line)) > -1) {
 		word_spliter(line, con.vec);
 		for (int i = 0; i < con.vec.size(); i++) {
-//			std::cout << con.vec[0] << std::endl;
 			if (con.vec[i] == "server")
 				con.pars.server_status = 1;
 			else if (con.vec[i] == "{" && con.pars.server_status == 1)
@@ -36,13 +35,13 @@ ServerConfig ServerParser::ParsConfs(parsConfig &con) {
 			else
 				errors("server body error!");
 		}
-		if (con.pars.server_status == 3 || !con.pars.res)
-			std::cout << con.vec[0] << std::endl;
 		con.vec.clear();
 		if (con.pars.server_status != 3 && con.pars.server_status != 4 && !con.pars.res)
 			errors("Server error!");
-		if (con.pars.server_status == 3 || !con.pars.res)
+		if (con.pars.server_status == 3 || !con.pars.res) {
+			CheckerServer(con);
 			break;
+		}
 	}
 	return con.serv;
 }
@@ -50,8 +49,6 @@ ServerConfig ServerParser::ParsConfs(parsConfig &con) {
 void ServerParser::ParsServer(parsConfig &con, int &i) {
 	std::string tmp;
 	con.serv.root = rootDir() + "/webserv/site";
-//for now con.serv.root equal to "User/ljerrica/webserv/site";
-//	con.serv.root = "/Users/ljerrica/Desktop/webserv/webserv/site";
 	for(; i < con.vec.size(); i++){
 		if (con.vec[i] == "location")
 			con.pars.location_status = 1;
@@ -130,8 +127,10 @@ void ServerParser::ParsServer(parsConfig &con, int &i) {
 				errors("server sintax error!");
 			i++;
 		}
-		else if (con.vec[i] == "}")
+		else if (con.vec[i] == "}") {
+			
 			con.pars.server_status = 3;
+		}
 		else
 			errors("server body error!");
 	}
@@ -162,6 +161,15 @@ void ServerParser::ParsLocation(parsConfig &con, int &i) {
 				errors("location autoindex error!");
 			i += 2;
 		}
+		else if (con.vec[i] == "max_body" && !con.location_body["max_body"]){
+			con.location_body["max_body"] = 1;
+			if (++i < con.vec.size())
+				con.location.max_body = to_int(con.vec[i++]);
+			if (con.location.max_body == -1)
+				errors("location max_body error!");
+			if (i == con.vec.size() || con.vec[i] != ";")
+				errors("location max_body error!");
+		}
 		else if (con.vec[i] == "index" && !con.location_body["index"]){
 			while (++i < con.vec.size(), con.vec[i] != ";"){
 				con.location.index.push_back(con.vec[i]);
@@ -177,8 +185,8 @@ void ServerParser::ParsLocation(parsConfig &con, int &i) {
 					con.location.http_methods.push_back(con.vec[i]);
 				else
 					errors("locaiton limit_except error!");
-				if (!con.location_body["index"])
-					con.location_body["index"] = 1;
+				if (!con.location_body["limit_except"])
+					con.location_body["limit_except"] = 1;
 			}
 			if (i == con.vec.size() || !con.location_body["index"])
 				errors("location index error2!");
@@ -234,6 +242,7 @@ void ServerParser::ParsLocation(parsConfig &con, int &i) {
 			i++;
 		}
 		else if (con.vec[i] == "}") {
+			CheckerLocation(con);
 			con.pars.location_status = 0;
 			con.serv.locations.push_back(con.location);
 			init_location(con);
@@ -242,6 +251,20 @@ void ServerParser::ParsLocation(parsConfig &con, int &i) {
 		else
 			errors("location error!");
 	}
+}
+
+void ServerParser::CheckerServer(parsConfig &con) {
+	std::map<std::string, short>::iterator begin;
+	for (begin = con.server_body.begin(); begin != con.server_body.end(); begin++)
+		if (begin->second == 0)
+			errors("Server body fill error!");
+}
+
+void ServerParser::CheckerLocation(parsConfig &con) {
+	std::map<std::string, short>::iterator begin;
+	for (begin = con.location_body.begin(); begin != con.location_body.end(); begin++)
+		if (begin->second == 0)
+			errors("Location body fill error!");
 }
 
 ServerParser::~ServerParser() {}

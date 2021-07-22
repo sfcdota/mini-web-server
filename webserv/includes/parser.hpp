@@ -15,6 +15,7 @@ struct location {
 	std::string path;
 	bool autoindex;
 	std::string root;
+	size_t max_body;
 	std::vector<std::string> index;
 	std::vector<std::string> http_methods;
 	std::string upload_path; // if exists - upload allowed
