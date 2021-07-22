@@ -236,6 +236,14 @@ const size_t &Request::GetLastSearchedIndex() const {
 void Request::SetLastSearchedIndex(const size_t &value) {
   last_searched_index = value;
 }
+
+const bool &Request::GetSendEOF() const {
+  return send_eof;
+}
+void Request::SetSendEOF(const bool &value) {
+  send_eof = value;
+}
+
 //void Request::CleanUp() {
 //  headers.clear();
 //  request_line.clear();

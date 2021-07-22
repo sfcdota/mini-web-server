@@ -111,7 +111,7 @@ void Server::SocketsRead() {
     }
 //    logger.WriteLog(*this, ServerLoggingOptions::STATUS);
     it->UpdateLastActionSeconds();
-    if (!status || it->GetIdleSeconds() > 3600 * 24) {
+    if (!status || it->GetIdleSeconds() > 7200) {
       ClearBrokenConnection(it->GetClientFd());
       read.erase(it--);
     } else if (req.IsFormed()) {
@@ -155,8 +155,10 @@ void Server::SocketsWrite() {
             logger.WriteLog(*it, WriteElementLoggingOptions::CLOSE_ON_END);
             close(it->GetClientFd());
           }
-          else
-              FD_SET(it->GetClientFd(), &master_read_);
+          else {
+//            shutdown(it->GetClientFd(), SHUT_WR);
+            FD_SET(it->GetClientFd(), &master_read_);
+          }
           write.erase(it--);
         }
       }
@@ -186,7 +188,7 @@ void Server::Initialize() {
 
     //todo save server addr
     Guard(bind(server_fd, (struct sockaddr *) &addr, sizeof(sockaddr_in)));
-    Guard(listen(server_fd, MAX_CONNECTIONS));
+    Guard(listen(server_fd, SOMAXCONN - 5));
     FD_SET(server_fd, &master_read_);
     server.push_back(ServerElement(server_fd, addr, *it));
   }

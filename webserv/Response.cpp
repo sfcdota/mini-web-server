@@ -183,7 +183,6 @@ void Response::GetRequest()  {
 void Response::PostRequest() {
 	if (this->_request.IsFailed()) {
 		ErrorHandler(std::to_string(this->_request.GetStatusCode()));
-		return ;
 	}
 	else if (this->_request.GetHeaders().find("Content-Length") == this->_request.GetHeaders().end()){
 		ErrorHandler("411");
@@ -206,15 +205,10 @@ void Response::PostRequest() {
               ErrorHandler("500");
               return ;
             }
-            fstat(test, &file);
-            if (file.st_size > 0 && _request.GetExpectedContentLength() != 0) {
+            if (_request.GetBody().size() > location_.max_body) {
               ErrorHandler("413");
-              close(test);
               return ;
             }
-            close(test);
-			if (!OpenOrCreateFile())
-			  return ;
 //			SetStatus("200");
 //			if (!SetBody(this->fullPath_))
 //				return ;
