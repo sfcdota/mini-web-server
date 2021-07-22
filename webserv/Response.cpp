@@ -371,6 +371,11 @@ bool Response::IsRequestCorrect() {
 
 const std::string Response::GetResponse() {
 	if (IsRequestCorrect()) {
+		if (location_.retur.size() != 0) {
+			SetStatus("301");
+			SetHeader("Location", location_.retur[1]);
+			return SendResponse();
+		}
 		if (location_.autoindex) {
           DIR *dir = opendir(this->fullPath_.c_str());
           if (dir) {

@@ -263,7 +263,7 @@ void ServerParser::CheckerServer(parsConfig &con) {
 void ServerParser::CheckerLocation(parsConfig &con) {
 	std::map<std::string, short>::iterator begin;
 	for (begin = con.location_body.begin(); begin != con.location_body.end(); begin++)
-		if (begin->second == 0)
+		if (begin->first != "return" && begin->first != "max_body" && begin->second == 0)
 			errors("Location body fill error!");
 }
 
