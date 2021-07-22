@@ -419,7 +419,7 @@ const std::string Response::SendResponse() {
 		response += begin->second + "\r\n";
 	}
 	response += "\r\n";
-	if (_request.GetRequestLine().at("method") != "HEAD") {
+	if (!_request.IsFailed() && _request.GetRequestLine().at("method") != "HEAD") {
 		response += this->body_;
 	}
 	return response;

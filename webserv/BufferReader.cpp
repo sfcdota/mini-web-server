@@ -40,9 +40,11 @@ const std::string BufferReader::PrintLog(const BufferReaderLoggingOptions &optio
 
 unsigned BufferReader::GetClientMessage(std::list<ReadElement, std::allocator<ReadElement> >::iterator &it) {
   unsigned status = 0;
-  for (; (status = recv(it->GetClientFd(), read_buffer_, BUFFER_SIZE_, 0)) != -1 && status;) {
+  if ((status = recv(it->GetClientFd(), read_buffer_, BUFFER_SIZE_, 0) != -1) && status) {
     it->UpdateLastReadSeconds();
     ProcessInputBuffer(it->GetRequest());
+    it->GetRequest().SetLastSearchedIndex(it->GetRequest().GetRequestBuffer().size() >= 5 ?
+          it->GetRequest().GetRequestBuffer().size() - 5 : 0);
     memset(read_buffer_, 0, BUFFER_SIZE_);
   }
   return status;
@@ -50,17 +52,20 @@ unsigned BufferReader::GetClientMessage(std::list<ReadElement, std::allocator<Re
 
 void BufferReader::ProcessInputBuffer(Request &request) {
   request.AppendRequestBuffer(read_buffer_);
-  request.AppendSourceRequest(read_buffer_);
+//  request.AppendSourceRequest(read_buffer_);
   size_t pos;
   if (!request.IsRecievedHeaders()) {
     if((pos = request.GetRequestBuffer().find("\r\n\r\n", 0)) == std::string::npos)
       return;
     FillRequestHeaders(request);
     request.SetRequsetBuffer(request.GetRequestBuffer().substr(pos + 4));
+//    request.SetLastSearchedIndex(0);
   }
   if (request.IsRecievedHeaders() && !request.IsFormed()) {
+    if (request.IsFailed())
+      bool t = true;
     if (request.IsChunked()) {
-      if ((pos = request.GetRequestBuffer().find("0\r\n\r\n")) == std::string::npos)
+      if ((pos = request.GetRequestBuffer().find("0\r\n\r\n", 0)) == std::string::npos)
         return;
       FillRequestChunkedBody(request);
     }
