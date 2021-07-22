@@ -1,10 +1,12 @@
 #include "ServerParser.hpp"
+#include <set>
 
 ServerParser::ServerParser() {}
 
 std::vector<ServerConfig> ServerParser::Run() {
 	parsConfig con;
 	std::vector<ServerConfig> serv;
+	std::set<int> shit;
 	
 	con.pars.fd = open("../webserv/configs/server.conf", O_RDONLY);
 	con.pars.res = 1;
@@ -14,7 +16,12 @@ std::vector<ServerConfig> ServerParser::Run() {
 		errors("Config error!");
 	if (serv.size() > 1 && serv[serv.size() - 1].port == serv[serv.size() - 2].port)
 		serv.pop_back();
-	
+	for (int i = 0; i < serv.size(); i++){
+		if (shit.find(serv[i].port) != shit.end())
+			errors("Confit error same port!");
+		else
+			shit.insert(serv[i].port);
+	}
 	return serv;
 }
 
@@ -256,7 +263,7 @@ void ServerParser::ParsLocation(parsConfig &con, int &i) {
 void ServerParser::CheckerServer(parsConfig &con) {
 	std::map<std::string, short>::iterator begin;
 	for (begin = con.server_body.begin(); begin != con.server_body.end(); begin++)
-		if (begin->second == 0)
+		if (begin->first != "return" && begin->second == 0)
 			errors("Server body fill error!");
 }
 
