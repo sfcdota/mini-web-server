@@ -5,6 +5,7 @@
 #include <map>
 #include <unistd.h>
 #include <iostream>
+#include <fcntl.h>
 struct error {
 	int error_code;
 	std::string error_path;
@@ -14,6 +15,7 @@ struct location {
 	std::string path;
 	bool autoindex;
 	std::string root;
+	size_t max_body;
 	std::vector<std::string> index;
 	std::vector<std::string> http_methods;
 	std::string upload_path; // if exists - upload allowed
@@ -61,9 +63,9 @@ int get_next_line(int fd, char **line);
 
 
 /*server config_ functions*/
-ServerConfig parsConf();
-void parsServer(parsConfig &con, int &i);
-void parsLocation(parsConfig &con, int &i);
+std::vector<ServerConfig> parsConf();
+void ParsServer(parsConfig &con, int &i);
+void ParsLocation(parsConfig &con, int &i);
 
 
 /*server config_ utils*/
