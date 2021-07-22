@@ -159,6 +159,7 @@ const Request & Response::GetRequestClass() const {
 
 bool Response::OpenOrCreateFile() {
     int fd;
+    
     if (_request.GetRequestLine().at("method") ==  "PUT")
 	  fd = open((this->fullPath_).c_str(), O_CREAT | O_RDWR | O_TRUNC , 0777);
     else
@@ -182,6 +183,7 @@ void Response::GetRequest()  {
 void Response::PostRequest() {
 	if (this->_request.IsFailed()) {
 		ErrorHandler(std::to_string(this->_request.GetStatusCode()));
+		return ;
 	}
 	else if (this->_request.GetHeaders().find("Content-Length") == this->_request.GetHeaders().end()){
 		ErrorHandler("411");
@@ -371,6 +373,11 @@ bool Response::IsRequestCorrect() {
 
 const std::string Response::GetResponse() {
 	if (IsRequestCorrect()) {
+		if (location_.retur.size() != 0) {
+			SetStatus("301");
+			SetHeader("Location", location_.retur[1]);
+			return SendResponse();
+		}
 		if (location_.autoindex) {
           DIR *dir = opendir(this->fullPath_.c_str());
           if (dir) {
