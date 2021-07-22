@@ -62,7 +62,11 @@ class Request: public ARequest, IRequest, public ILogger<RequestLoggingOptions> 
   void Clear();
   const size_t & GetLastSearchedIndex() const;
   void SetLastSearchedIndex(const size_t & value);
+  const bool & GetSendEOF() const;
+  void SetSendEOF(const bool & value);
+
  private:
+  bool send_eof;
   bool failed;
   bool chunked;
   bool recieved_headers;

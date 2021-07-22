@@ -163,6 +163,8 @@ void Request::AdjustHeaders() {
 //  if (failed)
 //    return;
 
+
+
   std::map<std::string, std::string>::iterator content = headers.find("Content-Length");
   std::map<std::string, std::string>::iterator transfer = headers.find("Transfer-Encoding");
   std::map<std::string, std::string>::iterator connection = headers.find("Connection");
@@ -197,7 +199,7 @@ void Request::AdjustHeaders() {
 
 void Request::SetFailed(const size_t &status_code) {
   failed = true;
-  if (status_code)
+  if (status_code && status_code != 200)
     this->status_code = status_code;
   else
     this->status_code = 400;
@@ -233,6 +235,13 @@ const size_t &Request::GetLastSearchedIndex() const {
 }
 void Request::SetLastSearchedIndex(const size_t &value) {
   last_searched_index = value;
+}
+
+const bool &Request::GetSendEOF() const {
+  return send_eof;
+}
+void Request::SetSendEOF(const bool &value) {
+  send_eof = value;
 }
 
 //void Request::CleanUp() {

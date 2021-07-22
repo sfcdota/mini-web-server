@@ -4,7 +4,7 @@
 
 #include "MessageValidator.hpp"
 
-size_t MessageValidator::status_code = 200;
+size_t MessageValidator::status_code = 0;
 size_t MessageValidator::out_temp = 0;
 
 /* Scheme of HTTP message in terms of rfc-7230 & subject restrictions
@@ -69,7 +69,7 @@ size_t MessageValidator::out_temp = 0;
 bool MessageValidator::ValidHeaders(const std::string & request) {
   msg_pos = 0;
   message = request;
-  status_code = 200;
+  status_code = 0;
   out_temp = 0;
   return ValidRequestLine(message, msg_pos) && ValidHeadersBlock(message, msg_pos);
 }

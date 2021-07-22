@@ -104,27 +104,35 @@ std::string update_string_to_see_crlf(std::string in) {
 
 void Server::SocketsRead() {
   for (read_iterator it = read.begin(); it != read.end(); it++) {
+    const Request& req = it->GetRequest();
     if (FD_ISSET(it->GetClientFd(), &working_read_)) {
 //      logger.WriteLog(*it, ReadElementLoggingOptions::CLIENT_IS_SET);
       status = buffer_reader_.GetClientMessage(it);
     }
 //    logger.WriteLog(*this, ServerLoggingOptions::STATUS);
     it->UpdateLastActionSeconds();
-    if (!status || it->GetIdleSeconds() > 120) {
+    if (!status || it->GetIdleSeconds() > 7200) {
       ClearBrokenConnection(it->GetClientFd());
       read.erase(it--);
-    } else if (it->GetRequest().IsFormed()) {
-      if (!it->GetRequest().IsFailed())
-        logger.WriteLog(it->GetRequest(), RequestLoggingOptions::FULL_REQUEST);
+    } else if (req.IsFormed()) {
+      if (!req.IsFailed())
+        logger.WriteLog(req, RequestLoggingOptions::FULL_REQUEST);
       FD_CLR(it->GetClientFd(), &master_read_);
       FD_SET(it->GetClientFd(), &master_write_);
+      Response resp = Response(req);
       write.push_back(WriteElement(it->GetServerFd(), it->GetClientFd(),
-                        it->GetRequest().IsCloseOnEnd(),
-                                   Response(it->GetRequest()).GetResponse()));
-      it->ClearRequest();
-      if (it->GetRequest().IsCloseOnEnd()) {
+                                   req.IsCloseOnEnd(),
+                                   resp.GetResponse()));
+      bool need_to_close = req.IsCloseOnEnd()
+//          || req.GetRequestLine().at("target").rfind('.') != std::string::npos &&
+//          req.GetRequestLine().at("target").substr(req.GetRequestLine().at("target").rfind('.'))
+//              == resp.GetLocation().cgi_extension
+              ;
+      if (need_to_close) {
         read.erase(it--);
       }
+      else
+        it->ClearRequest();
     }
   }
 }
@@ -135,7 +143,7 @@ void Server::SocketsWrite() {
   for (write_iterator it = write.begin(); it != write.end(); it++) {
 //    if (it->GetOutput().find("Content-Length: 0"))
     if (FD_ISSET(it->GetClientFd(), &working_write_)) {
-      while ((status = send(it->GetClientFd(), &it->GetOutput().c_str()[it->GetSentBytes()],
+      if ((status = send(it->GetClientFd(), &it->GetOutput().c_str()[it->GetSentBytes()],
                        it->GetOutLength() - it->GetSentBytes(), 0)) != -1
             ) {
         logger.WriteLog(*it, WriteElementLoggingOptions::OUTPUT);
@@ -147,8 +155,10 @@ void Server::SocketsWrite() {
             logger.WriteLog(*it, WriteElementLoggingOptions::CLOSE_ON_END);
             close(it->GetClientFd());
           }
-          else
-              FD_SET(it->GetClientFd(), &master_read_);
+          else {
+//            shutdown(it->GetClientFd(), SHUT_WR);
+            FD_SET(it->GetClientFd(), &master_read_);
+          }
           write.erase(it--);
         }
       }
@@ -178,7 +188,7 @@ void Server::Initialize() {
 
     //todo save server addr
     Guard(bind(server_fd, (struct sockaddr *) &addr, sizeof(sockaddr_in)));
-    Guard(listen(server_fd, MAX_CONNECTIONS));
+    Guard(listen(server_fd, SOMAXCONN - 5));
     FD_SET(server_fd, &master_read_);
     server.push_back(ServerElement(server_fd, addr, *it));
   }
