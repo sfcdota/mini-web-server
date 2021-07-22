@@ -73,7 +73,7 @@ void init_server(parsConfig &con);
 void init_location(parsConfig &con);
 void clear_loc(parsConfig &con);
 void errors(std::string str);
-int to_int(std::string str);
+size_t to_int(std::string str);
 void isstring(std::vector<std::string> &bla, std::string &tmp);
 void word_spliter(char *line, std::vector<std::string> &bla);
 std::string rootDir();

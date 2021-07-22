@@ -1,9 +1,9 @@
 #include "parser.hpp"
 #include <cassert>
-int to_int(std::string str){
-	int n = 0;
+size_t to_int(std::string str){
+	size_t n = 0;
 	for (int i = 0; i < str.size(); i++) {
-		if (n > 65535)
+		if (n > SIZE_T_MAX)
 			return -1;
 		if (str[i] >= '0' && str[i] <= '9')
 			n = n * 10 + (str[i] - 48);

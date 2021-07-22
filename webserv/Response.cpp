@@ -211,7 +211,8 @@ void Response::PostRequest() {
               return ;
             }
             close(test);
-			OpenOrCreateFile();
+			if (!OpenOrCreateFile())
+			  return ;
 //			SetStatus("200");
 //			if (!SetBody(this->fullPath_))
 //				return ;
@@ -219,7 +220,8 @@ void Response::PostRequest() {
 			if (!SetResponse(this->fullPath_, "200"))
 				return ;
 		} else {
-			OpenOrCreateFile();
+			if (!OpenOrCreateFile())
+			  return ;
 //			SetStatus("201");
 //			if (!SetBody(this->fullPath_))
 //				return ;
@@ -248,13 +250,16 @@ void Response::PutRequest() {
 		if (_SearchForFile(this->fullPath_)){
 			if (!FillBody(this->fullPath_))
 				return ;
-			OpenOrCreateFile();
+			if (!OpenOrCreateFile())
+			  return ;
 //			SetStatus("200");
 //			SetHeader("Content-Type", this->fullPath_);
 			if (!SetResponse(this->fullPath_, "200"))
 				return ;
 		} else {
-			OpenOrCreateFile();
+
+			if(!OpenOrCreateFile())
+			  return ;
 //			SetStatus("201");
 //			SetHeader("Content-Type", this->fullPath_);
 			if (!SetResponse(this->fullPath_, "201"))

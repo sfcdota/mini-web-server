@@ -242,10 +242,10 @@
 //
 //  return serv;
 //}
-
-int main (){
-	std::vector<ServerConfig> s;
-	s = ServerParser::Run();
-
-	return 0;
-}
+//
+//int main (){
+//	std::vector<ServerConfig> s;
+//	s = ServerParser::Run();
+//
+//	return 0;
+//}

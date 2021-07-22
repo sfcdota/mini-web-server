@@ -1,7 +1,7 @@
 #include "Server.hpp"
 #include "parser.hpp"
 #include <sys/wait.h>
-
+#include "parser/ServerParser.hpp"
 /*
  * /directory/youpi.bla
 CONTENT_LENGTH=100000000
@@ -118,7 +118,7 @@ int main(int argc, char **argv) {
     exit(0);
 //  std::string res = testCGI();
 //  std::cout << res;
-  ServerConfig config = parsConf();
+  std::vector<ServerConfig> config = ServerParser::Run();
   const ServerConfig DEFAULT_CONFIG =
       {0, 8080, std::string(),
        std::vector<std::string>(),
@@ -128,8 +128,7 @@ int main(int argc, char **argv) {
        std::vector<location>(),};
   std::vector<ServerConfig> serverConfigs;
 //  serverConfigs.push_back(DEFAULT_CONFIG);
-serverConfigs.push_back(config);
-  Server server(serverConfigs, 65536 * 32);
+  Server server(config, 65536 * 32);
   server.Run();
 
   return 0;
