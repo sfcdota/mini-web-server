@@ -88,7 +88,6 @@ void Server::AcceptConnections() {
         FD_SET(client_fd, &master_read_);
         read.push_back(ReadElement(it->GetServerFd(), client_fd, it->GetConfig(), addr));
       }
-
     }
   }
 }
@@ -115,7 +114,8 @@ void Server::SocketsRead() {
       ClearBrokenConnection(it->GetClientFd());
       read.erase(it--);
     } else if (it->GetRequest().IsFormed()) {
-      logger.WriteLog(it->GetRequest(), RequestLoggingOptions::FULL_REQUEST);
+      if (!it->GetRequest().IsFailed())
+        logger.WriteLog(it->GetRequest(), RequestLoggingOptions::FULL_REQUEST);
       FD_CLR(it->GetClientFd(), &master_read_);
       FD_SET(it->GetClientFd(), &master_write_);
       write.push_back(WriteElement(it->GetServerFd(), it->GetClientFd(),

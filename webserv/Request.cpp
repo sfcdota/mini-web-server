@@ -3,7 +3,7 @@
 Request::Request(const ServerConfig& config, const sockaddr_in & addr, const std::string & buf)
     : ARequest(config), addr(addr), buffer(buf), failed(),
       chunked(), recieved_headers(), recieved_body(), formed(),
-      content_length(), cgi_request(false) {}
+      content_length(), last_searched_index(0), cgi_request(false) {}
 
 Request::Request(const Request &in): ARequest(in.server_config), addr(in.addr), buffer(in.buffer)
     { *this = in; }
@@ -24,6 +24,7 @@ Request &Request::operator=(const Request &in) {
   buffer = in.buffer;
   source_request = in.source_request;
   force_to_break = in.force_to_break;
+  last_searched_index = in.last_searched_index;
   return *this;
 }
 
@@ -47,11 +48,11 @@ const std::string Request::PrintLog(const RequestLoggingOptions &option) const {
   else if (option == RequestLoggingOptions::REQUEST_TILL_BODY)
     ss << "request line & headers = " << RequestLineToStr() << HeadersToStr();
   else if (option == RequestLoggingOptions::REQUEST_BODY)
-    ss << "request body = " << GetShortString(body);
+    ss << "request short body = " << GetShortString(body);
   else if (option == RequestLoggingOptions::REQUEST_FULL_BODY)
-    ss << "request body = " << body;
+    ss << "full body = " << body;
   else if (option == RequestLoggingOptions::FULL_REQUEST)
-    ss << "request = " << RequestLineToStr() << HeadersToStr() << GetShortString(body);
+    ss << "full request = " << RequestLineToStr() << HeadersToStr() << GetShortString(body);
   ss << std::endl;
   return ss.str();
 }
@@ -159,6 +160,9 @@ const std::string Request::HeadersToStr() const {
 }
 
 void Request::AdjustHeaders() {
+//  if (failed)
+//    return;
+
   std::map<std::string, std::string>::iterator content = headers.find("Content-Length");
   std::map<std::string, std::string>::iterator transfer = headers.find("Transfer-Encoding");
   std::map<std::string, std::string>::iterator connection = headers.find("Connection");
@@ -222,6 +226,13 @@ const std::string &Request::GetSourceRequest() const {
 void Request::Clear() {
   request_line.clear();
   headers.clear();
+}
+
+const size_t &Request::GetLastSearchedIndex() const {
+  return last_searched_index;
+}
+void Request::SetLastSearchedIndex(const size_t &value) {
+  last_searched_index = value;
 }
 
 //void Request::CleanUp() {

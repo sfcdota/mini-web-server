@@ -53,15 +53,20 @@ void BufferReader::ProcessInputBuffer(Request &request) {
   request.AppendSourceRequest(read_buffer_);
   size_t pos;
   if (!request.IsRecievedHeaders()) {
-    if((pos = request.GetRequestBuffer().find("\r\n\r\n", 0)) == std::string::npos)
+    if((pos = request.GetRequestBuffer().find("\r\n\r\n", request.GetLastSearchedIndex())) == std::string::npos) {
+      request.SetLastSearchedIndex(request.GetRequestBuffer().size() >= 4 ? request.GetRequestBuffer().size() - 4 : 0);
       return;
+    }
     FillRequestHeaders(request);
     request.SetRequsetBuffer(request.GetRequestBuffer().substr(pos + 4));
+    request.SetLastSearchedIndex(0);
   }
   if (request.IsRecievedHeaders() && !request.IsFormed()) {
     if (request.IsChunked()) {
-      if ((pos = request.GetRequestBuffer().find("0\r\n\r\n")) == std::string::npos)
+      if ((pos = request.GetRequestBuffer().find("0\r\n\r\n", request.GetLastSearchedIndex())) == std::string::npos) {
+        request.SetLastSearchedIndex(request.GetRequestBuffer().size() >= 4 ? request.GetRequestBuffer().size() - 4 : 0);
         return;
+      }
       FillRequestChunkedBody(request);
     }
     else {

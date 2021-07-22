@@ -60,7 +60,8 @@ class Request: public ARequest, IRequest, public ILogger<RequestLoggingOptions> 
   void AppendSourceRequest(const std::string & s);
   const std::string & GetSourceRequest() const;
   void Clear();
-
+  const size_t & GetLastSearchedIndex() const;
+  void SetLastSearchedIndex(const size_t & value);
  private:
   bool failed;
   bool chunked;
@@ -73,6 +74,7 @@ class Request: public ARequest, IRequest, public ILogger<RequestLoggingOptions> 
   std::string source_request;
   const sockaddr_in addr;
   bool force_to_break;
+  size_t last_searched_index;
 
 };
 #endif // WEBSERV_REQUEST_HPP_

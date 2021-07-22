@@ -198,19 +198,19 @@ void Response::PostRequest() {
 		if (!FillBody(this->fullPath_))
 			return ;
 		if (_SearchForFile(this->fullPath_)) {
-//		    struct stat file;
-//            int test = open(this->fullPath_.c_str(), O_RDONLY, 0777);
-//            if (test == -1) {
-//              ErrorHandler("500");
-//              return ;
-//            }
-//            fstat(test, &file);
-//            if (file.st_size > 0 && _request.GetExpectedContentLength() != 0) {
-//              ErrorHandler("201");
-//              close(test);
-//              return ;
-//            }
-//            close(test);
+		    struct stat file;
+            int test = open(this->fullPath_.c_str(), O_RDONLY, 0777);
+            if (test == -1) {
+              ErrorHandler("500");
+              return ;
+            }
+            fstat(test, &file);
+            if (file.st_size > 0 && _request.GetExpectedContentLength() != 0) {
+              ErrorHandler("413");
+              close(test);
+              return ;
+            }
+            close(test);
 			OpenOrCreateFile();
 //			SetStatus("200");
 //			if (!SetBody(this->fullPath_))
@@ -354,10 +354,14 @@ void Response::SetStatus(const std::string &code) {
 }
 
 bool Response::IsRequestCorrect() {
-	return (HTTPVersionControl()
-			&& CheckMethodCorrectness()
-			&& CheckLocationCorrectness()
-			&& CheckLocationMethods());
+  if (_request.IsFailed()) {
+    ErrorHandler(std::to_string(_request.GetStatusCode()));
+    return 0;
+  }
+  return (HTTPVersionControl()
+		  && CheckMethodCorrectness()
+		  && CheckLocationCorrectness()
+		  && CheckLocationMethods());
 }
 
 const std::string Response::GetResponse() {

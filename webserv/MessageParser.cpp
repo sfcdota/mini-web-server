@@ -90,6 +90,8 @@ void MessageParser::ParseBody(Request & request) {
     return;
   for (size_t index = 0; (tmp = buffer.find("\r\n", index)) < pos;) {
     length = strtol(&buffer.c_str()[index], NULL, 16);
+    if (length == 0)
+      bool t = true;
     if (length < 0) {
       std::cout << "LENGTH OF CHUNKED PART DATA WAS BELOW ZERO. BODY PARSING ABORTED!" << std::endl;
       request.SetFailed(400);
